@@ -3,6 +3,8 @@ using BgituGrades.DTO;
 using BgituGrades.Entities;
 using BgituGrades.Models.Class;
 using BgituGrades.Repositories;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace BgituGrades.Services
 {
@@ -20,13 +22,16 @@ namespace BgituGrades.Services
         Task<ClassDTO?> GetClassDtoByIdAsync(int id);
     }
     public class ClassService(IClassRepository classRepository, IGroupRepository groupRepository,
-        IStudentRepository studentRepository, IWorkRepository workRepository, IMapper mapper) : IClassService
+        IStudentRepository studentRepository, IWorkRepository workRepository, IMapper mapper, IDistributedCache cache) : IClassService
     {
         private readonly IClassRepository _classRepository = classRepository;
         private readonly IGroupRepository _groupRepository = groupRepository;
         private readonly IStudentRepository _studentRepository = studentRepository;
         private readonly IWorkRepository _workRepository = workRepository;
         private readonly IMapper _mapper = mapper;
+        private readonly IDistributedCache _cache = cache;
+        private const string CacheKeyPrefix = "class:schedule:";
+        private const string CacheKeyAllClasses = "class:all:classes";
 
         public async Task<ClassResponse> CreateClassAsync(CreateClassRequest request)
         {
@@ -37,10 +42,21 @@ namespace BgituGrades.Services
 
         public async Task<IEnumerable<ClassDateResponse>> GetClassDatesAsync(GetClassDateRequest request)
         {
+            // ✅ Кэш расписания классов
+            var cacheKey = $"{CacheKeyPrefix}group:{request.GroupId}:discipline:{request.DisciplineId}";
+
+            var cached = await GetFromCacheAsync<IEnumerable<ClassDateResponse>>(cacheKey);
+            if (cached != null)
+                return cached;
+
             var group = await _groupRepository.GetByIdAsync(request.GroupId);
             if (group == null) return [];
 
             var classDates = await GenerateScheduleDatesAsync(request.GroupId, request.DisciplineId);
+
+            // Сохранить в кэш
+            await SetCacheAsync(cacheKey, classDates.ToList(), TimeSpan.FromDays(7));
+
             return classDates;
         }
 
@@ -136,6 +152,36 @@ namespace BgituGrades.Services
         {
             var entity = await _classRepository.GetByIdAsync(id);
             return entity == null ? null : _mapper.Map<ClassDTO>(entity);
+        }
+
+        // 🔧 Вспомогательные методы для работы с кэшем
+        private async Task<T?> GetFromCacheAsync<T>(string key)
+        {
+            try
+            {
+                var value = await _cache.GetStringAsync(key);
+                if (value == null)
+                    return default;
+                return JsonSerializer.Deserialize<T>(value);
+            }
+            catch
+            {
+                return default;
+            }
+        }
+
+        private async Task SetCacheAsync<T>(string key, T value, TimeSpan expiration)
+        {
+            try
+            {
+                var serialized = JsonSerializer.Serialize(value);
+                var options = new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = expiration };
+                await _cache.SetStringAsync(key, serialized, options);
+            }
+            catch
+            {
+                // Логировать ошибку кэширования, но не прерывать выполнение
+            }
         }
     }
 }

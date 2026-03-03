@@ -27,10 +27,10 @@ namespace BgituGrades.Repositories
 
         public async Task<bool> DeleteTransferAsync(int id)
         {
-            var entity = await GetByIdAsync(id);
-            _dbContext.Transfers.Remove(entity);
-            await _dbContext.SaveChangesAsync();
-            return true;
+            var result = await _dbContext.Transfers
+                .Where(t => t.Id == id)
+                .ExecuteDeleteAsync();
+            return result > 0;
         }
 
         public async Task<Transfer?> GetByIdAsync(int id)

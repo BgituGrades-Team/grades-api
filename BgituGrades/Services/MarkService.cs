@@ -5,6 +5,8 @@ using BgituGrades.Models.Class;
 using BgituGrades.Models.Mark;
 using BgituGrades.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace BgituGrades.Services
 {
@@ -19,39 +21,70 @@ namespace BgituGrades.Services
         Task<IEnumerable<MarkDTO>> GetAllMarksDtoAsync();
         Task<MarkDTO?> GetMarkDtoByIdAsync(int id);
     }
-    public class MarkService(IMarkRepository markRepository, IMapper mapper) : IMarkService
+    public class MarkService(IMarkRepository markRepository, IMapper mapper, IDistributedCache cache) : IMarkService
     {
         private readonly IMarkRepository _markRepository = markRepository;
         private readonly IMapper _mapper = mapper;
+        private readonly IDistributedCache _cache = cache;
+        private const string CacheKeyPrefix = "mark:";
+        private const string AllMarksKey = "mark:all";
 
         public async Task<MarkResponse> CreateMarkAsync(CreateMarkRequest request)
         {
             var entity = _mapper.Map<Mark>(request);
             var createdEntity = await _markRepository.CreateMarkAsync(entity);
+            // Инвалидировать кэш
+            await InvalidateCacheAsync();
             return _mapper.Map<MarkResponse>(createdEntity);
         }
 
         public async Task<IEnumerable<MarkResponse>> GetAllMarksAsync()
         {
+            // ✅ Кэш всех оценок
+            var cached = await GetFromCacheAsync<IEnumerable<MarkResponse>>(AllMarksKey);
+            if (cached != null)
+                return cached;
+
             var entities = await _markRepository.GetAllMarksAsync();
-            return _mapper.Map<IEnumerable<MarkResponse>>(entities);
+            var result = _mapper.Map<IEnumerable<MarkResponse>>(entities).ToList();
+            await SetCacheAsync(AllMarksKey, result, TimeSpan.FromHours(1));
+            return result;
         }
 
         public async Task<IEnumerable<MarkResponse>> GetMarksByDisciplineAndGroupAsync(GetMarksByDisciplineAndGroupRequest request)
         {
+            // ✅ Кэш таблицы оценок (часто запрашивается)
+            var cacheKey = $"{CacheKeyPrefix}discipline:{request.DisciplineId}:group:{request.GroupId}";
+
+            var cached = await GetFromCacheAsync<IEnumerable<MarkResponse>>(cacheKey);
+            if (cached != null)
+                return cached;
+
             var entities = await _markRepository.GetMarksByDisciplineAndGroupAsync(request.DisciplineId, request.GroupId);
-            return _mapper.Map<IEnumerable<MarkResponse>>(entities);
+            var result = _mapper.Map<IEnumerable<MarkResponse>>(entities).ToList();
+            await SetCacheAsync(cacheKey, result, TimeSpan.FromHours(2));
+            return result;
         }
 
         public async Task<bool> UpdateMarkAsync(UpdateMarkRequest request)
         {
             var entity = _mapper.Map<Mark>(request);
-            return await _markRepository.UpdateMarkAsync(entity);
+            var result = await _markRepository.UpdateMarkAsync(entity);
+            if (result)
+            {
+                await InvalidateCacheAsync();
+            }
+            return result;
         }
 
         public async Task<bool> DeleteMarkByStudentAndWorkAsync(DeleteMarkByStudentAndWorkRequest request)
         {
-            return await _markRepository.DeleteMarkByStudentAndWorkAsync(request.StudentId, request.WorkId);
+            var result = await _markRepository.DeleteMarkByStudentAndWorkAsync(request.StudentId, request.WorkId);
+            if (result)
+            {
+                await InvalidateCacheAsync();
+            }
+            return result;
         }
 
         public async Task<FullGradeMarkResponse> UpdateOrCreateMarkAsync(UpdateMarkGradeRequest request)
@@ -68,6 +101,9 @@ namespace BgituGrades.Services
                 mark = _mapper.Map<Mark>(request);
                 await _markRepository.CreateMarkAsync(mark);
             }
+
+            // Инвалидировать кэш
+            await InvalidateCacheAsync();
 
             var response = new FullGradeMarkResponse
             {
@@ -91,6 +127,48 @@ namespace BgituGrades.Services
         {
             var entity = await _markRepository.GetMarkByIdAsync(id);
             return entity == null ? null : _mapper.Map<MarkDTO>(entity);
+        }
+
+        // 🔧 Вспомогательные методы для работы с кэшем
+        private async Task<T?> GetFromCacheAsync<T>(string key)
+        {
+            try
+            {
+                var value = await _cache.GetStringAsync(key);
+                if (value == null)
+                    return default;
+                return JsonSerializer.Deserialize<T>(value);
+            }
+            catch
+            {
+                return default;
+            }
+        }
+
+        private async Task SetCacheAsync<T>(string key, T value, TimeSpan expiration)
+        {
+            try
+            {
+                var serialized = JsonSerializer.Serialize(value);
+                var options = new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = expiration };
+                await _cache.SetStringAsync(key, serialized, options);
+            }
+            catch
+            {
+                // Логировать ошибку кэширования, но не прерывать выполнение
+            }
+        }
+
+        private async Task InvalidateCacheAsync()
+        {
+            try
+            {
+                await _cache.RemoveAsync(AllMarksKey);
+            }
+            catch
+            {
+                // Логировать ошибку, но не прерывать выполнение
+            }
         }
     }
 }

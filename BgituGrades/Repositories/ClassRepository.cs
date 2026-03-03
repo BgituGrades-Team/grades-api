@@ -34,10 +34,10 @@ namespace BgituGrades.Repositories
 
         public async Task<bool> DeleteClassAsync(int id)
         {
-            var entity = await GetByIdAsync(id);
-            _dbContext.Classes.Remove(entity);
-            await _dbContext.SaveChangesAsync();
-            return true;
+            var result = await _dbContext.Classes
+                .Where(c => c.Id == id)
+                .ExecuteDeleteAsync();
+            return result > 0;
         }
 
         public async Task<Class?> GetByIdAsync(int id)

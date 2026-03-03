@@ -36,10 +36,8 @@ namespace BgituGrades.Repositories
         public async Task<bool> DeleteStudentAsync(int id)
         {
             using var context = await contextFactory.CreateDbContextAsync();
-            var entity = await GetByIdAsync(id);
-            context.Students.Remove(entity);
-            await context.SaveChangesAsync();
-            return true;
+            var result = await context.Students.Where(s => s.Id == id).ExecuteDeleteAsync();
+            return result > 0;
         }
 
         public async Task<Student?> GetByIdAsync(int id)
@@ -77,24 +75,27 @@ namespace BgituGrades.Repositories
                 {
                     s.Id,
                     s.Name,
-                    Presences = s.Presences
+                    PresencesByDate = s.Presences
                         .Where(p => p.DisciplineId == disciplineId)
-                        .Select(p => new { p.Date, p.IsPresent })
+                        .ToDictionary(p => p.Date, p => p.IsPresent)
                 })
                 .OrderBy(s => s.Name)
                 .AsNoTracking()
                 .ToListAsync();
 
+            var scheduleDatesList = scheduleDates.ToList();
             var result = studentsWithPresence.Select(s => new FullGradePresenceResponse
             {
                 StudentId = s.Id,
                 Name = s.Name,
-                Presences = scheduleDates.Select(date => new GradePresenceResponse
+                Presences = scheduleDatesList.Select(date => new GradePresenceResponse
                 {
                     ClassId = date.Id,
                     ClassType = date.ClassType,
                     Date = date.Date,
-                    IsPresent = s.Presences.FirstOrDefault(p => p.Date == date.Date)?.IsPresent ?? PresenceType.PRESENT
+                    IsPresent = s.PresencesByDate.TryGetValue(date.Date, out var presence) 
+                        ? presence 
+                        : PresenceType.PRESENT
                 }).ToList()
             });
 
@@ -110,25 +111,26 @@ namespace BgituGrades.Repositories
                 {
                     s.Id,
                     s.Name,
-                    Marks = s.Marks
+                    MarksByWorkId = s.Marks
                         .Where(m => m.Work.DisciplineId == disciplineId)
-                        .Select(m => new { m.WorkId, m.Value })
+                        .ToDictionary(m => m.WorkId, m => m.Value)
                 })
                 .OrderBy(s => s.Name)
                 .AsNoTracking()
                 .ToListAsync();
 
-                var result = studentsWithMarks.Select(s => new FullGradeMarkResponse
+            var worksList = works.ToList();
+            var result = studentsWithMarks.Select(s => new FullGradeMarkResponse
+            {
+                StudentId = s.Id,
+                Name = s.Name,
+                Marks = worksList.Select(work => new GradeMarkResponse
                 {
-                    StudentId = s.Id,
-                    Name = s.Name,
-                    Marks = works.Select(work => new GradeMarkResponse
-                    {
-                        WorkId = work.Id,
-                        Name = work.Name,
-                        Value = s.Marks.FirstOrDefault(m => m.WorkId == work.Id)?.Value ?? ""
-                    }).ToList()
-                });
+                    WorkId = work.Id,
+                    Name = work.Name,
+                    Value = s.MarksByWorkId.TryGetValue(work.Id, out var mark) ? mark : ""
+                }).ToList()
+            });
 
             return result;
         }

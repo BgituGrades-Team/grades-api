@@ -23,10 +23,10 @@ namespace BgituGrades.Repositories
 
         public async Task<bool> DeleteKeyAsync(string key)
         {
-            var storedKey = await GetAsync(key);
-            _dbContext.ApiKeys.Remove(storedKey);
-            await _dbContext.SaveChangesAsync();
-            return true;
+            var result = await _dbContext.ApiKeys
+                .Where(k => k.Key == key)
+                .ExecuteDeleteAsync();
+            return result > 0;
         }
 
         public async Task<ApiKey?> GetAsync(string key)

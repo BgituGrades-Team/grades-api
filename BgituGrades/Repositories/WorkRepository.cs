@@ -28,10 +28,10 @@ namespace BgituGrades.Repositories
 
         public async Task<bool> DeleteWorkAsync(int id)
         {
-            var entity = await GetByIdAsync(id);
-            _dbContext.Works.Remove(entity);
-            await _dbContext.SaveChangesAsync();
-            return true;
+            var result = await _dbContext.Works
+                .Where(w => w.Id == id)
+                .ExecuteDeleteAsync();
+            return result > 0;
         }
 
         public async Task<Work?> GetByIdAsync(int id)
@@ -51,9 +51,7 @@ namespace BgituGrades.Repositories
         public async Task<IEnumerable<Work>> GetByDisciplineAndGroupAsync(int disciplineId, int groupId)
         {
             var entities = await _dbContext.Works
-                .Where(w => w.DisciplineId == disciplineId &&
-                            _dbContext.Classes.Any(c => c.DisciplineId == disciplineId &&
-                                                        c.GroupId == groupId))
+                .Where(w => w.DisciplineId == disciplineId)
                 .AsNoTracking()
                 .ToListAsync();
 

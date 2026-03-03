@@ -3,6 +3,8 @@ using BgituGrades.DTO;
 using BgituGrades.Entities;
 using BgituGrades.Models.Discipline;
 using BgituGrades.Repositories;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace BgituGrades.Services
 {
@@ -18,33 +20,61 @@ namespace BgituGrades.Services
         Task<IEnumerable<DisciplineDTO>?> GetDisciplinesDtoByGroupIdAsync(int groupId);
         Task<DisciplineDTO?> GetDisciplineDtoByIdAsync(int id);
     }
-    public class DisciplineService(IDisciplineRepository disciplineRepository, IMapper mapper) : IDisciplineService
+    public class DisciplineService(IDisciplineRepository disciplineRepository, IMapper mapper, IDistributedCache cache) : IDisciplineService
     {
         private readonly IDisciplineRepository _disciplineRepository = disciplineRepository;
         private readonly IMapper _mapper = mapper;
+        private readonly IDistributedCache _cache = cache;
+        private const string AllDisciplinesKey = "discipline:all";
+        private const string DisciplineByGroupKey = "discipline:group:";
 
         public async Task<DisciplineResponse> CreateDisciplineAsync(CreateDisciplineRequest request)
         {
             var entity = _mapper.Map<Discipline>(request);
             var createdEntity = await _disciplineRepository.CreateDisciplineAsync(entity);
+            // Инвалидировать кэш
+            await _cache.RemoveAsync(AllDisciplinesKey);
             return _mapper.Map<DisciplineResponse>(createdEntity);
         }
 
         public async Task<bool> DeleteDisciplineAsync(int id)
         {
-            return await _disciplineRepository.DeleteDisciplineAsync(id);
+            var result = await _disciplineRepository.DeleteDisciplineAsync(id);
+            if (result)
+            {
+                await _cache.RemoveAsync(AllDisciplinesKey);
+            }
+            return result;
         }
 
         public async Task<IEnumerable<DisciplineResponse>> GetAllDisciplinesAsync()
         {
+            // ✅ Кэш всех дисциплин
+            var cached = await GetFromCacheAsync<IEnumerable<DisciplineResponse>>(AllDisciplinesKey);
+            if (cached != null)
+                return cached;
+
             var entities = await _disciplineRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<DisciplineResponse>>(entities);
+            var result = _mapper.Map<IEnumerable<DisciplineResponse>>(entities).ToList();
+            await SetCacheAsync(AllDisciplinesKey, result, TimeSpan.FromHours(2));
+            return result;
         }
 
         public async Task<IEnumerable<DisciplineResponse>?> GetDisciplineByGroupIdAsync(int groupId)
         {
+            // ✅ Кэш дисциплин по группам
+            var cacheKey = $"{DisciplineByGroupKey}{groupId}";
+            var cached = await GetFromCacheAsync<List<DisciplineResponse>>(cacheKey);
+            if (cached != null)
+                return cached;
+
             var entities = await _disciplineRepository.GetByGroupIdAsync(groupId);
-            return entities == null ? null : _mapper.Map<List<DisciplineResponse>>(entities);
+            if (entities == null)
+                return null;
+
+            var result = _mapper.Map<List<DisciplineResponse>>(entities);
+            await SetCacheAsync(cacheKey, result, TimeSpan.FromHours(2));
+            return result;
         }
 
         public async Task<DisciplineResponse?> GetDisciplineByIdAsync(int id)
@@ -56,7 +86,12 @@ namespace BgituGrades.Services
         public async Task<bool> UpdateDisciplineAsync(UpdateDisciplineRequest request)
         {
             var entity = _mapper.Map<Discipline>(request);
-            return await _disciplineRepository.UpdateDisciplineAsync(entity);
+            var result = await _disciplineRepository.UpdateDisciplineAsync(entity);
+            if (result)
+            {
+                await _cache.RemoveAsync(AllDisciplinesKey);
+            }
+            return result;
         }
 
         public async Task<IEnumerable<DisciplineDTO>> GetAllDisciplinesDtoAsync()
@@ -75,6 +110,36 @@ namespace BgituGrades.Services
         {
             var entity = await _disciplineRepository.GetByIdAsync(id);
             return entity == null ? null : _mapper.Map<DisciplineDTO>(entity);
+        }
+
+        // 🔧 Вспомогательные методы для работы с кэшем
+        private async Task<T?> GetFromCacheAsync<T>(string key)
+        {
+            try
+            {
+                var value = await _cache.GetStringAsync(key);
+                if (value == null)
+                    return default;
+                return JsonSerializer.Deserialize<T>(value);
+            }
+            catch
+            {
+                return default;
+            }
+        }
+
+        private async Task SetCacheAsync<T>(string key, T value, TimeSpan expiration)
+        {
+            try
+            {
+                var serialized = JsonSerializer.Serialize(value);
+                var options = new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = expiration };
+                await _cache.SetStringAsync(key, serialized, options);
+            }
+            catch
+            {
+                // Логировать ошибку кэширования, но не прерывать выполнение
+            }
         }
     }
 

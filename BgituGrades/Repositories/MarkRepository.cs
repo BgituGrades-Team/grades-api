@@ -63,11 +63,10 @@ namespace BgituGrades.Repositories
         public async Task<bool> DeleteMarkByStudentAndWorkAsync(int studentId, int workId)
         {
             using var context = await contextFactory.CreateDbContextAsync();
-            var entity = await context.Marks
-                .FirstOrDefaultAsync(m => m.StudentId == studentId && m.WorkId == workId);
-            context.Marks.Remove(entity);
-            await context.SaveChangesAsync();
-            return true;
+            var result = await context.Marks
+                .Where(m => m.StudentId == studentId && m.WorkId == workId)
+                .ExecuteDeleteAsync();
+            return result > 0;
         }
 
         public async Task DeleteAllAsync()
@@ -97,15 +96,15 @@ namespace BgituGrades.Repositories
                 .Select(double.Parse)
                 .ToList();
 
-            return validMarks.Count != 0 ? validMarks.Average() : 0;
+            return validMarks.Count > 0 ? validMarks.Average() : 0;
         }
 
         public async Task<IEnumerable<Mark>> GetMarksByDisciplinesAndGroupsAsync(List<int> disciplineIds, List<int> groupIds)
         {
             using var context = await contextFactory.CreateDbContextAsync();
             var entities = await context.Marks
-                .Include(m => m.Work)
                 .Where(m => disciplineIds.Contains(m.Work.DisciplineId) && groupIds.Contains(m.Student.GroupId))
+                .AsNoTracking()
                 .ToListAsync();
             return entities;
         }

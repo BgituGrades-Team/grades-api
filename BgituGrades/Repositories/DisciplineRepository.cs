@@ -37,10 +37,10 @@ namespace BgituGrades.Repositories
         public async Task<bool> DeleteDisciplineAsync(int id)
         {
             using var context = await contextFactory.CreateDbContextAsync();
-            var entity = await GetByIdAsync(id);
-            context.Disciplines.Remove(entity);
-            await context.SaveChangesAsync();
-            return true;
+            var result = await context.Disciplines
+                .Where(d => d.Id == id)
+                .ExecuteDeleteAsync();
+            return result > 0;
         }
 
         public async Task<IEnumerable<Discipline>> GetAllAsync()

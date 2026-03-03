@@ -50,11 +50,10 @@ namespace BgituGrades.Repositories
 
         public async Task<bool> DeletePresenceByStudentAndDateAsync(int studentId, DateOnly date)
         {
-            var entity = await _dbContext.Presences
-                .FirstOrDefaultAsync(p => p.StudentId == studentId && p.Date == date);
-            _dbContext.Presences.Remove(entity);
-            await _dbContext.SaveChangesAsync();
-            return true;
+            var result = await _dbContext.Presences
+                .Where(p => p.StudentId == studentId && p.Date == date)
+                .ExecuteDeleteAsync();
+            return result > 0;
         }
 
         public async Task<bool> UpdatePresenceAsync(Presence entity)
@@ -91,20 +90,22 @@ namespace BgituGrades.Repositories
 
         public async Task AddNewStudentPresences(int studentId, Dictionary<int, IEnumerable<DateOnly>> disciplines)
         {
+            var presences = new List<Presence>();
             foreach (var discipline in disciplines)
             {
                 foreach (var date in discipline.Value)
                 {
-                    var presence = new Presence
+                    presences.Add(new Presence
                     {
                         StudentId = studentId,
                         DisciplineId = discipline.Key,
                         Date = date,
                         IsPresent = PresenceType.PRESENT
-                    };
-                    await _dbContext.Presences.AddAsync(presence);
+                    });
                 }
             }
+
+            await _dbContext.Presences.AddRangeAsync(presences);
             await _dbContext.SaveChangesAsync();
         }
 

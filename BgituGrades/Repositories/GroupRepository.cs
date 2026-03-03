@@ -36,13 +36,10 @@ namespace BgituGrades.Repositories
         public async Task<bool> DeleteGroupAsync(int id)
         {
             using var context = await contextFactory.CreateDbContextAsync();
-            var entity = await GetByIdAsync(id);
-            if (entity == null) {
-                return false;
-            }
-            context.Groups.Remove(entity);
-            await context.SaveChangesAsync();
-            return true;
+            var result = await context.Groups
+                .Where(g => g.Id == id)
+                .ExecuteDeleteAsync();
+            return result > 0;
         }
 
         public async Task<IEnumerable<Group>> GetAllAsync()
@@ -76,8 +73,6 @@ namespace BgituGrades.Repositories
         {
             using var context = await contextFactory.CreateDbContextAsync();
             return await context.Groups
-                .Include(g => g.Classes)
-                    .ThenInclude(c => c.Discipline)
                 .AsNoTracking()
                 .Where(g => groupIds.Contains(g.Id))
                 .ToListAsync();
