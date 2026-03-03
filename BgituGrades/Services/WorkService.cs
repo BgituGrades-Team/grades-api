@@ -29,7 +29,7 @@ namespace BgituGrades.Services
         {
             var entity = _mapper.Map<Work>(request);
             var createdEntity = await _workRepository.CreateWorkAsync(entity);
-            // Инвалидировать кэш
+
             await _cache.RemoveAsync(AllWorksKey);
             return _mapper.Map<WorkResponse>(createdEntity);
         }
@@ -52,7 +52,6 @@ namespace BgituGrades.Services
 
         public async Task<IEnumerable<WorkResponse>> GetAllWorksAsync()
         {
-            // ✅ Кэш всех работ (справочные данные - редко меняются)
             var cached = await GetFromCacheAsync<IEnumerable<WorkResponse>>(AllWorksKey);
             if (cached != null)
                 return cached;
@@ -86,7 +85,6 @@ namespace BgituGrades.Services
             return entity == null ? null : _mapper.Map<WorkDTO>(entity);
         }
 
-        // 🔧 Вспомогательные методы для работы с кэшем
         private async Task<T?> GetFromCacheAsync<T>(string key)
         {
             try
@@ -112,7 +110,7 @@ namespace BgituGrades.Services
             }
             catch
             {
-                // Логировать ошибку кэширования, но не прерывать выполнение
+
             }
         }
     }

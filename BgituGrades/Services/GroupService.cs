@@ -33,7 +33,7 @@ namespace BgituGrades.Services
         {
             var entity = _mapper.Map<Group>(request);
             var createdEntity = await _groupRepository.CreateGroupAsync(entity);
-            // Инвалидировать кэш
+
             await _cache.RemoveAsync(AllGroupsKey);
             return _mapper.Map<GroupResponse>(createdEntity);
         }
@@ -50,7 +50,6 @@ namespace BgituGrades.Services
 
         public async Task<IEnumerable<GroupResponse>> GetAllAsync()
         {
-            // ✅ Кэш всех групп
             var cached = await GetFromCacheAsync<IEnumerable<GroupResponse>>(AllGroupsKey);
             if (cached != null)
                 return cached;
@@ -69,7 +68,6 @@ namespace BgituGrades.Services
 
         public async Task<IEnumerable<GroupResponse>> GetGroupsByDisciplineAsync(int disciplineId)
         {
-            // ✅ Кэш групп по дисциплинам
             var cacheKey = $"{GroupsByDisciplineKey}{disciplineId}";
             var cached = await GetFromCacheAsync<IEnumerable<GroupResponse>>(cacheKey);
             if (cached != null)
@@ -110,7 +108,6 @@ namespace BgituGrades.Services
             return entity == null ? null : _mapper.Map<GroupDTO>(entity);
         }
 
-        // 🔧 Вспомогательные методы для работы с кэшем
         private async Task<T?> GetFromCacheAsync<T>(string key)
         {
             try
@@ -136,7 +133,7 @@ namespace BgituGrades.Services
             }
             catch
             {
-                // Логировать ошибку кэширования, но не прерывать выполнение
+
             }
         }
     }

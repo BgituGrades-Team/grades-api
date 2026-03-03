@@ -33,14 +33,14 @@ namespace BgituGrades.Services
         {
             var entity = _mapper.Map<Presence>(request);
             var createdEntity = await _presenceRepository.CreatePresenceAsync(entity);
-            // Инвалидировать кэш
+
             await InvalidateCacheAsync(request.DisciplineId, request.StudentId);
             return _mapper.Map<PresenceResponse>(createdEntity);
         }
 
         public async Task<IEnumerable<PresenceResponse>> GetAllPresencesAsync()
         {
-            // ✅ Получить все присутствия с кэшем
+
             var cached = await GetFromCacheAsync<IEnumerable<PresenceResponse>>(AllPresencesKey);
             if (cached != null)
                 return cached;
@@ -53,7 +53,7 @@ namespace BgituGrades.Services
 
         public async Task<IEnumerable<PresenceResponse>> GetPresencesByDisciplineAndGroupAsync(GetPresenceByDisciplineAndGroupRequest request)
         {
-            // ✅ Кэш таблицы посещаемости (часто запрашивается)
+
             var cacheKey = $"{CacheKeyPrefix}discipline:{request.DisciplineId}:group:{request.GroupId}";
 
             var cached = await GetFromCacheAsync<IEnumerable<PresenceResponse>>(cacheKey);
@@ -102,7 +102,7 @@ namespace BgituGrades.Services
                 await _presenceRepository.CreatePresenceAsync(presence);
             }
 
-            // Инвалидировать кэш
+
             await InvalidateCacheAsync(request.DisciplineId, request.StudentId);
 
             var response = new FullGradePresenceResponse
@@ -129,7 +129,7 @@ namespace BgituGrades.Services
             return entity == null ? null : _mapper.Map<PresenceDTO>(entity);
         }
 
-        // 🔧 Вспомогательные методы для работы с кэшем
+
         private async Task<T?> GetFromCacheAsync<T>(string key)
         {
             try
@@ -155,7 +155,7 @@ namespace BgituGrades.Services
             }
             catch
             {
-                // Логировать ошибку кэширования, но не прерывать выполнение
+
             }
         }
 
@@ -169,7 +169,7 @@ namespace BgituGrades.Services
             }
             catch
             {
-                // Логировать ошибку, но не прерывать выполнение
+
             }
         }
     }

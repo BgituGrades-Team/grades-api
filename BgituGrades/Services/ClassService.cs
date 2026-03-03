@@ -42,7 +42,6 @@ namespace BgituGrades.Services
 
         public async Task<IEnumerable<ClassDateResponse>> GetClassDatesAsync(GetClassDateRequest request)
         {
-            // ✅ Кэш расписания классов
             var cacheKey = $"{CacheKeyPrefix}group:{request.GroupId}:discipline:{request.DisciplineId}";
 
             var cached = await GetFromCacheAsync<IEnumerable<ClassDateResponse>>(cacheKey);
@@ -54,7 +53,6 @@ namespace BgituGrades.Services
 
             var classDates = await GenerateScheduleDatesAsync(request.GroupId, request.DisciplineId);
 
-            // Сохранить в кэш
             await SetCacheAsync(cacheKey, classDates.ToList(), TimeSpan.FromDays(7));
 
             return classDates;
@@ -154,7 +152,6 @@ namespace BgituGrades.Services
             return entity == null ? null : _mapper.Map<ClassDTO>(entity);
         }
 
-        // 🔧 Вспомогательные методы для работы с кэшем
         private async Task<T?> GetFromCacheAsync<T>(string key)
         {
             try
@@ -180,7 +177,7 @@ namespace BgituGrades.Services
             }
             catch
             {
-                // Логировать ошибку кэширования, но не прерывать выполнение
+                
             }
         }
     }

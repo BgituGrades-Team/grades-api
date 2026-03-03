@@ -69,22 +69,26 @@ namespace BgituGrades.Repositories
         public async Task<IEnumerable<FullGradePresenceResponse>> GetPresenseGrade(IEnumerable<ClassDateResponse> scheduleDates, int groupId, int disciplineId)
         {
             using var context = await contextFactory.CreateDbContextAsync();
+            // ✅ Сначала загружаем в память, потом применяем клиентские операции
             var studentsWithPresence = await context.Students
                 .Where(s => s.GroupId == groupId)
-                .Select(s => new
-                {
-                    s.Id,
-                    s.Name,
-                    PresencesByDate = s.Presences
-                        .Where(p => p.DisciplineId == disciplineId)
-                        .ToDictionary(p => p.Date, p => p.IsPresent)
-                })
+                .Include(s => s.Presences)
                 .OrderBy(s => s.Name)
                 .AsNoTracking()
                 .ToListAsync();
 
+            // Преобразования выполняем на клиенте (не в SQL)
+            var presenceByStudent = studentsWithPresence.Select(s => new
+            {
+                s.Id,
+                s.Name,
+                PresencesByDate = s.Presences
+                    .Where(p => p.DisciplineId == disciplineId)
+                    .ToDictionary(p => p.Date, p => p.IsPresent)
+            }).ToList();
+
             var scheduleDatesList = scheduleDates.ToList();
-            var result = studentsWithPresence.Select(s => new FullGradePresenceResponse
+            var result = presenceByStudent.Select(s => new FullGradePresenceResponse
             {
                 StudentId = s.Id,
                 Name = s.Name,
@@ -107,20 +111,23 @@ namespace BgituGrades.Repositories
             using var context = await contextFactory.CreateDbContextAsync();
             var studentsWithMarks = await context.Students
                 .Where(s => s.GroupId == groupId)
-                .Select(s => new
-                {
-                    s.Id,
-                    s.Name,
-                    MarksByWorkId = s.Marks
-                        .Where(m => m.Work.DisciplineId == disciplineId)
-                        .ToDictionary(m => m.WorkId, m => m.Value)
-                })
+                .Include(s => s.Marks)
+                    .ThenInclude(m => m.Work)
                 .OrderBy(s => s.Name)
                 .AsNoTracking()
                 .ToListAsync();
 
+            var marksByStudent = studentsWithMarks.Select(s => new
+            {
+                s.Id,
+                s.Name,
+                MarksByWorkId = s.Marks
+                    .Where(m => m.Work.DisciplineId == disciplineId)
+                    .ToDictionary(m => m.WorkId, m => m.Value)
+            }).ToList();
+
             var worksList = works.ToList();
-            var result = studentsWithMarks.Select(s => new FullGradeMarkResponse
+            var result = marksByStudent.Select(s => new FullGradeMarkResponse
             {
                 StudentId = s.Id,
                 Name = s.Name,

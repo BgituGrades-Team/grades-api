@@ -33,14 +33,14 @@ namespace BgituGrades.Services
         {
             var entity = _mapper.Map<Mark>(request);
             var createdEntity = await _markRepository.CreateMarkAsync(entity);
-            // Инвалидировать кэш
+
             await InvalidateCacheAsync();
             return _mapper.Map<MarkResponse>(createdEntity);
         }
 
         public async Task<IEnumerable<MarkResponse>> GetAllMarksAsync()
         {
-            // ✅ Кэш всех оценок
+  
             var cached = await GetFromCacheAsync<IEnumerable<MarkResponse>>(AllMarksKey);
             if (cached != null)
                 return cached;
@@ -53,7 +53,7 @@ namespace BgituGrades.Services
 
         public async Task<IEnumerable<MarkResponse>> GetMarksByDisciplineAndGroupAsync(GetMarksByDisciplineAndGroupRequest request)
         {
-            // ✅ Кэш таблицы оценок (часто запрашивается)
+
             var cacheKey = $"{CacheKeyPrefix}discipline:{request.DisciplineId}:group:{request.GroupId}";
 
             var cached = await GetFromCacheAsync<IEnumerable<MarkResponse>>(cacheKey);
@@ -102,7 +102,7 @@ namespace BgituGrades.Services
                 await _markRepository.CreateMarkAsync(mark);
             }
 
-            // Инвалидировать кэш
+
             await InvalidateCacheAsync();
 
             var response = new FullGradeMarkResponse
@@ -129,7 +129,7 @@ namespace BgituGrades.Services
             return entity == null ? null : _mapper.Map<MarkDTO>(entity);
         }
 
-        // 🔧 Вспомогательные методы для работы с кэшем
+
         private async Task<T?> GetFromCacheAsync<T>(string key)
         {
             try
@@ -155,7 +155,7 @@ namespace BgituGrades.Services
             }
             catch
             {
-                // Логировать ошибку кэширования, но не прерывать выполнение
+
             }
         }
 
@@ -167,7 +167,7 @@ namespace BgituGrades.Services
             }
             catch
             {
-                // Логировать ошибку, но не прерывать выполнение
+
             }
         }
     }
