@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BgituGrades.DTO;
 using BgituGrades.Entities;
 using BgituGrades.Models.Work;
 using BgituGrades.Repositories;
@@ -12,6 +13,8 @@ namespace BgituGrades.Services
         Task<WorkResponse?> GetWorkByIdAsync(int id);
         Task<bool> UpdateWorkAsync(UpdateWorkRequest request);
         Task<bool> DeleteWorkAsync(int id);
+        Task<IEnumerable<WorkDTO>> GetAllWorksDtoAsync();
+        Task<WorkDTO?> GetWorkDtoByIdAsync(int id);
     }
     public class WorkService(IWorkRepository workRepository, IMapper mapper) : IWorkService
     {
@@ -46,6 +49,18 @@ namespace BgituGrades.Services
         {
             var entity = _mapper.Map<Work>(request);
             return await _workRepository.UpdateWorkAsync(entity);
+        }
+
+        public async Task<IEnumerable<WorkDTO>> GetAllWorksDtoAsync()
+        {
+            var entities = await _workRepository.GetAllWorksAsync();
+            return _mapper.Map<IEnumerable<WorkDTO>>(entities);
+        }
+
+        public async Task<WorkDTO?> GetWorkDtoByIdAsync(int id)
+        {
+            var entity = await _workRepository.GetByIdAsync(id);
+            return entity == null ? null : _mapper.Map<WorkDTO>(entity);
         }
     }
 

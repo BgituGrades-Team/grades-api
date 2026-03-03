@@ -13,6 +13,7 @@ namespace BgituGrades.Repositories
         Task<bool> UpdateClassAsync(Class entity);
         Task<bool> DeleteClassAsync(int id);
         Task DeleteAllAsync();
+        Task<IEnumerable<Class>> GetAllClassesAsync();
     }
 
     public class ClassRepository(AppDbContext dbContext) : IClassRepository
@@ -60,6 +61,11 @@ namespace BgituGrades.Repositories
             _dbContext.Update(entity);
             await _dbContext.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<IEnumerable<Class>> GetAllClassesAsync()
+        {
+            return await _dbContext.Classes.AsNoTracking().ToListAsync();
         }
     }
 }

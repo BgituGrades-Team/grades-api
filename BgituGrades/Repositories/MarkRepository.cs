@@ -16,6 +16,7 @@ namespace BgituGrades.Repositories
         Task DeleteAllAsync();
         Task<double> GetAverageMarkByStudentAndDisciplineAsync(int studentId, int disciplineId);
         Task<IEnumerable<Mark>> GetMarksByDisciplinesAndGroupsAsync(List<int> disciplinesIds, List<int> groupsIds);
+        Task<Mark?> GetMarkByIdAsync(int id);
     }
 
     public class MarkRepository(IDbContextFactory<AppDbContext> contextFactory) : IMarkRepository
@@ -107,6 +108,12 @@ namespace BgituGrades.Repositories
                 .Where(m => disciplineIds.Contains(m.Work.DisciplineId) && groupIds.Contains(m.Student.GroupId))
                 .ToListAsync();
             return entities;
+        }
+
+        public async Task<Mark?> GetMarkByIdAsync(int id)
+        {
+            using var context = await contextFactory.CreateDbContextAsync();
+            return await context.Marks.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id);
         }
     }
 

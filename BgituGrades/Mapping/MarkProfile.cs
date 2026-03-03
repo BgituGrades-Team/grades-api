@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BgituGrades.DTO;
 using BgituGrades.Entities;
 using BgituGrades.Models.Mark;
 
@@ -13,6 +14,8 @@ namespace BgituGrades.Mapping
             CreateMap<UpdateMarkRequest, MarkResponse>();
             CreateMap<UpdateMarkGradeRequest, Mark>();
             CreateMap<Mark, MarkResponse>();
+            CreateMap<Mark, MarkDTO>();
+            CreateMap<MarkDTO, Mark>();
         }
     }
 }

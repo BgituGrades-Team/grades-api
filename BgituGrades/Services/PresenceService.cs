@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BgituGrades.DTO;
 using BgituGrades.Entities;
 using BgituGrades.Models.Class;
 using BgituGrades.Models.Presence;
@@ -14,7 +15,8 @@ namespace BgituGrades.Services
         Task<bool> DeletePresenceByStudentAndDateAsync(DeletePresenceByStudentAndDateRequest request);
         Task<bool> UpdatePresenceAsync(UpdatePresenceRequest request);
         Task<FullGradePresenceResponse> UpdateOrCreatePresenceAsync(UpdatePresenceGradeRequest request);
-
+        Task<IEnumerable<PresenceDTO>> GetAllPresencesDtoAsync();
+        Task<PresenceDTO?> GetPresenceDtoByIdAsync(int id);
     }
     public class PresenceService(IPresenceRepository presenceRepository, IMapper mapper) : IPresenceService
     {
@@ -76,6 +78,18 @@ namespace BgituGrades.Services
                 }]
             };
             return response;
+        }
+
+        public async Task<IEnumerable<PresenceDTO>> GetAllPresencesDtoAsync()
+        {
+            var entities = await _presenceRepository.GetAllPresencesAsync();
+            return _mapper.Map<IEnumerable<PresenceDTO>>(entities);
+        }
+
+        public async Task<PresenceDTO?> GetPresenceDtoByIdAsync(int id)
+        {
+            var entity = await _presenceRepository.GetPresenceByIdAsync(id);
+            return entity == null ? null : _mapper.Map<PresenceDTO>(entity);
         }
     }
 

@@ -16,6 +16,7 @@ namespace BgituGrades.Repositories
         Task<bool> UpdatePresenceAsync(Presence entity);
         Task DeleteAllAsync();
         Task AddNewStudentPresences(int studentId, Dictionary<int, IEnumerable<DateOnly>> disciplines);
+        Task<Presence?> GetPresenceByIdAsync(int id);
     }
 
     public class PresenceRepository(AppDbContext dbContext) : IPresenceRepository
@@ -105,6 +106,11 @@ namespace BgituGrades.Repositories
                 }
             }
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<Presence?> GetPresenceByIdAsync(int id)
+        {
+            return await _dbContext.Presences.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
         }
     }
 }

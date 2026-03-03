@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
+using BgituGrades.DTO;
 using BgituGrades.Entities;
 using BgituGrades.Models.Group;
-using BgituGrades.DTO;
 
 namespace BgituGrades.Mapping
 {
@@ -12,6 +12,8 @@ namespace BgituGrades.Mapping
             CreateMap<CreateGroupRequest, Group>();
             CreateMap<UpdateGroupRequest, Group>();
             CreateMap<Group, GroupResponse>();
+            CreateMap<Group, GroupDTO>();
+            CreateMap<GroupDTO, Group>();
         }
     }
 }

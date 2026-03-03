@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BgituGrades.DTO;
 using BgituGrades.Entities;
 using BgituGrades.Models.Work;
 
@@ -11,6 +12,8 @@ namespace BgituGrades.Mapping
             CreateMap<CreateWorkRequest, Work>();
             CreateMap<UpdateWorkRequest, Work>();
             CreateMap<Work, WorkResponse>();
+            CreateMap<Work, WorkDTO>();
+            CreateMap<WorkDTO, Work>();
         }
     }
 }

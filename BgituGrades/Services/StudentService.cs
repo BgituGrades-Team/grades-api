@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BgituGrades.DTO;
 using BgituGrades.Entities;
 using BgituGrades.Models.Student;
 using BgituGrades.Repositories;
@@ -13,6 +14,9 @@ namespace BgituGrades.Services
         Task<StudentResponse?> GetStudentByIdAsync(int id);
         Task<bool> UpdateStudentAsync(UpdateStudentRequest request);
         Task<bool> DeleteStudentAsync(int id);
+        Task<IEnumerable<StudentDTO>> GetAllStudentsDtoAsync();
+        Task<IEnumerable<StudentDTO>> GetStudentsDtoByGroupAsync(int groupId);
+        Task<StudentDTO?> GetStudentDtoByIdAsync(int id);
     }
     public class StudentService(IStudentRepository studentRepository, IPresenceRepository presenceRepository,
         IClassService classService, IDisciplineRepository disciplineRepository, IMapper mapper) : IStudentService
@@ -65,6 +69,24 @@ namespace BgituGrades.Services
         {
             var entity = _mapper.Map<Student>(request);
             return await _studentRepository.UpdateStudentAsync(entity);
+        }
+
+        public async Task<IEnumerable<StudentDTO>> GetAllStudentsDtoAsync()
+        {
+            var entities = await _studentRepository.GetAllStudentsAsync();
+            return _mapper.Map<IEnumerable<StudentDTO>>(entities);
+        }
+
+        public async Task<IEnumerable<StudentDTO>> GetStudentsDtoByGroupAsync(int groupId)
+        {
+            var entities = await _studentRepository.GetStudentsByGroupAsync(groupId);
+            return _mapper.Map<IEnumerable<StudentDTO>>(entities);
+        }
+
+        public async Task<StudentDTO?> GetStudentDtoByIdAsync(int id)
+        {
+            var entity = await _studentRepository.GetByIdAsync(id);
+            return entity == null ? null : _mapper.Map<StudentDTO>(entity);
         }
     }
 

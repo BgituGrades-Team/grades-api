@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BgituGrades.DTO;
 using BgituGrades.Entities;
 using BgituGrades.Models.Class;
 using BgituGrades.Models.Mark;
@@ -15,6 +16,8 @@ namespace BgituGrades.Services
         Task<bool> UpdateMarkAsync(UpdateMarkRequest request);
         Task<bool> DeleteMarkByStudentAndWorkAsync(DeleteMarkByStudentAndWorkRequest request);
         Task<FullGradeMarkResponse> UpdateOrCreateMarkAsync(UpdateMarkGradeRequest request);
+        Task<IEnumerable<MarkDTO>> GetAllMarksDtoAsync();
+        Task<MarkDTO?> GetMarkDtoByIdAsync(int id);
     }
     public class MarkService(IMarkRepository markRepository, IMapper mapper) : IMarkService
     {
@@ -76,6 +79,18 @@ namespace BgituGrades.Services
                 }]
             };
             return response;
+        }
+
+        public async Task<IEnumerable<MarkDTO>> GetAllMarksDtoAsync()
+        {
+            var entities = await _markRepository.GetAllMarksAsync();
+            return _mapper.Map<IEnumerable<MarkDTO>>(entities);
+        }
+
+        public async Task<MarkDTO?> GetMarkDtoByIdAsync(int id)
+        {
+            var entity = await _markRepository.GetMarkByIdAsync(id);
+            return entity == null ? null : _mapper.Map<MarkDTO>(entity);
         }
     }
 }

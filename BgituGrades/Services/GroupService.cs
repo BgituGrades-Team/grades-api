@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BgituGrades.DTO;
 using BgituGrades.Entities;
 using BgituGrades.Models.Group;
 using BgituGrades.Repositories;
@@ -13,6 +14,9 @@ namespace BgituGrades.Services
         Task<GroupResponse?> GetGroupByIdAsync(int id);
         Task<bool> UpdateGroupAsync(UpdateGroupRequest request);
         Task<bool> DeleteGroupAsync(int id);
+        Task<IEnumerable<GroupDTO>> GetAllGroupsDtoAsync();
+        Task<IEnumerable<GroupDTO>> GetGroupsDtoByDisciplineAsync(int disciplineId);
+        Task<GroupDTO?> GetGroupDtoByIdAsync(int id);
     }
 
     public class GroupService(IGroupRepository groupRepository, IMapper mapper) : IGroupService
@@ -55,6 +59,24 @@ namespace BgituGrades.Services
         {
             var entity = _mapper.Map<Group>(request);
             return await _groupRepository.UpdateGroupAsync(entity);
+        }
+
+        public async Task<IEnumerable<GroupDTO>> GetAllGroupsDtoAsync()
+        {
+            var groups = await _groupRepository.GetAllAsync();
+            return _mapper.Map<IEnumerable<GroupDTO>>(groups);
+        }
+
+        public async Task<IEnumerable<GroupDTO>> GetGroupsDtoByDisciplineAsync(int disciplineId)
+        {
+            var entities = await _groupRepository.GetGroupsByDisciplineAsync(disciplineId);
+            return _mapper.Map<IEnumerable<GroupDTO>>(entities);
+        }
+
+        public async Task<GroupDTO?> GetGroupDtoByIdAsync(int id)
+        {
+            var entity = await _groupRepository.GetByIdAsync(id);
+            return entity == null ? null : _mapper.Map<GroupDTO>(entity);
         }
     }
 

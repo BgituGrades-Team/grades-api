@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BgituGrades.DTO;
 using BgituGrades.Entities;
 using BgituGrades.Models.Transfer;
 using BgituGrades.Repositories;
@@ -12,6 +13,8 @@ namespace BgituGrades.Services
         Task<TransferResponse?> GetTransferByIdAsync(int id);
         Task<bool> UpdateTransferAsync(UpdateTransferRequest request);
         Task<bool> DeleteTransferAsync(int id);
+        Task<IEnumerable<TransferDTO>> GetAllTransfersDtoAsync();
+        Task<TransferDTO?> GetTransferDtoByIdAsync(int id);
     }
     public class TransferService(ITransferRepository transferRepository, IMapper mapper) : ITransferService
     {
@@ -46,6 +49,18 @@ namespace BgituGrades.Services
         {
             var entity = _mapper.Map<Transfer>(request);
             return await _transferRepository.UpdateTransferAsync(entity);
+        }
+
+        public async Task<IEnumerable<TransferDTO>> GetAllTransfersDtoAsync()
+        {
+            var entities = await _transferRepository.GetAllTransfersAsync();
+            return _mapper.Map<IEnumerable<TransferDTO>>(entities);
+        }
+
+        public async Task<TransferDTO?> GetTransferDtoByIdAsync(int id)
+        {
+            var entity = await _transferRepository.GetByIdAsync(id);
+            return entity == null ? null : _mapper.Map<TransferDTO>(entity);
         }
     }
 }

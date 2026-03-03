@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BgituGrades.DTO;
 using BgituGrades.Entities;
 using BgituGrades.Models.Class;
 using BgituGrades.Repositories;
@@ -15,6 +16,8 @@ namespace BgituGrades.Services
         Task<bool> DeleteClassAsync(int id);
         Task<IEnumerable<ClassDateResponse>> GenerateScheduleDatesAsync(int groupId, int disciplineId,
             DateOnly? startDateOverride = null, DateOnly? endDateOverride = null);
+        Task<IEnumerable<ClassDTO>> GetAllClassesDtoAsync();
+        Task<ClassDTO?> GetClassDtoByIdAsync(int id);
     }
     public class ClassService(IClassRepository classRepository, IGroupRepository groupRepository,
         IStudentRepository studentRepository, IWorkRepository workRepository, IMapper mapper) : IClassService
@@ -121,6 +124,18 @@ namespace BgituGrades.Services
 
             var students = await _studentRepository.GetMarksGrade(works, request.GroupId, request.DisciplineId);
             return students;
+        }
+
+        public async Task<IEnumerable<ClassDTO>> GetAllClassesDtoAsync()
+        {
+            var entities = await _classRepository.GetAllClassesAsync();
+            return _mapper.Map<IEnumerable<ClassDTO>>(entities);
+        }
+
+        public async Task<ClassDTO?> GetClassDtoByIdAsync(int id)
+        {
+            var entity = await _classRepository.GetByIdAsync(id);
+            return entity == null ? null : _mapper.Map<ClassDTO>(entity);
         }
     }
 }

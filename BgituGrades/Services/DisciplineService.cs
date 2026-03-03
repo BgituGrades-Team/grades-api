@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BgituGrades.DTO;
 using BgituGrades.Entities;
 using BgituGrades.Models.Discipline;
 using BgituGrades.Repositories;
@@ -13,6 +14,9 @@ namespace BgituGrades.Services
         Task<IEnumerable<DisciplineResponse>?> GetDisciplineByGroupIdAsync(int groupId);
         Task<bool> UpdateDisciplineAsync(UpdateDisciplineRequest request);
         Task<bool> DeleteDisciplineAsync(int id);
+        Task<IEnumerable<DisciplineDTO>> GetAllDisciplinesDtoAsync();
+        Task<IEnumerable<DisciplineDTO>?> GetDisciplinesDtoByGroupIdAsync(int groupId);
+        Task<DisciplineDTO?> GetDisciplineDtoByIdAsync(int id);
     }
     public class DisciplineService(IDisciplineRepository disciplineRepository, IMapper mapper) : IDisciplineService
     {
@@ -53,6 +57,24 @@ namespace BgituGrades.Services
         {
             var entity = _mapper.Map<Discipline>(request);
             return await _disciplineRepository.UpdateDisciplineAsync(entity);
+        }
+
+        public async Task<IEnumerable<DisciplineDTO>> GetAllDisciplinesDtoAsync()
+        {
+            var entities = await _disciplineRepository.GetAllAsync();
+            return _mapper.Map<IEnumerable<DisciplineDTO>>(entities);
+        }
+
+        public async Task<IEnumerable<DisciplineDTO>?> GetDisciplinesDtoByGroupIdAsync(int groupId)
+        {
+            var entities = await _disciplineRepository.GetByGroupIdAsync(groupId);
+            return entities == null ? null : _mapper.Map<List<DisciplineDTO>>(entities);
+        }
+
+        public async Task<DisciplineDTO?> GetDisciplineDtoByIdAsync(int id)
+        {
+            var entity = await _disciplineRepository.GetByIdAsync(id);
+            return entity == null ? null : _mapper.Map<DisciplineDTO>(entity);
         }
     }
 
