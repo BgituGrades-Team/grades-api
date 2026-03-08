@@ -2,6 +2,7 @@
 using BgituGrades.DTO;
 using BgituGrades.Entities;
 using BgituGrades.Models.Class;
+using BgituGrades.Models.Transfer;
 using BgituGrades.Repositories;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
@@ -21,17 +22,17 @@ namespace BgituGrades.Services
         Task<IEnumerable<ClassDTO>> GetAllClassesDtoAsync();
         Task<ClassDTO?> GetClassDtoByIdAsync(int id);
     }
-    public class ClassService(IClassRepository classRepository, IGroupRepository groupRepository,
+    public class ClassService(IClassRepository classRepository, IGroupRepository groupRepository, ITransferService transferService,
         IStudentRepository studentRepository, IWorkRepository workRepository, IMapper mapper, IDistributedCache cache) : IClassService
     {
         private readonly IClassRepository _classRepository = classRepository;
         private readonly IGroupRepository _groupRepository = groupRepository;
         private readonly IStudentRepository _studentRepository = studentRepository;
         private readonly IWorkRepository _workRepository = workRepository;
+        private readonly ITransferService _transferService = transferService;
         private readonly IMapper _mapper = mapper;
         private readonly IDistributedCache _cache = cache;
         private const string CacheKeyPrefix = "class:schedule:";
-        private const string CacheKeyAllClasses = "class:all:classes";
 
         public async Task<ClassResponse> CreateClassAsync(CreateClassRequest request)
         {
@@ -65,8 +66,10 @@ namespace BgituGrades.Services
             var group = await _groupRepository.GetByIdAsync(groupId);
             if (group == null) return [];
 
-            var classes = await _classRepository.GetClassesByDisciplineAndGroupAsync(
-                disciplineId, groupId);
+            var classes = await _classRepository.GetClassesByDisciplineAndGroupAsync(disciplineId, groupId);
+            var transfers = await _transferService.GetTransfersByGroupAndDisciplineAsync(groupId, disciplineId);
+
+
 
             var startDate = startDateOverride ?? group.StudyStartDate;
             var endDate = endDateOverride ?? group.StudyEndDate;
@@ -82,7 +85,10 @@ namespace BgituGrades.Services
      
             var week1Start = firstMonday.AddDays(-7 * (firstWeekStart - 1));
 
-     
+            var transferMap = transfers
+                .ToDictionary(t => t.OriginalDate, t => t.NewDate);
+
+
             if (week1Start > endDate.AddDays(7))
                 return dates;
 
@@ -94,13 +100,17 @@ namespace BgituGrades.Services
                 {
                     var lessonDate = currentWeekStart
                         .AddDays(_class.WeekDay - 1)  
-                        .AddDays(7 * (_class.Weeknumber - 1)); 
+                        .AddDays(7 * (_class.Weeknumber - 1));
+
+                    var actualDate = transferMap.TryGetValue(lessonDate, out var newDate)
+                        ? newDate
+                        : lessonDate;
 
                     if (lessonDate >= startDate && lessonDate <= endDate)
                     {
                         dates.Add(new ClassDateResponse
                         {
-                            Date = lessonDate,
+                            Date = actualDate,
                             ClassType = _class.Type,
                             StartTime = _class.StartTime,
                             Id = _class.Id

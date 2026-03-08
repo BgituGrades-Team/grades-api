@@ -12,6 +12,7 @@ namespace BgituGrades.Repositories
         Task<bool> UpdateTransferAsync(Transfer entity);
         Task<bool> DeleteTransferAsync(int id);
         Task DeleteAllAsync();
+        Task<IEnumerable<Transfer>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId);
     }
 
     public class TransferRepository(AppDbContext dbContext) : ITransferRepository
@@ -57,6 +58,16 @@ namespace BgituGrades.Repositories
         public async Task DeleteAllAsync()
         {
             await _dbContext.Transfers.ExecuteDeleteAsync();
+        }
+
+        public async Task<IEnumerable<Transfer>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId)
+        {
+            var entities =  await _dbContext.Transfers
+                .Where(t => t.DisciplineId == disciplineId &&
+                            t.GroupId == groupId)
+                .AsNoTracking()
+                .ToListAsync();
+            return entities;
         }
     }
 

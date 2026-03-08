@@ -11,6 +11,7 @@ namespace BgituGrades.Services
         Task<IEnumerable<TransferResponse>> GetAllTransfersAsync();
         Task<TransferResponse> CreateTransferAsync(CreateTransferRequest request);
         Task<TransferResponse?> GetTransferByIdAsync(int id);
+        Task<IEnumerable<TransferResponse>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId);
         Task<bool> UpdateTransferAsync(UpdateTransferRequest request);
         Task<bool> DeleteTransferAsync(int id);
         Task<IEnumerable<TransferDTO>> GetAllTransfersDtoAsync();
@@ -61,6 +62,13 @@ namespace BgituGrades.Services
         {
             var entity = await _transferRepository.GetByIdAsync(id);
             return entity == null ? null : _mapper.Map<TransferDTO>(entity);
+        }
+
+        public async Task<IEnumerable<TransferResponse>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId)
+        {
+            var entities = await _transferRepository.GetTransfersByGroupAndDisciplineAsync(groupId, disciplineId);
+            var response = _mapper.Map<IEnumerable<TransferResponse>>(entities);
+            return response;
         }
     }
 }

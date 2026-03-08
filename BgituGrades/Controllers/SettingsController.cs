@@ -1,4 +1,5 @@
-﻿using BgituGrades.Models.Setting;
+﻿using Asp.Versioning;
+using BgituGrades.Models.Setting;
 using BgituGrades.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,7 @@ namespace BgituGrades.Controllers
         private readonly ISettingService _settingService = settingService;
 
         [HttpGet]
+        [ApiVersion("2.0")]
         public async Task<ActionResult<SettingResponse>> GetSettings()
         {
             var settings = await _settingService.GetSettingsAsync();
@@ -23,6 +25,7 @@ namespace BgituGrades.Controllers
 
         
         [HttpPut]
+        [ApiVersion("2.0")]
         public async Task<IActionResult> UpdateSettings([FromBody] UpdateSettingRequest request)
         {
             await _settingService.UpdateSettingAsync(request);
