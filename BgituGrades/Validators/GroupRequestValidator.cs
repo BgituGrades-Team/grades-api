@@ -3,14 +3,6 @@ using BgituGrades.Models.Group;
 
 namespace BgituGrades.Validators
 {
-    /// <summary>
-    /// Валидатор для создания группы.
-    /// 
-    /// Правила валидации:
-    /// - Имя: обязательное поле, максимум 255 символов
-    /// - StudyStartDate: должна быть раньше StudyEndDate
-    /// - StartWeekNumber: должен быть от 1 до 52
-    /// </summary>
     public class CreateGroupRequestValidator : AbstractValidator<CreateGroupRequest>
     {
         public CreateGroupRequestValidator()
@@ -37,10 +29,6 @@ namespace BgituGrades.Validators
                     .WithErrorCode("WEEK_NUMBER_OUT_OF_RANGE");
         }
     }
-
-    /// <summary>
-    /// Валидатор для обновления группы.
-    /// </summary>
     public class UpdateGroupRequestValidator : AbstractValidator<UpdateGroupRequest>
     {
         public UpdateGroupRequestValidator()
@@ -73,9 +61,6 @@ namespace BgituGrades.Validators
         }
     }
 
-    /// <summary>
-    /// Валидатор для получения групп по дисциплине.
-    /// </summary>
     public class GetGroupsByDisciplineRequestValidator : AbstractValidator<GetGroupsByDisciplineRequest>
     {
         public GetGroupsByDisciplineRequestValidator()

@@ -3,13 +3,6 @@ using BgituGrades.Models.Student;
 
 namespace BgituGrades.Validators
 {
-    /// <summary>
-    /// Валидатор для создания студента.
-    /// 
-    /// Правила валидации:
-    /// - Имя: обязательное поле, максимум 255 символов
-    /// - GroupId: должен быть больше 0
-    /// </summary>
     public class CreateStudentRequestValidator : AbstractValidator<CreateStudentRequest>
     {
         public CreateStudentRequestValidator()
@@ -26,17 +19,13 @@ namespace BgituGrades.Validators
                 .GreaterThan(0)
                     .WithMessage("GroupId должен быть больше 0")
                     .WithErrorCode("INVALID_GROUP_ID");
+            RuleFor(x => x.OfficialId)
+                .GreaterThan(0)
+                    .WithMessage("OfficialId должен быть больше 0")
+                    .WithErrorCode("INVALID_OFFICIAL_ID");
         }
     }
 
-    /// <summary>
-    /// Валидатор для обновления студента.
-    /// 
-    /// Правила валидации:
-    /// - Id: должен быть больше 0
-    /// - Имя: обязательное поле, максимум 255 символов
-    /// - GroupId: должен быть больше 0
-    /// </summary>
     public class UpdateStudentRequestValidator : AbstractValidator<UpdateStudentRequest>
     {
         public UpdateStudentRequestValidator()
@@ -60,13 +49,6 @@ namespace BgituGrades.Validators
                     .WithErrorCode("INVALID_GROUP_ID");
         }
     }
-
-    /// <summary>
-    /// Валидатор для получения студентов группы.
-    /// 
-    /// Правила валидации:
-    /// - GroupId: должен быть больше 0
-    /// </summary>
     public class GetStudentsByGroupRequestValidator : AbstractValidator<GetStudentsByGroupRequest>
     {
         public GetStudentsByGroupRequestValidator()

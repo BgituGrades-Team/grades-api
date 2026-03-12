@@ -18,6 +18,8 @@ namespace BgituGrades.Models.Student
         public string? Name { get; set; }
         [Required]
         public int GroupId { get; set; }
+        [Required]
+        public int OfficialId { get; set; }
     }
 
     public class UpdateStudentRequest

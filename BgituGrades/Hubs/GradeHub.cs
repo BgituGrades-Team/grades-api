@@ -51,10 +51,8 @@ namespace BgituGrades.Hubs
         [SubscribeOperation(typeof(FullGradePresenceResponse), Summary = "Событие: Посещаемость обновлена (рассылается всем)", OperationId = "UpdatedPresence")]
         public async Task UpdatePresenceGrade(UpdatePresenceGradeRequest request)
         {
-
             var response = await _presenceService.UpdateOrCreatePresenceAsync(request);
             await Clients.All.SendAsync("UpdatedPresence", response);
-            
         }
     }
 }
