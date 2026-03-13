@@ -34,16 +34,12 @@ namespace BgituGrades.Services
 
             var disciplines = await _disciplineRepository.GetByGroupIdAsync(request.GroupId);
 
-            var schedulesTasks = disciplines.Select(d => 
-                _classService.GenerateScheduleDatesAsync(request.GroupId, d.Id)
-                    .ContinueWith(task => new { DisciplineId = d.Id, Classes = task.Result })
-            );
-
-            var allSchedules = await Task.WhenAll(schedulesTasks);
-            var disciplinesDict = allSchedules.ToDictionary(
-                x => x.DisciplineId, 
-                x => x.Classes.Select(c => c.Date).AsEnumerable()
-            );
+            var disciplinesDict = new Dictionary<int, IEnumerable<DateOnly>>();
+            foreach (var d in disciplines)
+            {
+                var classes = await _classService.GenerateScheduleDatesAsync(request.GroupId, d.Id);
+                disciplinesDict[d.Id] = classes.Select(c => c.Date);
+            }
 
             await _presenceRepository.AddNewStudentPresences(createdEntity.Id, disciplinesDict);
             return _mapper.Map<StudentResponse>(createdEntity);
