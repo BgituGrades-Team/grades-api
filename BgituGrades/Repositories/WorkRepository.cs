@@ -51,7 +51,7 @@ namespace BgituGrades.Repositories
         public async Task<IEnumerable<Work>> GetByDisciplineAndGroupAsync(int disciplineId, int groupId)
         {
             var entities = await _dbContext.Works
-                .Where(w => w.DisciplineId == disciplineId)
+                .Where(w => w.DisciplineId == disciplineId && w.GroupId == groupId)
                 .AsNoTracking()
                 .ToListAsync();
 

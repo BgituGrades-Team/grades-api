@@ -1,10 +1,12 @@
-﻿using BgituGrades.Entities;
+﻿using BgituGrades.DTO;
+using BgituGrades.Entities;
 using BgituGrades.Hubs;
 using BgituGrades.Models.Report;
 using BgituGrades.Repositories;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Distributed;
 using OfficeOpenXml;
+using System.Globalization;
 
 namespace BgituGrades.Services
 {
@@ -80,23 +82,23 @@ namespace BgituGrades.Services
                 await _hubContext.Clients.Group(reportId.ToString())
                     .SendAsync("ReportProgress", reportId.ToString(), 40, "Генерация Excel файла...");
 
-                byte[] excelBytes;
+                TablePreview result;
                 if (request.ReportType == ReportType.MARK)
                 {
-                    excelBytes = await GenerateMarksExcelAsync(markRepo, groups, disciplines, students);
+                    result = await GenerateMarksExcelAsync(markRepo, groups, disciplines, students);
                 }
                 else
                 {
-                    excelBytes = await GeneratePresenceExcelAsync(presenceRepo, groups, disciplines, students);
+                    result = await GeneratePresenceExcelAsync(presenceRepo, groups, disciplines, students);
                 }
 
                 await _hubContext.Clients.Group(reportId.ToString())
                     .SendAsync("ReportProgress", reportId.ToString(), 80, "Сохранение...");
 
-                await _cache.SetAsync($"report_{reportId}", excelBytes, cacheOptions);
+                await _cache.SetAsync($"report_{reportId}", result.ExcelBytes, cacheOptions);
 
                 await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("ReportReady", reportId.ToString(), $"https://maxim.pamagiti.site/api/report/{reportId}/download");
+                    .SendAsync("ReportReady", reportId.ToString(), $"https://maxim.pamagiti.site/api/report/{reportId}/download", result.Preview);
             }
             catch (Exception ex)
             {
@@ -105,7 +107,7 @@ namespace BgituGrades.Services
             }
         }
 
-        private static async Task<byte[]> GenerateMarksExcelAsync(IMarkRepository _markRepository, IEnumerable<Group> groups, IEnumerable<Discipline> disciplines, IEnumerable<Student> students)
+        private static async Task<TablePreview> GenerateMarksExcelAsync(IMarkRepository _markRepository, IEnumerable<Group> groups, IEnumerable<Discipline> disciplines, IEnumerable<Student> students)
         {
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Отчёт успеваемости");
@@ -207,12 +209,56 @@ namespace BgituGrades.Services
             fullRange.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
             worksheet.View.FreezePanes(2, 2);
 
+            var preview = new ReportPreviewDto();
+            preview.Headers.Add("Студент");
+
+            var allDisciplineNames = disciplinesByGroup
+                .SelectMany(kvp => kvp.Value)
+                .DistinctBy(d => d.Id)
+                .OrderBy(d => d.Name)
+                .Select(d => d.Name);
+            preview.Headers.AddRange(allDisciplineNames);
+
+            foreach (var group in sortedGroups)
+            {
+                preview.Rows.Add(new PreviewRow
+                {
+                    IsGroupHeader = true,
+                    Cells = new List<string> { group.Name }
+                });
+
+                var groupDisciplines = disciplinesByGroup[group.Id];
+                var groupStudents = students
+                    .Where(s => s.GroupId == group.Id)
+                    .OrderBy(s => s.Name);
+
+                foreach (var student in groupStudents)
+                {
+                    var cells = new List<string> { student.Name };
+                    cells.AddRange(groupDisciplines.Select(d =>
+                        markDict.TryGetValue((student.Id, d.Id), out var mark)
+                            ? mark.ToString("0.0", CultureInfo.InvariantCulture)
+                            : "0"
+                    ));
+
+                    preview.Rows.Add(new PreviewRow
+                    {
+                        IsGroupHeader = false,
+                        Cells = cells
+                    });
+                }
+            }
+
             using var stream = new MemoryStream();
             await package.SaveAsAsync(stream);
-            return stream.ToArray();
+            return new TablePreview
+            {
+                ExcelBytes = stream.ToArray(),
+                Preview = preview
+            };
         }
 
-        private static async Task<byte[]> GeneratePresenceExcelAsync(IPresenceRepository _presenceRepository, IEnumerable<Group> groups, IEnumerable<Discipline> disciplines, IEnumerable<Student> students)
+        private static async Task<TablePreview> GeneratePresenceExcelAsync(IPresenceRepository _presenceRepository, IEnumerable<Group> groups, IEnumerable<Discipline> disciplines, IEnumerable<Student> students)
         {
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Отчёт посещаемости");
@@ -306,9 +352,53 @@ namespace BgituGrades.Services
             borderRange.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
             worksheet.View.FreezePanes(2, 2);
 
+            var preview = new ReportPreviewDto();
+            preview.Headers.Add("Группы");
+
+            var allDisciplineNames = disciplinesByGroup
+                .SelectMany(kvp => kvp.Value)
+                .DistinctBy(d => d.Id)
+                .OrderBy(d => d.Name)
+                .Select(d => d.Name);
+            preview.Headers.AddRange(allDisciplineNames);
+
+            foreach (var group in sortedGroups)
+            {
+                preview.Rows.Add(new PreviewRow
+                {
+                    IsGroupHeader = true,
+                    Cells = new List<string> { group.Name }
+                });
+
+                var groupDisciplines = disciplinesByGroup[group.Id];
+                var groupStudents = students
+                    .Where(s => s.GroupId == group.Id)
+                    .OrderBy(s => s.Name);
+
+                foreach (var student in groupStudents)
+                {
+                    var cells = new List<string> { student.Name };
+                    cells.AddRange(groupDisciplines.Select(d =>
+                        presenceDict.TryGetValue((student.Id, d.Id), out var stats)
+                            ? $"{stats.Present}/{stats.Total}"
+                            : "0/0"
+                    ));
+
+                    preview.Rows.Add(new PreviewRow
+                    {
+                        IsGroupHeader = false,
+                        Cells = cells
+                    });
+                }
+            }
+
             using var stream = new MemoryStream();
             await package.SaveAsAsync(stream);
-            return stream.ToArray();
+            return new TablePreview
+            {
+                ExcelBytes = stream.ToArray(),
+                Preview = preview
+            };
         }
     }
 }

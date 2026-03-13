@@ -8,5 +8,6 @@
         public string? Description { get; set; }
         public string? Link { get; set; }
         public int DisciplineId { get; set; }
+        public int GroupId { get; set; }
     }
 }

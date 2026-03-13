@@ -14,6 +14,8 @@ namespace BgituGrades.Models.Work
         public string? Link { get; set; }
         [Required]
         public int DisciplineId { get; set; }
+        [Required]
+        public int GroupId { get; set; }
     }
 
     public class UpdateWorkRequest
@@ -24,10 +26,14 @@ namespace BgituGrades.Models.Work
         public string? Name { get; set; }
         [Required]
         public DateOnly IssuedDate { get; set; }
+        [Required]
         public string Description { get; set; }
+        [Required]
         public string Link { get; set; }
         [Required]
         public int DisciplineId { get; set; }
+        [Required]
+        public int GroupId { get; set; }
     }
 
     public class DeleteWorkRequest

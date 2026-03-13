@@ -1,4 +1,6 @@
-﻿namespace BgituGrades.Models.Work
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace BgituGrades.Models.Work
 {
     public class WorkResponse
     {
@@ -8,5 +10,6 @@
         public string? Description { get; set; }
         public string? Link { get; set; }
         public int DisciplineId { get; set; }
+        public int GroupId { get; set; }
     }
 }
