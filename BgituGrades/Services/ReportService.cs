@@ -27,7 +27,7 @@ namespace BgituGrades.Services
         public async Task<Guid> GenerateReportAsync(ReportRequest request, string connectionId, CancellationToken cancellationToken)
         {
             var reportId = Guid.NewGuid();
-            await _hubContext.Groups.AddToGroupAsync(connectionId, reportId.ToString(), cancellationToken: cancellationToken);
+            await _hubContext.Groups.AddToGroupAsync(connectionId, reportId.ToString());
 
             _ = Task.Run(async () => await GenerateWithProgress(reportId, request, cancellationToken: cancellationToken), cancellationToken: cancellationToken);
 
@@ -50,7 +50,7 @@ namespace BgituGrades.Services
             try
             {
                 await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("ReportProgress", reportId.ToString(), 10, "Загрузка данных...", cancellationToken: cancellationToken);
+                    .SendAsync("ReportProgress", reportId.ToString(), 10, "Загрузка данных...");
                 IEnumerable<Group> groups;
                 if (request.GroupIds != null)
                 {
@@ -80,7 +80,7 @@ namespace BgituGrades.Services
                 }
 
                 await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("ReportProgress", reportId.ToString(), 40, "Генерация Excel файла...", cancellationToken: cancellationToken);
+                    .SendAsync("ReportProgress", reportId.ToString(), 40, "Генерация Excel файла...");
 
                 TablePreview result;
                 if (request.ReportType == ReportType.MARK)
@@ -93,17 +93,17 @@ namespace BgituGrades.Services
                 }
 
                 await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("ReportProgress", reportId.ToString(), 80, "Сохранение...", cancellationToken: cancellationToken);
+                    .SendAsync("ReportProgress", reportId.ToString(), 80, "Сохранение...");
 
                 await _cache.SetAsync($"report_{reportId}", result.ExcelBytes, cacheOptions);
 
                 await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("ReportReady", reportId.ToString(), $"https://maxim.pamagiti.site/api/report/{reportId}/download", result.Preview, cancellationToken: cancellationToken);
+                    .SendAsync("ReportReady", reportId.ToString(), $"https://maxim.pamagiti.site/api/report/{reportId}/download", result.Preview);
             }
             catch (Exception ex)
             {
                 await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("Error", ex.Message, ex.StackTrace, cancellationToken: cancellationToken);
+                    .SendAsync("Error", ex.Message, ex.StackTrace);
             }
         }
 
