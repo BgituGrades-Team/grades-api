@@ -1,4 +1,6 @@
-﻿namespace BgituGrades.Models.Report
+﻿using BgituGrades.DTO;
+
+namespace BgituGrades.Models.Report
 {
     public class ProgressReportResponse
     {
@@ -11,5 +13,6 @@
     {
         public string ReportId { get; set; }
         public string Link { get; set; }
+        public ReportPreviewDto Preview { get; set; }
     }
 }

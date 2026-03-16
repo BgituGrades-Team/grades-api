@@ -7,7 +7,6 @@ using BgituGrades.Features;
 using BgituGrades.Hubs;
 using BgituGrades.Services;
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using OfficeOpenXml;
@@ -48,7 +47,6 @@ namespace BgituGrades
                 .AddRepositories()
                 .AddApplicationServices();
 
-            builder.Services.AddFluentValidationAutoValidation();
             builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
             builder.Services.AddSignalR()
