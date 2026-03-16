@@ -6,23 +6,23 @@ namespace BgituGrades.Repositories
 {
     public interface ISettingRepository
     {
-        Task<Setting?> GetCalendarUrlAsync();
-        Task UpdateSettingAsync(Setting setting);
+        Task<Setting?> GetCalendarUrlAsync(CancellationToken cancellationToken);
+        Task UpdateSettingAsync(Setting setting, CancellationToken cancellationToken);
     }
     public class SettingRepository(AppDbContext dbContext) : ISettingRepository
     {
         private readonly AppDbContext _dbContext = dbContext;
-        public async Task<Setting?> GetCalendarUrlAsync()
+        public async Task<Setting?> GetCalendarUrlAsync(CancellationToken cancellationToken)
         {
             var url = await _dbContext.Settings
                 .AsNoTracking()
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken: cancellationToken);
             return url;
         }
 
-        public async Task UpdateSettingAsync(Setting setting)
+        public async Task UpdateSettingAsync(Setting setting, CancellationToken cancellationToken)
         {
-            var existing = await _dbContext.Settings.FirstOrDefaultAsync();
+            var existing = await _dbContext.Settings.FirstOrDefaultAsync(cancellationToken: cancellationToken);
 
             if (existing is null)
                 _dbContext.Settings.Add(setting);
@@ -31,7 +31,7 @@ namespace BgituGrades.Repositories
                 existing.CalendarUrl = setting.CalendarUrl;
             }
 
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
         }
     }
 }

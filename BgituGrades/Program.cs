@@ -130,9 +130,9 @@ namespace BgituGrades
                 }
             });
 
-            builder.Services.AddMemoryCache();
-
             var app = builder.Build();
+
+            var tokenSource = new CancellationTokenSource();
 
             using (var scope = app.Services.CreateScope())
             {
@@ -143,11 +143,11 @@ namespace BgituGrades
                     await dbContext.Database.MigrateAsync();
 
                     var keyService = services.GetRequiredService<IKeyService>();
-                    var existingKeys = await keyService.GetKeysAsync();
+                    var existingKeys = await keyService.GetKeysAsync(cancellationToken: tokenSource.Token);
 
                     if (!existingKeys.Any())
                     {
-                        var key = await keyService.GenerateKeyAsync(Role.ADMIN);
+                        var key = await keyService.GenerateKeyAsync(Role.ADMIN, cancellationToken: tokenSource.Token);
                         Console.WriteLine($"##################################");
                         Console.WriteLine($"### INITIAL KEY: {key.Key} ###");
                         Console.WriteLine($"##################################");
@@ -163,21 +163,26 @@ namespace BgituGrades
 
             var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
 
-            app.UseSwagger();
-            app.UseSwaggerUI(options =>
+            if (app.Environment.IsDevelopment())
             {
-                foreach (var description in provider.ApiVersionDescriptions)
+                app.UseSwagger();
+                app.UseSwaggerUI(options =>
                 {
-                    options.SwaggerEndpoint(
-                        $"/swagger/{description.GroupName}/swagger.json",
-                        $"BGITU.GRADES API {description.GroupName} {(description.IsDeprecated ? "(deprecated)" : "")}"
-                    );
-                }
+                    foreach (var description in provider.ApiVersionDescriptions)
+                    {
+                        options.SwaggerEndpoint(
+                            $"/swagger/{description.GroupName}/swagger.json",
+                            $"BGITU.GRADES API {description.GroupName} {(description.IsDeprecated ? "(deprecated)" : "")}"
+                        );
+                    }
 
-                options.RoutePrefix = "";
-            });
+                    options.RoutePrefix = "";
+                });
 
-            app.MapAsyncApiDocuments();
+                app.MapAsyncApiDocuments();
+            }
+
+            
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseCors();

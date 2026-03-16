@@ -19,40 +19,40 @@ namespace BgituGrades.Hubs
         [Authorize(Policy = "ViewOnly")]
         [PublishOperation(typeof(GetClassDateRequest), Summary = "Запросить оценки по работам", OperationId = nameof(GetMarkGrade))]
         [SubscribeOperation(typeof(IEnumerable<FullGradeMarkResponse>), Summary = "Событие: Получение списка оценок (ответ на GetMarkGrade)", OperationId = "ReceiveMarks")]
-        public async Task GetMarkGrade(GetClassDateRequest request)
+        public async Task GetMarkGrade(GetClassDateRequest request, CancellationToken cancellationToken)
         {
-            var marks = await _classService.GetMarksByWorksAsync(request);
-            await Clients.Caller.SendAsync("ReceiveMarks", marks);
+            var marks = await _classService.GetMarksByWorksAsync(request, cancellationToken);
+            await Clients.Caller.SendAsync("ReceiveMarks", marks, cancellationToken: cancellationToken);
         }
 
         [Channel("hubs/grade/GetPresenceGrade")]
         [Authorize(Policy = "ViewOnly")]
         [PublishOperation(typeof(GetClassDateRequest), Summary = "Запросить данные о посещаемости", OperationId = nameof(GetPresenceGrade))]
         [SubscribeOperation(typeof(IEnumerable<FullGradePresenceResponse>), Summary = "Событие: Получение данных о посещаемости (ответ на GetPresenceGrade)", OperationId = "ReceivePresences")]
-        public async Task GetPresenceGrade(GetClassDateRequest request)
+        public async Task GetPresenceGrade(GetClassDateRequest request, CancellationToken cancellationToken)
         {
-            var classDates = await _classService.GetPresenceByScheduleAsync(request);
-            await Clients.Caller.SendAsync("ReceivePresences", classDates);
+            var classDates = await _classService.GetPresenceByScheduleAsync(request, cancellationToken);
+            await Clients.Caller.SendAsync("ReceivePresences", classDates, cancellationToken: cancellationToken);
         }
 
         [Channel("hubs/grade/UpdateMarkGrade")]
         [Authorize(Policy = "Edit")]
         [PublishOperation(typeof(UpdateMarkGradeRequest), Summary = "Обновить или создать оценку", OperationId = nameof(UpdateMarkGrade))]
         [SubscribeOperation(typeof(FullGradeMarkResponse), Summary = "Событие: Оценка обновлена (рассылается всем)", OperationId = "UpdatedMark")]
-        public async Task UpdateMarkGrade(UpdateMarkGradeRequest request)
+        public async Task UpdateMarkGrade(UpdateMarkGradeRequest request, CancellationToken cancellationToken)
         {
-            var response = await _markService.UpdateOrCreateMarkAsync(request);
-            await Clients.All.SendAsync("UpdatedMark", response);
+            var response = await _markService.UpdateOrCreateMarkAsync(request, cancellationToken: cancellationToken);
+            await Clients.All.SendAsync("UpdatedMark", response, cancellationToken: cancellationToken);
         }
 
         [Channel("hubs/grade/UpdatePresenceGrade")]
         [Authorize(Policy = "Edit")]
         [PublishOperation(typeof(UpdatePresenceGradeRequest), Summary = "Обновить или создать запись о посещаемости", OperationId = nameof(UpdatePresenceGrade))]
         [SubscribeOperation(typeof(FullGradePresenceResponse), Summary = "Событие: Посещаемость обновлена (рассылается всем)", OperationId = "UpdatedPresence")]
-        public async Task UpdatePresenceGrade(UpdatePresenceGradeRequest request)
+        public async Task UpdatePresenceGrade(UpdatePresenceGradeRequest request, CancellationToken cancellationToken)
         {
-            var response = await _presenceService.UpdateOrCreatePresenceAsync(request);
-            await Clients.All.SendAsync("UpdatedPresence", response);
+            var response = await _presenceService.UpdateOrCreatePresenceAsync(request, cancellationToken: cancellationToken);
+            await Clients.All.SendAsync("UpdatedPresence", response, cancellationToken: cancellationToken);
         }
     }
 }

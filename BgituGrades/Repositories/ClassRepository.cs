@@ -7,65 +7,65 @@ namespace BgituGrades.Repositories
 {
     public interface IClassRepository
     {
-        Task<IEnumerable<Class>> GetClassesByDisciplineAndGroupAsync(int disciplineId, int groupId);
-        Task<Class> CreateClassAsync(Class entity);
-        Task<Class?> GetByIdAsync(int id);
-        Task<bool> UpdateClassAsync(Class entity);
-        Task<bool> DeleteClassAsync(int id);
-        Task DeleteAllAsync();
-        Task<IEnumerable<Class>> GetAllClassesAsync();
+        Task<IEnumerable<Class>> GetClassesByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
+        Task<Class> CreateClassAsync(Class entity, CancellationToken cancellationToken);
+        Task<Class?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<bool> UpdateClassAsync(Class entity, CancellationToken cancellationToken);
+        Task<bool> DeleteClassAsync(int id, CancellationToken cancellationToken);
+        Task DeleteAllAsync(CancellationToken cancellationToken);
+        Task<IEnumerable<Class>> GetAllClassesAsync(CancellationToken cancellationToken);
     }
 
     public class ClassRepository(AppDbContext dbContext) : IClassRepository
     {
         private readonly AppDbContext _dbContext = dbContext;
 
-        public async Task<Class> CreateClassAsync(Class entity)
+        public async Task<Class> CreateClassAsync(Class entity, CancellationToken cancellationToken)
         {
             await _dbContext.Classes.AddAsync(entity);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
             return entity;
         }
 
-        public async Task DeleteAllAsync()
+        public async Task DeleteAllAsync(CancellationToken cancellationToken)
         {
-            await _dbContext.Classes.ExecuteDeleteAsync();
+            await _dbContext.Classes.ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<bool> DeleteClassAsync(int id)
+        public async Task<bool> DeleteClassAsync(int id, CancellationToken cancellationToken)
         {
             var result = await _dbContext.Classes
                 .Where(c => c.Id == id)
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync(cancellationToken: cancellationToken);
             return result > 0;
         }
 
-        public async Task<Class?> GetByIdAsync(int id)
+        public async Task<Class?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var entity = await _dbContext.Classes.FindAsync(id);
+            var entity = await _dbContext.Classes.FindAsync([id], cancellationToken: cancellationToken);
             return entity;
         }
 
-        public async Task<IEnumerable<Class>> GetClassesByDisciplineAndGroupAsync(int disciplineId, int groupId)
+        public async Task<IEnumerable<Class>> GetClassesByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken)
         {
             var entities = await _dbContext.Classes
                 .Where(c => c.GroupId == groupId && c.DisciplineId == disciplineId)
                 .OrderBy(c => c.Weeknumber)
                 .ThenBy(c => c.WeekDay)
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
             return entities;
         }
 
-        public async Task<bool> UpdateClassAsync(Class entity)
+        public async Task<bool> UpdateClassAsync(Class entity, CancellationToken cancellationToken)
         {
             _dbContext.Update(entity);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
             return true;
         }
 
-        public async Task<IEnumerable<Class>> GetAllClassesAsync()
+        public async Task<IEnumerable<Class>> GetAllClassesAsync(CancellationToken cancellationToken)
         {
-            return await _dbContext.Classes.AsNoTracking().ToListAsync();
+            return await _dbContext.Classes.AsNoTracking().ToListAsync(cancellationToken: cancellationToken);
         }
     }
 }

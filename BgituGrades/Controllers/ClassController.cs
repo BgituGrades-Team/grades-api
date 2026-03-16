@@ -18,9 +18,9 @@ namespace BgituGrades.Controllers
         [Obsolete("deprecated")]
         [EndpointDescription("Больше не используется, т.к. произведён полный переход на SignalR")]
         [ProducesResponseType(typeof(IEnumerable<ClassDateResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<ClassDateResponse>>> GetClasssDates([FromBody] GetClassDateRequest request)
+        public async Task<ActionResult<IEnumerable<ClassDateResponse>>> GetClasssDates([FromBody] GetClassDateRequest request, CancellationToken cancellationToken)
         {
-            var classDates = await _classService.GetClassDatesAsync(request);
+            var classDates = await _classService.GetClassDatesAsync(request, cancellationToken: cancellationToken);
             return Ok(classDates);
         }
 
@@ -29,9 +29,9 @@ namespace BgituGrades.Controllers
         [Obsolete("deprecated")]
         [EndpointDescription("Больше не используется, т.к. произведён полный переход на SignalR")]
         [ProducesResponseType(typeof(IEnumerable<FullGradeMarkResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<FullGradeMarkResponse>>>GetMarkGrade([FromQuery] GetClassDateRequest request)
+        public async Task<ActionResult<IEnumerable<FullGradeMarkResponse>>>GetMarkGrade([FromQuery] GetClassDateRequest request, CancellationToken cancellationToken)
         {
-            var works = await _classService.GetMarksByWorksAsync(request);
+            var works = await _classService.GetMarksByWorksAsync(request, cancellationToken: cancellationToken);
             return Ok(works);
         }
 
@@ -40,9 +40,9 @@ namespace BgituGrades.Controllers
         [Obsolete("deprecated")]
         [EndpointDescription("Больше не используется, т.к. произведён полный переход на SignalR")]
         [ProducesResponseType(typeof(IEnumerable<FullGradePresenceResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<FullGradePresenceResponse>>> GetPresenceGrade([FromQuery] GetClassDateRequest request)
+        public async Task<ActionResult<IEnumerable<FullGradePresenceResponse>>> GetPresenceGrade([FromQuery] GetClassDateRequest request, CancellationToken cancellationToken)
         {
-            var classDates = await _classService.GetPresenceByScheduleAsync(request);
+            var classDates = await _classService.GetPresenceByScheduleAsync(request, cancellationToken: cancellationToken);
             return Ok(classDates);
         }
 
@@ -50,9 +50,9 @@ namespace BgituGrades.Controllers
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
         [ProducesResponseType(typeof(ClassResponse), StatusCodes.Status201Created)]
-        public async Task<ActionResult<ClassResponse>> CreateClass([FromBody] CreateClassRequest request)
+        public async Task<ActionResult<ClassResponse>> CreateClass([FromBody] CreateClassRequest request, CancellationToken cancellationToken)
         {
-            var _class = await _classService.CreateClassAsync(request);
+            var _class = await _classService.CreateClassAsync(request, cancellationToken: cancellationToken);
             return CreatedAtAction(nameof(GetClass), new { id = _class.Id }, _class);
         }
 
@@ -61,9 +61,9 @@ namespace BgituGrades.Controllers
         [Obsolete("deprecated")]
         [ProducesResponseType(typeof(ClassResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ClassResponse>> GetClass([FromRoute] int id)
+        public async Task<ActionResult<ClassResponse>> GetClass([FromRoute] int id, CancellationToken cancellationToken)
         {
-            var _class = await _classService.GetClassByIdAsync(id);
+            var _class = await _classService.GetClassByIdAsync(id, cancellationToken: cancellationToken);
             if (_class == null)
                 return NotFound(id);
             return Ok(_class);
@@ -74,9 +74,9 @@ namespace BgituGrades.Controllers
         [Authorize(Policy = "Admin")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteClass([FromQuery] int id)
+        public async Task<IActionResult> DeleteClass([FromQuery] int id, CancellationToken cancellationToken)
         {
-            var success = await _classService.DeleteClassAsync(id);
+            var success = await _classService.DeleteClassAsync(id, cancellationToken: cancellationToken);
             if (!success)
                 return NotFound(id);
 

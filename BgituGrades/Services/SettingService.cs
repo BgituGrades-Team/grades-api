@@ -7,25 +7,25 @@ namespace BgituGrades.Services
 {
     public interface ISettingService
     {
-        public Task<SettingResponse> GetSettingsAsync();
-        public Task UpdateSettingAsync(UpdateSettingRequest request);
+        public Task<SettingResponse> GetSettingsAsync(CancellationToken cancellationToken);
+        public Task UpdateSettingAsync(UpdateSettingRequest request, CancellationToken cancellationToken);
 
     }
     public class SettingService(ISettingRepository settingRepository, IMapper mapper) : ISettingService
     {
         private readonly ISettingRepository _settingRepository = settingRepository;
         private readonly IMapper _mapper = mapper;
-        public async Task<SettingResponse> GetSettingsAsync()
+        public async Task<SettingResponse> GetSettingsAsync(CancellationToken cancellationToken)
         {
-            var calendarUrl = await _settingRepository.GetCalendarUrlAsync();
+            var calendarUrl = await _settingRepository.GetCalendarUrlAsync(cancellationToken: cancellationToken);
             var result = _mapper.Map<SettingResponse>(calendarUrl);
             return result;
         }
 
-        public async Task UpdateSettingAsync(UpdateSettingRequest request)
+        public async Task UpdateSettingAsync(UpdateSettingRequest request, CancellationToken cancellationToken)
         {
             var setting = _mapper.Map<Setting>(request);
-            await _settingRepository.UpdateSettingAsync(setting);
+            await _settingRepository.UpdateSettingAsync(setting, cancellationToken: cancellationToken);
         }
     }
 }

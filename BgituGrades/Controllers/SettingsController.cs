@@ -17,18 +17,18 @@ namespace BgituGrades.Controllers
 
         [HttpGet]
         [ApiVersion("2.0")]
-        public async Task<ActionResult<SettingResponse>> GetSettings()
+        public async Task<ActionResult<SettingResponse>> GetSettings(CancellationToken cancellationToken)
         {
-            var settings = await _settingService.GetSettingsAsync();
+            var settings = await _settingService.GetSettingsAsync(cancellationToken: cancellationToken);
             return Ok(settings);
         }
 
         
         [HttpPut]
         [ApiVersion("2.0")]
-        public async Task<IActionResult> UpdateSettings([FromBody] UpdateSettingRequest request)
+        public async Task<IActionResult> UpdateSettings([FromBody] UpdateSettingRequest request, CancellationToken cancellationToken)
         {
-            await _settingService.UpdateSettingAsync(request);
+            await _settingService.UpdateSettingAsync(request, cancellationToken: cancellationToken);
             return NoContent();
         }
     }

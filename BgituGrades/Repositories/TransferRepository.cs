@@ -6,67 +6,67 @@ namespace BgituGrades.Repositories
 {
     public interface ITransferRepository
     {
-        Task<IEnumerable<Transfer>> GetAllTransfersAsync();
-        Task<Transfer> CreateTransferAsync(Transfer entity);
-        Task<Transfer?> GetByIdAsync(int id);
-        Task<bool> UpdateTransferAsync(Transfer entity);
-        Task<bool> DeleteTransferAsync(int id);
-        Task DeleteAllAsync();
-        Task<IEnumerable<Transfer>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId);
+        Task<IEnumerable<Transfer>> GetAllTransfersAsync(CancellationToken cancellationToken);
+        Task<Transfer> CreateTransferAsync(Transfer entity, CancellationToken cancellationToken);
+        Task<Transfer?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<bool> UpdateTransferAsync(Transfer entity, CancellationToken cancellationToken);
+        Task<bool> DeleteTransferAsync(int id, CancellationToken cancellationToken);
+        Task DeleteAllAsync(CancellationToken cancellationToken);
+        Task<IEnumerable<Transfer>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken);
     }
 
     public class TransferRepository(AppDbContext dbContext) : ITransferRepository
     {
         private readonly AppDbContext _dbContext = dbContext;
 
-        public async Task<Transfer> CreateTransferAsync(Transfer entity)
+        public async Task<Transfer> CreateTransferAsync(Transfer entity, CancellationToken cancellationToken)
         {
-            await _dbContext.Transfers.AddAsync(entity);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.Transfers.AddAsync(entity, cancellationToken: cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
             return entity;
         }
 
-        public async Task<bool> DeleteTransferAsync(int id)
+        public async Task<bool> DeleteTransferAsync(int id, CancellationToken cancellationToken)
         {
             var result = await _dbContext.Transfers
                 .Where(t => t.Id == id)
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync(cancellationToken: cancellationToken);
             return result > 0;
         }
 
-        public async Task<Transfer?> GetByIdAsync(int id)
+        public async Task<Transfer?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var entity = await _dbContext.Transfers.FindAsync(id);
+            var entity = await _dbContext.Transfers.FindAsync([id], cancellationToken: cancellationToken);
             return entity;
         }
 
-        public async Task<IEnumerable<Transfer>> GetAllTransfersAsync()
+        public async Task<IEnumerable<Transfer>> GetAllTransfersAsync(CancellationToken cancellationToken)
         {
             var entities = await _dbContext.Transfers
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
             return entities;
         }
 
-        public async Task<bool> UpdateTransferAsync(Transfer entity)
+        public async Task<bool> UpdateTransferAsync(Transfer entity, CancellationToken cancellationToken)
         {
             _dbContext.Update(entity);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
             return true;
         }
 
-        public async Task DeleteAllAsync()
+        public async Task DeleteAllAsync(CancellationToken cancellationToken)
         {
-            await _dbContext.Transfers.ExecuteDeleteAsync();
+            await _dbContext.Transfers.ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<Transfer>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId)
+        public async Task<IEnumerable<Transfer>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken)
         {
             var entities =  await _dbContext.Transfers
                 .Where(t => t.DisciplineId == disciplineId &&
                             t.GroupId == groupId)
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
             return entities;
         }
     }

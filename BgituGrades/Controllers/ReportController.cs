@@ -1,20 +1,16 @@
 ﻿using Asp.Versioning;
-using BgituGrades.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
-using System.ComponentModel.DataAnnotations;
 
 namespace BgituGrades.Controllers
 {
     [ApiController]
     [Route("api/report")]
     public class ReportController(
-        IDistributedCache cache,
-        ILogger<ReportController> logger) : ControllerBase
+        IDistributedCache cache) : ControllerBase
     {
         private readonly IDistributedCache _cache = cache;
-        private readonly ILogger<ReportController> _logger = logger;
 
 
         [HttpGet("{reportId}/download")]

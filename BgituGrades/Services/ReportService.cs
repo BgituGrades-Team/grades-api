@@ -12,7 +12,7 @@ namespace BgituGrades.Services
 {
     public interface IReportService
     {
-        Task<Guid> GenerateReportAsync(ReportRequest request, string connectionId);
+        Task<Guid> GenerateReportAsync(ReportRequest request, string connectionId, CancellationToken cancellationToken);
     }
 
     public class ReportService(
@@ -24,17 +24,17 @@ namespace BgituGrades.Services
         private readonly IDistributedCache _cache = cache;
         private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
 
-        public async Task<Guid> GenerateReportAsync(ReportRequest request, string connectionId)
+        public async Task<Guid> GenerateReportAsync(ReportRequest request, string connectionId, CancellationToken cancellationToken)
         {
             var reportId = Guid.NewGuid();
-            await _hubContext.Groups.AddToGroupAsync(connectionId, reportId.ToString());
+            await _hubContext.Groups.AddToGroupAsync(connectionId, reportId.ToString(), cancellationToken: cancellationToken);
 
-            _ = Task.Run(async () => await GenerateWithProgress(reportId, request));
+            _ = Task.Run(async () => await GenerateWithProgress(reportId, request, cancellationToken: cancellationToken), cancellationToken: cancellationToken);
 
             return reportId;
         }
 
-        private async Task GenerateWithProgress(Guid reportId, ReportRequest request)
+        private async Task GenerateWithProgress(Guid reportId, ReportRequest request, CancellationToken cancellationToken)
         {
             using var scope = _scopeFactory.CreateScope();
 
@@ -50,28 +50,28 @@ namespace BgituGrades.Services
             try
             {
                 await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("ReportProgress", reportId.ToString(), 10, "Загрузка данных...");
+                    .SendAsync("ReportProgress", reportId.ToString(), 10, "Загрузка данных...", cancellationToken: cancellationToken);
                 IEnumerable<Group> groups;
                 if (request.GroupIds != null)
                 {
-                    groups = await groupRepo.GetGroupsByIdsAsync(request.GroupIds);
+                    groups = await groupRepo.GetGroupsByIdsAsync(request.GroupIds, cancellationToken: cancellationToken);
                 } else {
-                    groups = await groupRepo.GetAllAsync();
+                    groups = await groupRepo.GetAllAsync(cancellationToken: cancellationToken);
                 }
                  
                 IEnumerable<Discipline> disciplines;
                 if (request.DisciplineIds !=  null)
                 {
-                    disciplines = await disciplineRepo.GetDisciplinesByIdsAsync(request.DisciplineIds);
+                    disciplines = await disciplineRepo.GetDisciplinesByIdsAsync(request.DisciplineIds, cancellationToken: cancellationToken);
                 } else {
-                    disciplines = await disciplineRepo.GetByGroupIdsAsync(groups.Select(g => g.Id).ToArray());
+                    disciplines = await disciplineRepo.GetByGroupIdsAsync(groups.Select(g => g.Id).ToArray(), cancellationToken: cancellationToken);
                 }
 
                 IEnumerable<Student> students;
                 if (request.StudentIds != null) {
-                    students = await studentRepo.GetStudentsByIdsAsync(request.StudentIds);
+                    students = await studentRepo.GetStudentsByIdsAsync(request.StudentIds, cancellationToken: cancellationToken);
                 } else {
-                    students = await studentRepo.GetStudentsByGroupIdsAsync(groups.Select(g => g.Id).ToArray());
+                    students = await studentRepo.GetStudentsByGroupIdsAsync(groups.Select(g => g.Id).ToArray(), cancellationToken: cancellationToken);
                 }
 
                 if (!groups.Any() || !disciplines.Any())
@@ -80,34 +80,35 @@ namespace BgituGrades.Services
                 }
 
                 await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("ReportProgress", reportId.ToString(), 40, "Генерация Excel файла...");
+                    .SendAsync("ReportProgress", reportId.ToString(), 40, "Генерация Excel файла...", cancellationToken: cancellationToken);
 
                 TablePreview result;
                 if (request.ReportType == ReportType.MARK)
                 {
-                    result = await GenerateMarksExcelAsync(markRepo, groups, disciplines, students);
+                    result = await GenerateMarksExcelAsync(markRepo, groups, disciplines, students, cancellationToken);
                 }
                 else
                 {
-                    result = await GeneratePresenceExcelAsync(presenceRepo, groups, disciplines, students);
+                    result = await GeneratePresenceExcelAsync(presenceRepo, groups, disciplines, students, cancellationToken);
                 }
 
                 await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("ReportProgress", reportId.ToString(), 80, "Сохранение...");
+                    .SendAsync("ReportProgress", reportId.ToString(), 80, "Сохранение...", cancellationToken: cancellationToken);
 
                 await _cache.SetAsync($"report_{reportId}", result.ExcelBytes, cacheOptions);
 
                 await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("ReportReady", reportId.ToString(), $"https://maxim.pamagiti.site/api/report/{reportId}/download", result.Preview);
+                    .SendAsync("ReportReady", reportId.ToString(), $"https://maxim.pamagiti.site/api/report/{reportId}/download", result.Preview, cancellationToken: cancellationToken);
             }
             catch (Exception ex)
             {
                 await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("Error", ex.Message, ex.StackTrace);
+                    .SendAsync("Error", ex.Message, ex.StackTrace, cancellationToken: cancellationToken);
             }
         }
 
-        private static async Task<TablePreview> GenerateMarksExcelAsync(IMarkRepository _markRepository, IEnumerable<Group> groups, IEnumerable<Discipline> disciplines, IEnumerable<Student> students)
+        private static async Task<TablePreview> GenerateMarksExcelAsync(IMarkRepository _markRepository, IEnumerable<Group> groups, 
+            IEnumerable<Discipline> disciplines, IEnumerable<Student> students, CancellationToken cancellationToken)
         {
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Отчёт успеваемости");
@@ -144,7 +145,7 @@ namespace BgituGrades.Services
             disciplinesHeaderRange.Style.Fill.BackgroundColor.SetColor(headColor);
             disciplinesHeaderRange.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
-            var allMarks = await _markRepository.GetMarksByDisciplinesAndGroupsAsync(disciplines.Select(d => d.Id).ToList(), sortedGroups.Select(g => g.Id).ToList());
+            var allMarks = await _markRepository.GetMarksByDisciplinesAndGroupsAsync(disciplines.Select(d => d.Id).ToList(), sortedGroups.Select(g => g.Id).ToList(), cancellationToken: cancellationToken);
             var markDict = allMarks
                 .Where(m => m.Work != null && !string.IsNullOrEmpty(m.Value))
                 .Select(m => new {
@@ -253,7 +254,8 @@ namespace BgituGrades.Services
             };
         }
 
-        private static async Task<TablePreview> GeneratePresenceExcelAsync(IPresenceRepository _presenceRepository, IEnumerable<Group> groups, IEnumerable<Discipline> disciplines, IEnumerable<Student> students)
+        private static async Task<TablePreview> GeneratePresenceExcelAsync(IPresenceRepository _presenceRepository, IEnumerable<Group> groups, 
+            IEnumerable<Discipline> disciplines, IEnumerable<Student> students, CancellationToken cancellationToken)
         {
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Отчёт посещаемости");
@@ -289,7 +291,7 @@ namespace BgituGrades.Services
             headRange.Style.Fill.BackgroundColor.SetColor(headColor);
             headRange.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
 
-            var allPresences = await _presenceRepository.GetPresencesByDisciplinesAndGroupsAsync(disciplines.Select(d => d.Id).ToList(), sortedGroups.Select(g => g.Id).ToList());
+            var allPresences = await _presenceRepository.GetPresencesByDisciplinesAndGroupsAsync(disciplines.Select(d => d.Id).ToList(), sortedGroups.Select(g => g.Id).ToList(), cancellationToken: cancellationToken);
             var presenceDict = allPresences
                 .GroupBy(m => new { m.StudentId, m.DisciplineId })
                 .ToDictionary(
@@ -383,7 +385,7 @@ namespace BgituGrades.Services
             }
 
             using var stream = new MemoryStream();
-            await package.SaveAsAsync(stream);
+            await package.SaveAsAsync(stream, cancellationToken);
             return new TablePreview
             {
                 ExcelBytes = stream.ToArray(),

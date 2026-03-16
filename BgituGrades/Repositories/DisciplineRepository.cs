@@ -1,92 +1,90 @@
 ﻿using BgituGrades.Data;
 using BgituGrades.Entities;
-using BgituGrades.Models.Discipline;
 using Microsoft.EntityFrameworkCore;
-using System.Text.RegularExpressions;
 
 namespace BgituGrades.Repositories
 {
     public interface IDisciplineRepository {
-        Task<IEnumerable<Discipline>> GetAllAsync();
-        Task<Discipline> CreateDisciplineAsync(Discipline entity);
-        Task<Discipline?> GetByIdAsync(int id);
-        Task<IEnumerable<Discipline?>> GetByGroupIdAsync(int groupId);
-        Task<IEnumerable<Discipline?>> GetByGroupIdsAsync(int[] groupIds);
-        Task<bool> UpdateDisciplineAsync(Discipline entity);
-        Task<bool> DeleteDisciplineAsync(int id);
-        Task DeleteAllAsync();
-        Task<IEnumerable<Discipline>> GetDisciplinesByIdsAsync(int[] disciplineIds);
+        Task<IEnumerable<Discipline>> GetAllAsync(CancellationToken cancellationToken);
+        Task<Discipline> CreateDisciplineAsync(Discipline entity, CancellationToken cancellationToken);
+        Task<Discipline?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<IEnumerable<Discipline?>> GetByGroupIdAsync(int groupId, CancellationToken cancellationToken);
+        Task<IEnumerable<Discipline?>> GetByGroupIdsAsync(int[] groupIds, CancellationToken cancellationToken);
+        Task<bool> UpdateDisciplineAsync(Discipline entity, CancellationToken cancellationToken);
+        Task<bool> DeleteDisciplineAsync(int id, CancellationToken cancellationToken);
+        Task DeleteAllAsync(CancellationToken cancellationToken);
+        Task<IEnumerable<Discipline>> GetDisciplinesByIdsAsync(int[] disciplineIds, CancellationToken cancellationToken);
     }
 
     public class DisciplineRepository(IDbContextFactory<AppDbContext> contextFactory) : IDisciplineRepository
     {
-        public async Task<Discipline> CreateDisciplineAsync(Discipline entity)
+        public async Task<Discipline> CreateDisciplineAsync(Discipline entity, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             await context.Disciplines.AddAsync(entity);
-            await context.SaveChangesAsync();  
+            await context.SaveChangesAsync(cancellationToken: cancellationToken);  
             return entity;
         }
 
-        public async Task DeleteAllAsync()
+        public async Task DeleteAllAsync(CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
-            await context.Disciplines.ExecuteDeleteAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            await context.Disciplines.ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<bool> DeleteDisciplineAsync(int id)
+        public async Task<bool> DeleteDisciplineAsync(int id, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var result = await context.Disciplines
                 .Where(d => d.Id == id)
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync(cancellationToken: cancellationToken);
             return result > 0;
         }
 
-        public async Task<IEnumerable<Discipline>> GetAllAsync()
+        public async Task<IEnumerable<Discipline>> GetAllAsync(CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
-            return await context.Disciplines.AsNoTracking().ToListAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            return await context.Disciplines.AsNoTracking().ToListAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<Discipline?>> GetByGroupIdAsync(int groupId)
+        public async Task<IEnumerable<Discipline?>> GetByGroupIdAsync(int groupId, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Disciplines
                 .Where(d => d.Classes!.Any(c => c.GroupId == groupId))
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<Discipline?>> GetByGroupIdsAsync(int[] groupIds)
+        public async Task<IEnumerable<Discipline?>> GetByGroupIdsAsync(int[] groupIds, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Disciplines
                 .Where(d => d.Classes.Any(c => groupIds.Contains(c.GroupId)))
                 .Distinct()
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<Discipline?> GetByIdAsync(int id)
+        public async Task<Discipline?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
-            return await context.Disciplines.FindAsync(id);
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            return await context.Disciplines.FindAsync([id], cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<Discipline>> GetDisciplinesByIdsAsync(int[] disciplineIds)
+        public async Task<IEnumerable<Discipline>> GetDisciplinesByIdsAsync(int[] disciplineIds, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Disciplines
                 .AsNoTracking()
                 .Where(d => disciplineIds.Contains(d.Id))
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<bool> UpdateDisciplineAsync(Discipline entity)
+        public async Task<bool> UpdateDisciplineAsync(Discipline entity, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             context.Disciplines.Update(entity);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(cancellationToken: cancellationToken);
             return true;
         }
     }

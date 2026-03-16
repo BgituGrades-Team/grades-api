@@ -17,9 +17,9 @@ namespace BgituGrades.Controllers
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(IEnumerable<StudentResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<StudentResponse>>> GetStudents([FromQuery] GetStudentsByGroupRequest request)
+        public async Task<ActionResult<IEnumerable<StudentResponse>>> GetStudents([FromQuery] GetStudentsByGroupRequest request, CancellationToken cancellationToken)
         {
-            var students = await _studentService.GetStudentsByGroupAsync(request);
+            var students = await _studentService.GetStudentsByGroupAsync(request, cancellationToken: cancellationToken);
             return Ok(students);
         }
 
@@ -27,9 +27,9 @@ namespace BgituGrades.Controllers
         [ApiVersion("2.0")]
         [Authorize(Policy = "Edit")]
         [ProducesResponseType(typeof(StudentResponse), StatusCodes.Status201Created)]
-        public async Task<ActionResult<StudentResponse>> CreateStudent([FromBody] CreateStudentRequest request)
+        public async Task<ActionResult<StudentResponse>> CreateStudent([FromBody] CreateStudentRequest request, CancellationToken cancellationToken)
         {
-            var student = await _studentService.CreateStudentAsync(request);
+            var student = await _studentService.CreateStudentAsync(request, cancellationToken: cancellationToken);
             return CreatedAtAction(nameof(GetStudent), new { id = student.Id }, student);
         }
 
@@ -38,9 +38,9 @@ namespace BgituGrades.Controllers
         [Obsolete("deprecated")]
         [ProducesResponseType(typeof(StudentResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<StudentResponse>> GetStudent([FromRoute] int id)
+        public async Task<ActionResult<StudentResponse>> GetStudent([FromRoute] int id, CancellationToken cancellationToken)
         {
-            var student = await _studentService.GetStudentByIdAsync(id);
+            var student = await _studentService.GetStudentByIdAsync(id, cancellationToken: cancellationToken);
             if (student == null)
                 return NotFound(id);
             return Ok(student);
@@ -51,9 +51,9 @@ namespace BgituGrades.Controllers
         [Authorize(Policy = "Edit")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateStudent([FromBody] UpdateStudentRequest request)
+        public async Task<IActionResult> UpdateStudent([FromBody] UpdateStudentRequest request, CancellationToken cancellationToken)
         {
-            var success = await _studentService.UpdateStudentAsync(request);
+            var success = await _studentService.UpdateStudentAsync(request, cancellationToken: cancellationToken);
             if (!success)
                 return NotFound(request.Id);
 
@@ -65,9 +65,9 @@ namespace BgituGrades.Controllers
         [Authorize(Policy = "Edit")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteStudent([FromQuery] DeleteStudentRequest request)
+        public async Task<IActionResult> DeleteStudent([FromQuery] DeleteStudentRequest request, CancellationToken cancellationToken)
         {
-            var success = await _studentService.DeleteStudentAsync(request.Id);
+            var success = await _studentService.DeleteStudentAsync(request.Id, cancellationToken: cancellationToken);
             if (!success)
                 return NotFound(request.Id);
 

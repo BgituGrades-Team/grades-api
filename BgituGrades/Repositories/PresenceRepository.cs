@@ -7,87 +7,87 @@ namespace BgituGrades.Repositories
 {
     public interface IPresenceRepository
     {
-        Task<IEnumerable<Presence>> GetAllPresencesAsync();
-        Task<Presence> CreatePresenceAsync(Presence entity);
-        Task<IEnumerable<Presence>> GetPresencesByDisciplineAndGroupAsync(int disciplineId, int groupId);
-        Task<IEnumerable<Presence>> GetPresencesByDisciplinesAndGroupsAsync(List<int> disciplineIds, List<int> groupIds);
-        Task<Presence?> GetAsync(int disciplineId, int studentId, DateOnly date);
-        Task<bool> DeletePresenceByStudentAndDateAsync(int studentId, DateOnly date);
-        Task UpdatePresenceAsync(Presence entity);
-        Task DeleteAllAsync();
-        Task AddNewStudentPresences(int studentId, Dictionary<int, IEnumerable<DateOnly>> disciplines);
-        Task<Presence?> GetPresenceByIdAsync(int id);
+        Task<IEnumerable<Presence>> GetAllPresencesAsync(CancellationToken cancellationToken);
+        Task<Presence> CreatePresenceAsync(Presence entity, CancellationToken cancellationToken);
+        Task<IEnumerable<Presence>> GetPresencesByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
+        Task<IEnumerable<Presence>> GetPresencesByDisciplinesAndGroupsAsync(List<int> disciplineIds, List<int> groupIds, CancellationToken cancellationToken);
+        Task<Presence?> GetAsync(int disciplineId, int studentId, DateOnly date, CancellationToken cancellationToken);
+        Task<bool> DeletePresenceByStudentAndDateAsync(int studentId, DateOnly date, CancellationToken cancellationToken);
+        Task UpdatePresenceAsync(Presence entity, CancellationToken cancellationToken);
+        Task DeleteAllAsync(CancellationToken cancellationToken);
+        Task AddNewStudentPresences(int studentId, Dictionary<int, IEnumerable<DateOnly>> disciplines, CancellationToken cancellationToken);
+        Task<Presence?> GetPresenceByIdAsync(int id, CancellationToken cancellationToken);
     }
 
     public class PresenceRepository(AppDbContext dbContext) : IPresenceRepository
     {
         private readonly AppDbContext _dbContext = dbContext;
 
-        public async Task<Presence> CreatePresenceAsync(Presence entity)
+        public async Task<Presence> CreatePresenceAsync(Presence entity, CancellationToken cancellationToken)
         {
-            await _dbContext.Presences.AddAsync(entity);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.Presences.AddAsync(entity, cancellationToken: cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
             return entity;
         }
 
-        public async Task<IEnumerable<Presence>> GetAllPresencesAsync()
+        public async Task<IEnumerable<Presence>> GetAllPresencesAsync(CancellationToken cancellationToken)
         {
             var entities = await _dbContext.Presences
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
             return entities;
         }
 
-        public async Task<IEnumerable<Presence>> GetPresencesByDisciplineAndGroupAsync(int disciplineId, int groupId)
+        public async Task<IEnumerable<Presence>> GetPresencesByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken)
         {
             var entities = await _dbContext.Presences
                 .Where(p => p.DisciplineId == disciplineId &&
                            p.Student.GroupId == groupId)
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
             return entities;
         }
 
-        public async Task<bool> DeletePresenceByStudentAndDateAsync(int studentId, DateOnly date)
+        public async Task<bool> DeletePresenceByStudentAndDateAsync(int studentId, DateOnly date, CancellationToken cancellationToken)
         {
             var result = await _dbContext.Presences
                 .Where(p => p.StudentId == studentId && p.Date == date)
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync(cancellationToken: cancellationToken);
             return result > 0;
         }
 
-        public async Task UpdatePresenceAsync(Presence entity)
+        public async Task UpdatePresenceAsync(Presence entity, CancellationToken cancellationToken)
         {
             _dbContext.Presences.Update(entity);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task DeleteAllAsync()
+        public async Task DeleteAllAsync(CancellationToken cancellationToken)
         {
-            await _dbContext.Presences.ExecuteDeleteAsync();
+            await _dbContext.Presences.ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<Presence?> GetAsync(int disciplineId, int studentId, DateOnly date)
+        public async Task<Presence?> GetAsync(int disciplineId, int studentId, DateOnly date, CancellationToken cancellationToken)
         {
             var presence = await _dbContext.Presences
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.DisciplineId == disciplineId &&
                                          p.StudentId == studentId &&
-                                         p.Date == date);
+                                         p.Date == date, cancellationToken: cancellationToken);
             return presence;
         }
 
-        public async Task<IEnumerable<Presence>> GetPresencesByDisciplinesAndGroupsAsync(List<int> disciplineIds, List<int> groupIds)
+        public async Task<IEnumerable<Presence>> GetPresencesByDisciplinesAndGroupsAsync(List<int> disciplineIds, List<int> groupIds, CancellationToken cancellationToken)
         {
             var entities = await _dbContext.Presences
                 .Where(p => disciplineIds.Contains(p.DisciplineId) &&
                            groupIds.Contains(p.Student.GroupId))
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
             return entities;
         }
 
-        public async Task AddNewStudentPresences(int studentId, Dictionary<int, IEnumerable<DateOnly>> disciplines)
+        public async Task AddNewStudentPresences(int studentId, Dictionary<int, IEnumerable<DateOnly>> disciplines, CancellationToken cancellationToken)
         {
             var presences = new List<Presence>();
             foreach (var discipline in disciplines)
@@ -105,12 +105,12 @@ namespace BgituGrades.Repositories
             }
 
             await _dbContext.Presences.AddRangeAsync(presences);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<Presence?> GetPresenceByIdAsync(int id)
+        public async Task<Presence?> GetPresenceByIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await _dbContext.Presences.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+            return await _dbContext.Presences.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, cancellationToken: cancellationToken);
         }
     }
 }

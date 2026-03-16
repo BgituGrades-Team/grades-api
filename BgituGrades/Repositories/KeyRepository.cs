@@ -6,33 +6,33 @@ namespace BgituGrades.Repositories
 {
     public interface IKeyRepository
     {
-        Task<IEnumerable<ApiKey>> GetKeysAsync();
-        Task<ApiKey> CreateKeyAsync(ApiKey entity);
-        Task<ApiKey?> GetAsync(string key);
-        Task<bool> DeleteKeyAsync(string key);
+        Task<IEnumerable<ApiKey>> GetKeysAsync(CancellationToken cancellationToken);
+        Task<ApiKey> CreateKeyAsync(ApiKey entity, CancellationToken cancellationToken);
+        Task<ApiKey?> GetAsync(string key, CancellationToken cancellationToken);
+        Task<bool> DeleteKeyAsync(string key, CancellationToken cancellationToken);
         Task<ApiKey?> GetByLookupHashAsync(string lookupHash);
     }
     public class KeyRepository(AppDbContext dbContext) : IKeyRepository
     {
         private readonly AppDbContext _dbContext = dbContext;
-        public async Task<ApiKey> CreateKeyAsync(ApiKey entity)
+        public async Task<ApiKey> CreateKeyAsync(ApiKey entity, CancellationToken cancellationToken)
         {
-            await _dbContext.ApiKeys.AddAsync(entity);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.ApiKeys.AddAsync(entity, cancellationToken: cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
             return entity;
         }
 
-        public async Task<bool> DeleteKeyAsync(string key)
+        public async Task<bool> DeleteKeyAsync(string key, CancellationToken cancellationToken)
         {
             var result = await _dbContext.ApiKeys
                 .Where(k => k.Key == key)
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync(cancellationToken: cancellationToken);
             return result > 0;
         }
 
-        public async Task<ApiKey?> GetAsync(string key)
+        public async Task<ApiKey?> GetAsync(string key, CancellationToken cancellationToken)
         {
-            var storedKey = await _dbContext.ApiKeys.FindAsync(key);
+            var storedKey = await _dbContext.ApiKeys.FindAsync([key], cancellationToken: cancellationToken);
             return storedKey;
         }
 
@@ -42,9 +42,9 @@ namespace BgituGrades.Repositories
             return storedKey;
         }
 
-        public async Task<IEnumerable<ApiKey>> GetKeysAsync()
+        public async Task<IEnumerable<ApiKey>> GetKeysAsync(CancellationToken cancellationToken)
         {
-            var keys = await _dbContext.ApiKeys.AsNoTracking().ToListAsync();
+            var keys = await _dbContext.ApiKeys.AsNoTracking().ToListAsync(cancellationToken: cancellationToken);
             return keys;
         }
     }

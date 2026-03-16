@@ -12,10 +12,10 @@ namespace BgituGrades.Hubs
 
         [Channel("hubs/report/GenerateReport")]
         [PublishOperation(typeof(ReportRequest), Summary = "Запросить формирование отчёта", OperationId = nameof(GenerateReport))]
-        public async Task GenerateReport(ReportRequest request)
+        public async Task GenerateReport(ReportRequest request, CancellationToken cancellationToken)
         {
             var connectionId = Context.ConnectionId;
-            var reportId = await _reportService.GenerateReportAsync(request, connectionId);
+            var reportId = await _reportService.GenerateReportAsync(request, connectionId, cancellationToken: cancellationToken);
 
             await Clients.Caller.SendAsync("ReportStarted", reportId);
         }

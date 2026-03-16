@@ -9,17 +9,17 @@ namespace BgituGrades.Services
 {
     public interface IKeyService
     {
-        Task<IEnumerable<KeyResponse>> GetKeysAsync();
-        Task<KeyResponse> GetKeyAsync(string key);
-        Task<KeyResponse> GenerateKeyAsync(Role role);
-        Task<bool> DeleteKeyAsync(string key);
+        Task<IEnumerable<KeyResponse>> GetKeysAsync(CancellationToken cancellationToken);
+        Task<KeyResponse> GetKeyAsync(string key, CancellationToken cancellationToken);
+        Task<KeyResponse> GenerateKeyAsync(Role role, CancellationToken cancellationToken);
+        Task<bool> DeleteKeyAsync(string key, CancellationToken cancellationToken);
     }
     public class KeyService(IKeyRepository keyRepository, ITokenHasher hasher, IMapper mapper) : IKeyService
     {
         private readonly IKeyRepository _keyRepository = keyRepository;
         private readonly IMapper _mapper = mapper;
         private readonly ITokenHasher _hasher = hasher;
-        public async Task<KeyResponse> GenerateKeyAsync(Role role)
+        public async Task<KeyResponse> GenerateKeyAsync(Role role, CancellationToken cancellationToken)
         {
             var newKey = RandomNumberGenerator.GetHexString(64, true);
 
@@ -33,27 +33,27 @@ namespace BgituGrades.Services
                 ExpiryDate = role == Role.STUDENT ? DateTime.UtcNow.AddDays(30) : null
             };
 
-            var createdKey = await _keyRepository.CreateKeyAsync(apiKey);
+            var createdKey = await _keyRepository.CreateKeyAsync(apiKey, cancellationToken: cancellationToken);
             var response = _mapper.Map<KeyResponse>(createdKey);
             return response;
         }
 
-        public async Task<bool> DeleteKeyAsync(string key)
+        public async Task<bool> DeleteKeyAsync(string key, CancellationToken cancellationToken)
         {
             var lookupHash = _hasher.ComputeLookupHash(key);
-            return await _keyRepository.DeleteKeyAsync(lookupHash);
+            return await _keyRepository.DeleteKeyAsync(lookupHash, cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<KeyResponse>> GetKeysAsync()
+        public async Task<IEnumerable<KeyResponse>> GetKeysAsync(CancellationToken cancellationToken)
         {
-            var storedKeys = await _keyRepository.GetKeysAsync();
+            var storedKeys = await _keyRepository.GetKeysAsync(cancellationToken: cancellationToken);
             var response = _mapper.Map<IEnumerable<KeyResponse>>(storedKeys);
             return response;
         }
 
-        public async Task<KeyResponse> GetKeyAsync(string key)
+        public async Task<KeyResponse> GetKeyAsync(string key, CancellationToken cancellationToken)
         {
-            var storedKey = await _keyRepository.GetAsync(key);
+            var storedKey = await _keyRepository.GetAsync(key, cancellationToken: cancellationToken);
             var response = _mapper.Map<KeyResponse>(storedKey);
             return response;
         }

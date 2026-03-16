@@ -9,71 +9,72 @@ namespace BgituGrades.Repositories
 {
     public interface IStudentRepository
     {
-        Task<IEnumerable<Student>> GetAllStudentsAsync();
-        Task<IEnumerable<Student>> GetStudentsByGroupAsync(int groupId);
-        Task<IEnumerable<Student>> GetStudentsByGroupIdsAsync(int[] groupIds);
-        Task<IEnumerable<FullGradeMarkResponse>> GetMarksGrade(IEnumerable<Work> works, int groupId, int disciplineId);
-        Task<IEnumerable<FullGradePresenceResponse>> GetPresenseGrade(IEnumerable<ClassDateResponse> scheduleDates, int groupId, int disciplineId);
-        Task<Student> CreateStudentAsync(Student entity);
-        Task<Student?> GetByIdAsync(int id);
-        Task<bool> UpdateStudentAsync(Student entity);
-        Task<bool> DeleteStudentAsync(int id);
-        Task<IEnumerable<Student>> GetStudentsByIdsAsync(int[] studentIds);
+        Task<IEnumerable<Student>> GetAllStudentsAsync(CancellationToken cancellationToken);
+        Task<IEnumerable<Student>> GetStudentsByGroupAsync(int groupId, CancellationToken cancellationToken);
+        Task<IEnumerable<Student>> GetStudentsByGroupIdsAsync(int[] groupIds, CancellationToken cancellationToken);
+        Task<IEnumerable<FullGradeMarkResponse>> GetMarksGrade(IEnumerable<Work> works, int groupId, int disciplineId, CancellationToken cancellationToken);
+        Task<IEnumerable<FullGradePresenceResponse>> GetPresenseGrade(IEnumerable<ClassDateResponse> scheduleDates, int groupId, int disciplineId, CancellationToken cancellationToken);
+        Task<Student> CreateStudentAsync(Student entity, CancellationToken cancellationToken);
+        Task<Student?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<bool> UpdateStudentAsync(Student entity, CancellationToken cancellationToken);
+        Task<bool> DeleteStudentAsync(int id, CancellationToken cancellationToken);
+        Task<IEnumerable<Student>> GetStudentsByIdsAsync(int[] studentIds, CancellationToken cancellationToken);
     }
 
     public class StudentRepository(IDbContextFactory<AppDbContext> contextFactory) : IStudentRepository
     {
 
-        public async Task<Student> CreateStudentAsync(Student entity)
+        public async Task<Student> CreateStudentAsync(Student entity, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
-            await context.Students.AddAsync(entity);
-            await context.SaveChangesAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            await context.Students.AddAsync(entity, cancellationToken: cancellationToken);
+            await context.SaveChangesAsync(cancellationToken: cancellationToken);
             return entity;
         }
 
-        public async Task<bool> DeleteStudentAsync(int id)
+        public async Task<bool> DeleteStudentAsync(int id, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
-            var result = await context.Students.Where(s => s.Id == id).ExecuteDeleteAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            var result = await context.Students.Where(s => s.Id == id).ExecuteDeleteAsync(cancellationToken: cancellationToken);
             return result > 0;
         }
 
-        public async Task<Student?> GetByIdAsync(int id)
+        public async Task<Student?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
-            var entity = await context.Students.FindAsync(id);
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            var entity = await context.Students.FindAsync([id], cancellationToken: cancellationToken);
             return entity;
         }
 
-        public async Task<IEnumerable<Student>> GetAllStudentsAsync()
+        public async Task<IEnumerable<Student>> GetAllStudentsAsync(CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Students
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
             return entities;
         }
 
-        public async Task<IEnumerable<Student>> GetStudentsByGroupAsync(int groupId)
+        public async Task<IEnumerable<Student>> GetStudentsByGroupAsync(int groupId, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Students
                 .Where(s => s.GroupId == groupId)
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
             return entities;
         }
 
-        public async Task<IEnumerable<FullGradePresenceResponse>> GetPresenseGrade(IEnumerable<ClassDateResponse> scheduleDates, int groupId, int disciplineId)
+        public async Task<IEnumerable<FullGradePresenceResponse>> GetPresenseGrade(IEnumerable<ClassDateResponse> scheduleDates, 
+            int groupId, int disciplineId, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var studentsWithPresence = await context.Students
                 .Where(s => s.GroupId == groupId)
                 .Include(s => s.Presences)
                 .OrderBy(s => s.Name)
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
 
             var presenceByStudent = studentsWithPresence.Select(s => new
             {
@@ -101,16 +102,17 @@ namespace BgituGrades.Repositories
             return result;
         }
 
-        public async Task<IEnumerable<FullGradeMarkResponse>> GetMarksGrade(IEnumerable<Work> works, int groupId, int disciplineId)
+        public async Task<IEnumerable<FullGradeMarkResponse>> GetMarksGrade(IEnumerable<Work> works,
+            int groupId, int disciplineId, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var studentsWithMarks = await context.Students
                 .Where(s => s.GroupId == groupId)
                 .Include(s => s.Marks)
                     .ThenInclude(m => m.Work)
                 .OrderBy(s => s.Name)
                 .AsNoTracking()
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
 
             var marksByStudent = studentsWithMarks.Select(s => new
             {
@@ -137,30 +139,30 @@ namespace BgituGrades.Repositories
             return result;
         }
 
-        public async Task<bool> UpdateStudentAsync(Student entity)
+        public async Task<bool> UpdateStudentAsync(Student entity, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             context.Update(entity);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(cancellationToken: cancellationToken);
             return true;
         }
 
-        public async Task<IEnumerable<Student>> GetStudentsByIdsAsync(int[] studentIds)
+        public async Task<IEnumerable<Student>> GetStudentsByIdsAsync(int[] studentIds, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Students
                 .AsNoTracking()
                 .Where(s => studentIds.Contains(s.Id))
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<Student>> GetStudentsByGroupIdsAsync(int[] groupIds)
+        public async Task<IEnumerable<Student>> GetStudentsByGroupIdsAsync(int[] groupIds, CancellationToken cancellationToken)
         {
-            using var context = await contextFactory.CreateDbContextAsync();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Students
                 .AsNoTracking()
                 .Where(s =>  groupIds.Contains(s.GroupId))
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
             return entities;
         }
     }

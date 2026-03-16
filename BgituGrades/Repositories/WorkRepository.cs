@@ -6,27 +6,27 @@ namespace BgituGrades.Repositories
 {
     public interface IWorkRepository
     {
-        Task<IEnumerable<Work>> GetAllWorksAsync();
-        Task<Work> CreateWorkAsync(Work entity);
-        Task<Work?> GetByIdAsync(int id);
-        Task<IEnumerable<Work>> GetByDisciplineAndGroupAsync(int disciplineId, int groupId);
-        Task<bool> UpdateWorkAsync(Work entity);
-        Task<bool> DeleteWorkAsync(int id);
-        Task DeleteAllAsync();
+        Task<IEnumerable<Work>> GetAllWorksAsync(CancellationToken cancellationToken);
+        Task<Work> CreateWorkAsync(Work entity, CancellationToken cancellationToken);
+        Task<Work?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<IEnumerable<Work>> GetByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
+        Task<bool> UpdateWorkAsync(Work entity, CancellationToken cancellationToken);
+        Task<bool> DeleteWorkAsync(int id, CancellationToken cancellationToken);
+        Task DeleteAllAsync(CancellationToken cancellationToken);
     }
 
     public class WorkRepository(AppDbContext dbContext) : IWorkRepository
     {
         private readonly AppDbContext _dbContext = dbContext;
 
-        public async Task<Work> CreateWorkAsync(Work entity)
+        public async Task<Work> CreateWorkAsync(Work entity, CancellationToken cancellationToken)
         {
             await _dbContext.Works.AddAsync(entity);
             await _dbContext.SaveChangesAsync();
             return entity;
         }
 
-        public async Task<bool> DeleteWorkAsync(int id)
+        public async Task<bool> DeleteWorkAsync(int id, CancellationToken cancellationToken)
         {
             var result = await _dbContext.Works
                 .Where(w => w.Id == id)
@@ -34,13 +34,13 @@ namespace BgituGrades.Repositories
             return result > 0;
         }
 
-        public async Task<Work?> GetByIdAsync(int id)
+        public async Task<Work?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var entity = await _dbContext.Works.FindAsync(id);
             return entity;
         }
 
-        public async Task<IEnumerable<Work>> GetAllWorksAsync()
+        public async Task<IEnumerable<Work>> GetAllWorksAsync(CancellationToken cancellationToken)
         {
             var entities = await _dbContext.Works
                 .AsNoTracking()
@@ -48,7 +48,7 @@ namespace BgituGrades.Repositories
             return entities;
         }
 
-        public async Task<IEnumerable<Work>> GetByDisciplineAndGroupAsync(int disciplineId, int groupId)
+        public async Task<IEnumerable<Work>> GetByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken)
         {
             var entities = await _dbContext.Works
                 .Where(w => w.DisciplineId == disciplineId && w.GroupId == groupId)
@@ -58,14 +58,14 @@ namespace BgituGrades.Repositories
             return entities;
         }
 
-        public async Task<bool> UpdateWorkAsync(Work entity)
+        public async Task<bool> UpdateWorkAsync(Work entity, CancellationToken cancellationToken)
         {
             _dbContext.Update(entity);
             await _dbContext.SaveChangesAsync();
             return true;
         }
 
-        public async Task DeleteAllAsync()
+        public async Task DeleteAllAsync(CancellationToken cancellationToken)
         {
             await _dbContext.Works.ExecuteDeleteAsync();
         }

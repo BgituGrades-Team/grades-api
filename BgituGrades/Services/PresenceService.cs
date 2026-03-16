@@ -11,14 +11,14 @@ namespace BgituGrades.Services
 {
     public interface IPresenceService
     {
-        Task<IEnumerable<PresenceResponse>> GetAllPresencesAsync();
-        Task<PresenceResponse> CreatePresenceAsync(CreatePresenceRequest request);
-        Task<IEnumerable<PresenceResponse>> GetPresencesByDisciplineAndGroupAsync(GetPresenceByDisciplineAndGroupRequest request);
-        Task<bool> DeletePresenceByStudentAndDateAsync(DeletePresenceByStudentAndDateRequest request);
-        Task UpdatePresenceAsync(UpdatePresenceRequest request);
-        Task<FullGradePresenceResponse> UpdateOrCreatePresenceAsync(UpdatePresenceGradeRequest request);
-        Task<IEnumerable<PresenceDTO>> GetAllPresencesDtoAsync();
-        Task<PresenceDTO?> GetPresenceDtoByIdAsync(int id);
+        Task<IEnumerable<PresenceResponse>> GetAllPresencesAsync(CancellationToken cancellationToken);
+        Task<PresenceResponse> CreatePresenceAsync(CreatePresenceRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<PresenceResponse>> GetPresencesByDisciplineAndGroupAsync(GetPresenceByDisciplineAndGroupRequest request, CancellationToken cancellationToken);
+        Task<bool> DeletePresenceByStudentAndDateAsync(DeletePresenceByStudentAndDateRequest request, CancellationToken cancellationToken);
+        Task UpdatePresenceAsync(UpdatePresenceRequest request, CancellationToken cancellationToken);
+        Task<FullGradePresenceResponse> UpdateOrCreatePresenceAsync(UpdatePresenceGradeRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<PresenceDTO>> GetAllPresencesDtoAsync(CancellationToken cancellationToken);
+        Task<PresenceDTO?> GetPresenceDtoByIdAsync(int id, CancellationToken cancellationToken);
     }
     public class PresenceService(IPresenceRepository presenceRepository, IMapper mapper, IDistributedCache cache) : IPresenceService
     {
@@ -29,29 +29,29 @@ namespace BgituGrades.Services
         private const string AllPresencesKey = "presence:all";
 
 
-        public async Task<PresenceResponse> CreatePresenceAsync(CreatePresenceRequest request)
+        public async Task<PresenceResponse> CreatePresenceAsync(CreatePresenceRequest request, CancellationToken cancellationToken)
         {
             var entity = _mapper.Map<Presence>(request);
-            var createdEntity = await _presenceRepository.CreatePresenceAsync(entity);
+            var createdEntity = await _presenceRepository.CreatePresenceAsync(entity, cancellationToken: cancellationToken);
 
             await InvalidateCacheAsync(request.DisciplineId, request.StudentId);
             return _mapper.Map<PresenceResponse>(createdEntity);
         }
 
-        public async Task<IEnumerable<PresenceResponse>> GetAllPresencesAsync()
+        public async Task<IEnumerable<PresenceResponse>> GetAllPresencesAsync(CancellationToken cancellationToken)
         {
 
             var cached = await GetFromCacheAsync<IEnumerable<PresenceResponse>>(AllPresencesKey);
             if (cached != null)
                 return cached;
 
-            var entities = await _presenceRepository.GetAllPresencesAsync();
+            var entities = await _presenceRepository.GetAllPresencesAsync(cancellationToken: cancellationToken);
             var result = _mapper.Map<IEnumerable<PresenceResponse>>(entities).ToList();
             await SetCacheAsync(AllPresencesKey, result, TimeSpan.FromHours(1));
             return result;
         }
 
-        public async Task<IEnumerable<PresenceResponse>> GetPresencesByDisciplineAndGroupAsync(GetPresenceByDisciplineAndGroupRequest request)
+        public async Task<IEnumerable<PresenceResponse>> GetPresencesByDisciplineAndGroupAsync(GetPresenceByDisciplineAndGroupRequest request, CancellationToken cancellationToken)
         {
 
             var cacheKey = $"{CacheKeyPrefix}discipline:{request.DisciplineId}:group:{request.GroupId}";
@@ -60,15 +60,15 @@ namespace BgituGrades.Services
             if (cached != null)
                 return cached;
 
-            var entities = await _presenceRepository.GetPresencesByDisciplineAndGroupAsync(request.DisciplineId, request.GroupId);
+            var entities = await _presenceRepository.GetPresencesByDisciplineAndGroupAsync(request.DisciplineId, request.GroupId, cancellationToken: cancellationToken);
             var result = _mapper.Map<IEnumerable<PresenceResponse>>(entities).ToList();
             await SetCacheAsync(cacheKey, result, TimeSpan.FromHours(2));
             return result;
         }
 
-        public async Task<bool> DeletePresenceByStudentAndDateAsync(DeletePresenceByStudentAndDateRequest request)
+        public async Task<bool> DeletePresenceByStudentAndDateAsync(DeletePresenceByStudentAndDateRequest request, CancellationToken cancellationToken)
         {
-            var result = await _presenceRepository.DeletePresenceByStudentAndDateAsync(request.StudentId, request.Date);
+            var result = await _presenceRepository.DeletePresenceByStudentAndDateAsync(request.StudentId, request.Date, cancellationToken: cancellationToken);
             if (result)
             {
                 await InvalidateCacheAsync(0, request.StudentId);
@@ -76,25 +76,25 @@ namespace BgituGrades.Services
             return result;
         }
 
-        public async Task UpdatePresenceAsync(UpdatePresenceRequest request)
+        public async Task UpdatePresenceAsync(UpdatePresenceRequest request, CancellationToken cancellationToken)
         {
             var entity = _mapper.Map<Presence>(request);
-            await _presenceRepository.UpdatePresenceAsync(entity);
+            await _presenceRepository.UpdatePresenceAsync(entity, cancellationToken: cancellationToken);
         }
 
-        public async Task<FullGradePresenceResponse> UpdateOrCreatePresenceAsync(UpdatePresenceGradeRequest request)
+        public async Task<FullGradePresenceResponse> UpdateOrCreatePresenceAsync(UpdatePresenceGradeRequest request, CancellationToken cancellationToken)
         {
-            var presence = await _presenceRepository.GetAsync(request.DisciplineId, request.StudentId, request.Date);
+            var presence = await _presenceRepository.GetAsync(request.DisciplineId, request.StudentId, request.Date, cancellationToken: cancellationToken);
 
             if (presence != null)
             {
                 presence.IsPresent = request.IsPresent;
-                await _presenceRepository.UpdatePresenceAsync(presence);
+                await _presenceRepository.UpdatePresenceAsync(presence, cancellationToken: cancellationToken);
             }
             else
             {
                 presence = _mapper.Map<Presence>(request);
-                await _presenceRepository.CreatePresenceAsync(presence);
+                await _presenceRepository.CreatePresenceAsync(presence, cancellationToken: cancellationToken);
             }
 
 
@@ -112,15 +112,15 @@ namespace BgituGrades.Services
             return response;
         }
 
-        public async Task<IEnumerable<PresenceDTO>> GetAllPresencesDtoAsync()
+        public async Task<IEnumerable<PresenceDTO>> GetAllPresencesDtoAsync(CancellationToken cancellationToken)
         {
-            var entities = await _presenceRepository.GetAllPresencesAsync();
+            var entities = await _presenceRepository.GetAllPresencesAsync(cancellationToken: cancellationToken);
             return _mapper.Map<IEnumerable<PresenceDTO>>(entities);
         }
 
-        public async Task<PresenceDTO?> GetPresenceDtoByIdAsync(int id)
+        public async Task<PresenceDTO?> GetPresenceDtoByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var entity = await _presenceRepository.GetPresenceByIdAsync(id);
+            var entity = await _presenceRepository.GetPresenceByIdAsync(id, cancellationToken: cancellationToken);
             return entity == null ? null : _mapper.Map<PresenceDTO>(entity);
         }
 

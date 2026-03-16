@@ -5,7 +5,7 @@ namespace BgituGrades.Services
 {
     public interface IMigrationService
     {
-        Task DeleteAll();
+        Task DeleteAll(CancellationToken cancellationToken);
     }
     public class MigrationsService(IClassRepository classRepository, IDisciplineRepository disciplineRepository,
         IGroupRepository groupRepository, IMarkRepository markRepository, 
@@ -18,15 +18,15 @@ namespace BgituGrades.Services
         private readonly ITransferRepository _transferRepository = transferRepository;
         private readonly IWorkRepository _workRepository = workRepository;
         private readonly IMarkRepository _markRepository = markRepository;
-        public async Task DeleteAll()
+        public async Task DeleteAll(CancellationToken cancellationToken)
         {
-            await _markRepository.DeleteAllAsync();
-            await _classRepository.DeleteAllAsync();
-            await _disciplineRepository.DeleteAllAsync();
-            await _groupRepository.DeleteAllAsync();
-            await _presenceRepository.DeleteAllAsync();
-            await _transferRepository.DeleteAllAsync();
-            await _workRepository.DeleteAllAsync();
+            await _markRepository.DeleteAllAsync(cancellationToken: cancellationToken);
+            await _classRepository.DeleteAllAsync(cancellationToken: cancellationToken);
+            await _disciplineRepository.DeleteAllAsync(cancellationToken: cancellationToken);
+            await _groupRepository.DeleteAllAsync(cancellationToken: cancellationToken);
+            await _presenceRepository.DeleteAllAsync(cancellationToken: cancellationToken);
+            await _transferRepository.DeleteAllAsync(cancellationToken: cancellationToken);
+            await _workRepository.DeleteAllAsync(cancellationToken: cancellationToken);
         }
     }
 }

@@ -18,9 +18,9 @@ namespace BgituGrades.Controllers
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(IEnumerable<GroupResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<GroupResponse>>> GetGroups(
-            [FromQuery] GetGroupsByDisciplineRequest request)
+            [FromQuery] GetGroupsByDisciplineRequest request, CancellationToken cancellationToken)
         {
-            var groups = await _groupService.GetGroupsByDisciplineAsync(request.DisciplineId);
+            var groups = await _groupService.GetGroupsByDisciplineAsync(request.DisciplineId, cancellationToken: cancellationToken);
             return Ok(groups);
         }
 
@@ -28,9 +28,9 @@ namespace BgituGrades.Controllers
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(IEnumerable<GroupResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<GroupResponse>>> GetAllGroups()
+        public async Task<ActionResult<IEnumerable<GroupResponse>>> GetAllGroups(CancellationToken cancellationToken)
         {
-            var groups = await _groupService.GetAllAsync();
+            var groups = await _groupService.GetAllAsync(cancellationToken: cancellationToken);
             return Ok(groups);
         }
 
@@ -38,9 +38,9 @@ namespace BgituGrades.Controllers
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
         [ProducesResponseType(typeof(GroupResponse), StatusCodes.Status201Created)]
-        public async Task<ActionResult<GroupResponse>> CreateGroup([FromBody] CreateGroupRequest request)
+        public async Task<ActionResult<GroupResponse>> CreateGroup([FromBody] CreateGroupRequest request, CancellationToken cancellationToken)
         {
-            var group = await _groupService.CreateGroupAsync(request);
+            var group = await _groupService.CreateGroupAsync(request, cancellationToken: cancellationToken);
             return CreatedAtAction(nameof(GetGroup), new { id = group.Id }, group);
         }
 
@@ -49,9 +49,9 @@ namespace BgituGrades.Controllers
         [Obsolete("deprecated")]
         [ProducesResponseType(typeof(GroupResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<GroupResponse>> GetGroup([FromRoute] int id)
+        public async Task<ActionResult<GroupResponse>> GetGroup([FromRoute] int id, CancellationToken cancellationToken)
         {
-            var group = await _groupService.GetGroupByIdAsync(id);
+            var group = await _groupService.GetGroupByIdAsync(id, cancellationToken: cancellationToken);
             if (group == null)
                 return NotFound(id);
             return Ok(group);
@@ -62,9 +62,9 @@ namespace BgituGrades.Controllers
         [Obsolete("deprecated")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(UpdateGroupRequest), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateGroup([FromBody] UpdateGroupRequest request)
+        public async Task<IActionResult> UpdateGroup([FromBody] UpdateGroupRequest request, CancellationToken cancellationToken)
         {
-            var success = await _groupService.UpdateGroupAsync(request);
+            var success = await _groupService.UpdateGroupAsync(request, cancellationToken: cancellationToken);
             if (!success)
                 return NotFound(request.Id);
 
@@ -76,9 +76,9 @@ namespace BgituGrades.Controllers
         [Authorize(Policy = "Admin")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteGroup([FromQuery] DeleteGroupRequest request)
+        public async Task<IActionResult> DeleteGroup([FromQuery] DeleteGroupRequest request, CancellationToken cancellationToken)
         {
-            var success = await _groupService.DeleteGroupAsync(request.Id);
+            var success = await _groupService.DeleteGroupAsync(request.Id, cancellationToken: cancellationToken);
             if (!success)
                 return NotFound(request.Id);
 

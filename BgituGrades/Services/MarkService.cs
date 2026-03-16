@@ -12,14 +12,14 @@ namespace BgituGrades.Services
 {
     public interface IMarkService
     {
-        Task<IEnumerable<MarkResponse>> GetAllMarksAsync();
-        Task<MarkResponse> CreateMarkAsync(CreateMarkRequest request);
-        Task<IEnumerable<MarkResponse>> GetMarksByDisciplineAndGroupAsync(GetMarksByDisciplineAndGroupRequest request);
-        Task<bool> UpdateMarkAsync(UpdateMarkRequest request);
-        Task<bool> DeleteMarkByStudentAndWorkAsync(DeleteMarkByStudentAndWorkRequest request);
-        Task<FullGradeMarkResponse> UpdateOrCreateMarkAsync(UpdateMarkGradeRequest request);
-        Task<IEnumerable<MarkDTO>> GetAllMarksDtoAsync();
-        Task<MarkDTO?> GetMarkDtoByIdAsync(int id);
+        Task<IEnumerable<MarkResponse>> GetAllMarksAsync(CancellationToken cancellationToken);
+        Task<MarkResponse> CreateMarkAsync(CreateMarkRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<MarkResponse>> GetMarksByDisciplineAndGroupAsync(GetMarksByDisciplineAndGroupRequest request, CancellationToken cancellationToken);
+        Task<bool> UpdateMarkAsync(UpdateMarkRequest request, CancellationToken cancellationToken);
+        Task<bool> DeleteMarkByStudentAndWorkAsync(DeleteMarkByStudentAndWorkRequest request, CancellationToken cancellationToken);
+        Task<FullGradeMarkResponse> UpdateOrCreateMarkAsync(UpdateMarkGradeRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<MarkDTO>> GetAllMarksDtoAsync(CancellationToken cancellationToken);
+        Task<MarkDTO?> GetMarkDtoByIdAsync(int id, CancellationToken cancellationToken);
     }
     public class MarkService(IMarkRepository markRepository, IMapper mapper, IDistributedCache cache) : IMarkService
     {
@@ -29,29 +29,29 @@ namespace BgituGrades.Services
         private const string CacheKeyPrefix = "mark:";
         private const string AllMarksKey = "mark:all";
 
-        public async Task<MarkResponse> CreateMarkAsync(CreateMarkRequest request)
+        public async Task<MarkResponse> CreateMarkAsync(CreateMarkRequest request, CancellationToken cancellationToken)
         {
             var entity = _mapper.Map<Mark>(request);
-            var createdEntity = await _markRepository.CreateMarkAsync(entity);
+            var createdEntity = await _markRepository.CreateMarkAsync(entity, cancellationToken: cancellationToken);
 
             await InvalidateCacheAsync();
             return _mapper.Map<MarkResponse>(createdEntity);
         }
 
-        public async Task<IEnumerable<MarkResponse>> GetAllMarksAsync()
+        public async Task<IEnumerable<MarkResponse>> GetAllMarksAsync(CancellationToken cancellationToken)
         {
   
             var cached = await GetFromCacheAsync<IEnumerable<MarkResponse>>(AllMarksKey);
             if (cached != null)
                 return cached;
 
-            var entities = await _markRepository.GetAllMarksAsync();
+            var entities = await _markRepository.GetAllMarksAsync(cancellationToken: cancellationToken);
             var result = _mapper.Map<IEnumerable<MarkResponse>>(entities).ToList();
             await SetCacheAsync(AllMarksKey, result, TimeSpan.FromHours(1));
             return result;
         }
 
-        public async Task<IEnumerable<MarkResponse>> GetMarksByDisciplineAndGroupAsync(GetMarksByDisciplineAndGroupRequest request)
+        public async Task<IEnumerable<MarkResponse>> GetMarksByDisciplineAndGroupAsync(GetMarksByDisciplineAndGroupRequest request, CancellationToken cancellationToken)
         {
 
             var cacheKey = $"{CacheKeyPrefix}discipline:{request.DisciplineId}:group:{request.GroupId}";
@@ -60,16 +60,16 @@ namespace BgituGrades.Services
             if (cached != null)
                 return cached;
 
-            var entities = await _markRepository.GetMarksByDisciplineAndGroupAsync(request.DisciplineId, request.GroupId);
+            var entities = await _markRepository.GetMarksByDisciplineAndGroupAsync(request.DisciplineId, request.GroupId, cancellationToken: cancellationToken);
             var result = _mapper.Map<IEnumerable<MarkResponse>>(entities).ToList();
             await SetCacheAsync(cacheKey, result, TimeSpan.FromHours(2));
             return result;
         }
 
-        public async Task<bool> UpdateMarkAsync(UpdateMarkRequest request)
+        public async Task<bool> UpdateMarkAsync(UpdateMarkRequest request, CancellationToken cancellationToken)
         {
             var entity = _mapper.Map<Mark>(request);
-            var result = await _markRepository.UpdateMarkAsync(entity);
+            var result = await _markRepository.UpdateMarkAsync(entity, cancellationToken: cancellationToken);
             if (result)
             {
                 await InvalidateCacheAsync();
@@ -77,9 +77,9 @@ namespace BgituGrades.Services
             return result;
         }
 
-        public async Task<bool> DeleteMarkByStudentAndWorkAsync(DeleteMarkByStudentAndWorkRequest request)
+        public async Task<bool> DeleteMarkByStudentAndWorkAsync(DeleteMarkByStudentAndWorkRequest request, CancellationToken cancellationToken)
         {
-            var result = await _markRepository.DeleteMarkByStudentAndWorkAsync(request.StudentId, request.WorkId);
+            var result = await _markRepository.DeleteMarkByStudentAndWorkAsync(request.StudentId, request.WorkId, cancellationToken: cancellationToken);
             if (result)
             {
                 await InvalidateCacheAsync();
@@ -87,19 +87,19 @@ namespace BgituGrades.Services
             return result;
         }
 
-        public async Task<FullGradeMarkResponse> UpdateOrCreateMarkAsync(UpdateMarkGradeRequest request)
+        public async Task<FullGradeMarkResponse> UpdateOrCreateMarkAsync(UpdateMarkGradeRequest request, CancellationToken cancellationToken)
         {
-            var mark = await _markRepository.GetMarkByStudentAndWorkAsync(request.StudentId, request.WorkId);
+            var mark = await _markRepository.GetMarkByStudentAndWorkAsync(request.StudentId, request.WorkId, cancellationToken: cancellationToken);
 
             if (mark != null)
             {
                 mark.Value = request.Value;
-                await _markRepository.UpdateMarkAsync(mark);
+                await _markRepository.UpdateMarkAsync(mark, cancellationToken: cancellationToken);
             }
             else
             {
                 mark = _mapper.Map<Mark>(request);
-                await _markRepository.CreateMarkAsync(mark);
+                await _markRepository.CreateMarkAsync(mark, cancellationToken: cancellationToken);
             }
 
 
@@ -117,15 +117,15 @@ namespace BgituGrades.Services
             return response;
         }
 
-        public async Task<IEnumerable<MarkDTO>> GetAllMarksDtoAsync()
+        public async Task<IEnumerable<MarkDTO>> GetAllMarksDtoAsync(CancellationToken cancellationToken)
         {
-            var entities = await _markRepository.GetAllMarksAsync();
+            var entities = await _markRepository.GetAllMarksAsync(cancellationToken: cancellationToken);
             return _mapper.Map<IEnumerable<MarkDTO>>(entities);
         }
 
-        public async Task<MarkDTO?> GetMarkDtoByIdAsync(int id)
+        public async Task<MarkDTO?> GetMarkDtoByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var entity = await _markRepository.GetMarkByIdAsync(id);
+            var entity = await _markRepository.GetMarkByIdAsync(id, cancellationToken: cancellationToken);
             return entity == null ? null : _mapper.Map<MarkDTO>(entity);
         }
 

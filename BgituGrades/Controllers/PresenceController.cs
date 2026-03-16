@@ -3,7 +3,6 @@ using BgituGrades.Data;
 using BgituGrades.Models.Presence;
 using BgituGrades.Models.Student;
 using BgituGrades.Services;
-using BgituGrades.Models.Class;
 using BgituGrades.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -23,26 +22,26 @@ namespace BgituGrades.Controllers
         [HttpGet]
 
         [ProducesResponseType(typeof(IEnumerable<PresenceResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<PresenceResponse>>> GetPresences()
+        public async Task<ActionResult<IEnumerable<PresenceResponse>>> GetPresences(CancellationToken cancellationToken)
         {
-            var Presences = await _presenceService.GetAllPresencesAsync();
+            var Presences = await _presenceService.GetAllPresencesAsync(cancellationToken: cancellationToken);
             return Ok(Presences);
         }
 
         [HttpPost]
         [ProducesResponseType(typeof(PresenceResponse), StatusCodes.Status201Created)]
-        public async Task<ActionResult<PresenceResponse>> CreatePresence([FromBody] CreatePresenceRequest request)
+        public async Task<ActionResult<PresenceResponse>> CreatePresence([FromBody] CreatePresenceRequest request, CancellationToken cancellationToken)
         {
-            var Presence = await _presenceService.CreatePresenceAsync(request);
+            var Presence = await _presenceService.CreatePresenceAsync(request, cancellationToken: cancellationToken);
             return CreatedAtAction(nameof(GetPresence), new { id = Presence.Id }, Presence);
         }
 
         [HttpGet("by_dId_gId")]
         [ProducesResponseType(typeof(PresenceResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<PresenceResponse>> GetPresence([FromQuery] GetPresenceByDisciplineAndGroupRequest request)
+        public async Task<ActionResult<PresenceResponse>> GetPresence([FromQuery] GetPresenceByDisciplineAndGroupRequest request, CancellationToken cancellationToken)
         {
-            var Presence = await _presenceService.GetPresencesByDisciplineAndGroupAsync(request);
+            var Presence = await _presenceService.GetPresencesByDisciplineAndGroupAsync(request, cancellationToken: cancellationToken);
             if (Presence == null)
                 return NotFound(new { disciplineId = request.DisciplineId, groupId = request.GroupId });
             return Ok(Presence);
@@ -51,9 +50,9 @@ namespace BgituGrades.Controllers
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdatePresence([FromBody] UpdatePresenceRequest request)
+        public async Task<IActionResult> UpdatePresence([FromBody] UpdatePresenceRequest request, CancellationToken cancellationToken)
         {
-            await _presenceService.UpdatePresenceAsync(request);
+            await _presenceService.UpdatePresenceAsync(request, cancellationToken: cancellationToken);
 
             return NoContent();
         }
@@ -87,9 +86,9 @@ namespace BgituGrades.Controllers
         [HttpDelete]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeletePresence([FromQuery] DeletePresenceByStudentAndDateRequest request)
+        public async Task<IActionResult> DeletePresence([FromQuery] DeletePresenceByStudentAndDateRequest request, CancellationToken cancellationToken)
         {
-            var success = await _presenceService.DeletePresenceByStudentAndDateAsync(request);
+            var success = await _presenceService.DeletePresenceByStudentAndDateAsync(request, cancellationToken: cancellationToken);
             if (!success)
                 return NotFound(new { studentId = request.StudentId, date = request.Date});
 

@@ -16,9 +16,9 @@ namespace BgituGrades.Controllers
 
         [HttpDelete]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Delete()
+        public async Task<IActionResult> Delete(CancellationToken cancellationToken)
         {
-            await _migrationService.DeleteAll();
+            await _migrationService.DeleteAll(cancellationToken: cancellationToken);
             return NoContent();
         }
     }
