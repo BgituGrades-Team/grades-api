@@ -155,7 +155,7 @@ namespace BgituGrades.Services
 
                 var fullName = string.Join(" ",
                     new[] { lastName, firstName, middleName }
-                        .Where(s => !string.IsNullOrEmpty(s)));
+                        .Where(s => !string.IsNullOrEmpty(s) && s != "NULL"));
 
                 batch.Add(new Student
                 {
