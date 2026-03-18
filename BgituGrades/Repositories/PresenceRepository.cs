@@ -120,6 +120,7 @@ namespace BgituGrades.Repositories
 
         public async Task<Presence?> GetPresenceByIdAsync(int id, CancellationToken cancellationToken)
         {
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Presences.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, cancellationToken: cancellationToken);
         }
 
