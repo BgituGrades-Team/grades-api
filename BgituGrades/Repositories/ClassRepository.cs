@@ -16,13 +16,13 @@ namespace BgituGrades.Repositories
         Task<IEnumerable<Class>> GetAllClassesAsync(CancellationToken cancellationToken);
     }
 
-    public class ClassRepository(AppDbContext dbContext) : IClassRepository
+    public class ClassRepository(AppDbContext dbContext, IDbContextFactory<AppDbContext> contextFactory) : IClassRepository
     {
         private readonly AppDbContext _dbContext = dbContext;
 
         public async Task<Class> CreateClassAsync(Class entity, CancellationToken cancellationToken)
         {
-            await _dbContext.Classes.AddAsync(entity);
+            await _dbContext.Classes.AddAsync(entity, cancellationToken: cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
             return entity;
         }
@@ -48,7 +48,8 @@ namespace BgituGrades.Repositories
 
         public async Task<IEnumerable<Class>> GetClassesByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken)
         {
-            var entities = await _dbContext.Classes
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            var entities = await context.Classes
                 .Where(c => c.GroupId == groupId && c.DisciplineId == disciplineId)
                 .OrderBy(c => c.Weeknumber)
                 .ThenBy(c => c.WeekDay)
