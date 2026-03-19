@@ -200,30 +200,29 @@ namespace BgituGrades.Services
 
         private async Task<Dictionary<int, Dictionary<int, IEnumerable<DateOnly>>>> BuildScheduleCacheAsync(
             IEnumerable<int> groupIds, CancellationToken cancellationToken)
-        { 
-            var disciplines = await _disciplineRepository
-                .GetByGroupIdsAsync([.. groupIds], cancellationToken);
-
-            var result = new Dictionary<int, Dictionary<int, IEnumerable<DateOnly>>>();
-
-            foreach (var groupId in groupIds)
+        {
+            var tasks = groupIds.Select(async groupId =>
             {
-                var groupDisciplines = disciplines
-                    .Where(d => d.Classes!.Any(c => c.GroupId == groupId));
+                var disciplines = await _disciplineRepository
+                    .GetByGroupIdAsync(groupId, cancellationToken);
 
-                var disciplineSchedules = new Dictionary<int, IEnumerable<DateOnly>>();
-
-                foreach (var discipline in groupDisciplines)
+                var scheduleTasks = disciplines.Select(async d =>
                 {
                     var dates = await _classService
-                        .GenerateScheduleDatesAsync(groupId, discipline.Id, cancellationToken);
-                    disciplineSchedules[discipline.Id] = dates.Select(c => c.Date).ToList();
-                }
+                        .GenerateScheduleDatesAsync(groupId, d.Id, cancellationToken);
+                    return (d.Id, Dates: dates.Select(c => c.Date));
+                });
 
-                result[groupId] = disciplineSchedules;
-            }
+                var schedules = await Task.WhenAll(scheduleTasks);
 
-            return result;
+                return (groupId, Schedule: schedules.ToDictionary(
+                    s => s.Id,
+                    s => s.Dates));
+            });
+
+            var results = await Task.WhenAll(tasks);
+
+            return results.ToDictionary(r => r.groupId, r => r.Schedule);
         }
 
         public async Task DeleteAllAsync(CancellationToken cancellationToken)
