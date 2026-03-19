@@ -200,29 +200,30 @@ namespace BgituGrades.Services
 
         private async Task<Dictionary<int, Dictionary<int, IEnumerable<DateOnly>>>> BuildScheduleCacheAsync(
             IEnumerable<int> groupIds, CancellationToken cancellationToken)
-        {
-            var tasks = groupIds.Select(async groupId =>
-            {
-                var disciplines = await _disciplineRepository
-                    .GetByGroupIdAsync(groupId, cancellationToken);
+        { 
+            var disciplines = await _disciplineRepository
+                .GetByGroupIdsAsync([.. groupIds], cancellationToken);
 
-                var scheduleTasks = disciplines.Select(async d =>
+            var result = new Dictionary<int, Dictionary<int, IEnumerable<DateOnly>>>();
+
+            foreach (var groupId in groupIds)
+            {
+                var groupDisciplines = disciplines
+                    .Where(d => d.Classes!.Any(c => c.GroupId == groupId));
+
+                var disciplineSchedules = new Dictionary<int, IEnumerable<DateOnly>>();
+
+                foreach (var discipline in groupDisciplines)
                 {
                     var dates = await _classService
-                        .GenerateScheduleDatesAsync(groupId, d.Id, cancellationToken);
-                    return (d.Id, Dates: dates.Select(c => c.Date));
-                });
+                        .GenerateScheduleDatesAsync(groupId, discipline.Id, cancellationToken);
+                    disciplineSchedules[discipline.Id] = dates.Select(c => c.Date).ToList();
+                }
 
-                var schedules = await Task.WhenAll(scheduleTasks);
+                result[groupId] = disciplineSchedules;
+            }
 
-                return (groupId, Schedule: schedules.ToDictionary(
-                    s => s.Id,
-                    s => s.Dates));
-            });
-
-            var results = await Task.WhenAll(tasks);
-
-            return results.ToDictionary(r => r.groupId, r => r.Schedule);
+            return result;
         }
 
         public async Task DeleteAllAsync(CancellationToken cancellationToken)

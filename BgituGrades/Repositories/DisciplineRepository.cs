@@ -21,7 +21,7 @@ namespace BgituGrades.Repositories
         public async Task<Discipline> CreateDisciplineAsync(Discipline entity, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
-            await context.Disciplines.AddAsync(entity);
+            await context.Disciplines.AddAsync(entity, cancellationToken);
             await context.SaveChangesAsync(cancellationToken: cancellationToken);  
             return entity;
         }
@@ -61,6 +61,9 @@ namespace BgituGrades.Repositories
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Disciplines
                 .Where(d => d.Classes.Any(c => groupIds.Contains(c.GroupId)))
+                .Include(d => d.Classes)
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Distinct()
                 .ToListAsync(cancellationToken: cancellationToken);
         }
