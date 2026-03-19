@@ -32,7 +32,7 @@ namespace BgituGrades.Services
         private readonly IMapper _mapper = mapper;
 
         private const byte STATUS_STUDYING = 1;
-        private const short BATCH_SIZE = 500;
+        private const short BATCH_SIZE = 2000;
         private const byte COL_CODE = 0;
         private const byte COL_LASTNAME = 1;
         private const byte COL_FIRSTNAME = 2;
@@ -108,12 +108,11 @@ namespace BgituGrades.Services
 
         public async Task<ImportResult> ImportStudentsFromXlsxAsync(Stream fileStream, CancellationToken cancellationToken)
         {
-            var groupsByName = await _groupService
-            .GetAllAsync(cancellationToken)
-            .ContinueWith(t => t.Result.ToDictionary(
-                g => g.Name,
-                g => g.Id,
-                StringComparer.OrdinalIgnoreCase));
+            var groupsByName = (await _groupService.GetAllAsync(cancellationToken))
+                .ToDictionary(g => g.Name, g => g.Id, StringComparer.OrdinalIgnoreCase);
+
+            var scheduleCache = await BuildScheduleCacheAsync(
+                groupsByName.Values, cancellationToken);
 
             var result = new ImportResult();
             var batch = new List<Student>(BATCH_SIZE);
@@ -168,50 +167,62 @@ namespace BgituGrades.Services
 
                 if (batch.Count >= BATCH_SIZE)
                 {
-                    await FlushBatchAsync(batch, cancellationToken);
+                    await FlushBatchAsync(batch, scheduleCache, cancellationToken: cancellationToken);
                     batch.Clear();
                 }
             }
 
             if (batch.Count > 0)
-                await FlushBatchAsync(batch, cancellationToken);
+                await FlushBatchAsync(batch, scheduleCache, cancellationToken: cancellationToken);
 
             result.UnknownGroups = unknownGroups;
             return result;
         }
 
-        private async Task FlushBatchAsync(List<Student> batch, CancellationToken cancellationToken)
+        private async Task FlushBatchAsync(List<Student> batch, Dictionary<int, Dictionary<int, IEnumerable<DateOnly>>> schedules, CancellationToken cancellationToken)
         {
             await _studentRepository.BulkInsertAsync(batch, cancellationToken: cancellationToken);
             // Великая ъуйня batch возвращается уже с Id из бд
 
-            var presencesDict = await BuildPresencesDictAsync(batch, cancellationToken: cancellationToken);
-            await _presenceRepository.BulkInsertPresencesAsync(presencesDict, cancellationToken: cancellationToken);
+            var presences = batch
+                .Where(s => schedules.TryGetValue(s.GroupId, out _))
+                .SelectMany(s => schedules[s.GroupId]
+                    .SelectMany(d => d.Value.Select(date => new Presence
+                    {
+                        StudentId = s.Id,
+                        DisciplineId = d.Key,
+                        Date = date,
+                        IsPresent = PresenceType.PRESENT
+                    })))
+                .ToList();
+            await _presenceRepository.BulkInsertPresencesAsync(presences, cancellationToken: cancellationToken);
         }
 
-        private async Task<Dictionary<int, Dictionary<int, IEnumerable<DateOnly>>>> BuildPresencesDictAsync(
-            List<Student> students, CancellationToken cancellationToken)
+        private async Task<Dictionary<int, Dictionary<int, IEnumerable<DateOnly>>>> BuildScheduleCacheAsync(
+            IEnumerable<int> groupIds, CancellationToken cancellationToken)
         {
-            var byGroup = students.GroupBy(s => s.GroupId);
-            var result = new Dictionary<int, Dictionary<int, IEnumerable<DateOnly>>>();
-
-            foreach (var group in byGroup)
+            var tasks = groupIds.Select(async groupId =>
             {
                 var disciplines = await _disciplineRepository
-                    .GetByGroupIdAsync(group.Key, cancellationToken: cancellationToken);
+                    .GetByGroupIdAsync(groupId, cancellationToken);
 
-                var disciplineSchedules = new Dictionary<int, IEnumerable<DateOnly>>();
-                var scheduleTasks = disciplines.Select(d =>
-                    _classService.GenerateScheduleDatesAsync(group.Key, d.Id, cancellationToken: cancellationToken)
-                        .ContinueWith(t => (d.Id, Dates: t.Result.Select(c => c.Date))));
+                var scheduleTasks = disciplines.Select(async d =>
+                {
+                    var dates = await _classService
+                        .GenerateScheduleDatesAsync(groupId, d.Id, cancellationToken);
+                    return (d.Id, Dates: dates.Select(c => c.Date));
+                });
 
-                foreach (var (disciplineId, dates) in await Task.WhenAll(scheduleTasks))
-                    disciplineSchedules[disciplineId] = dates;
+                var schedules = await Task.WhenAll(scheduleTasks);
 
-                foreach (var student in group)
-                    result[student.Id] = disciplineSchedules;
-            }
-            return result;
+                return (groupId, Schedule: schedules.ToDictionary(
+                    s => s.Id,
+                    s => s.Dates));
+            });
+
+            var results = await Task.WhenAll(tasks);
+
+            return results.ToDictionary(r => r.groupId, r => r.Schedule);
         }
 
         public async Task DeleteAllAsync(CancellationToken cancellationToken)
