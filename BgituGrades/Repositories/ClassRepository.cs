@@ -14,6 +14,8 @@ namespace BgituGrades.Repositories
         Task<bool> DeleteClassAsync(int id, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
         Task<IEnumerable<Class>> GetAllClassesAsync(CancellationToken cancellationToken);
+        Task<Dictionary<(int GroupId, int DisciplineId), IEnumerable<Class>>> GetClassesByGroupIdsAndDisciplineIdsAsync(
+            List<int> groupIds, List<int> disciplineIds, CancellationToken cancellationToken);
     }
 
     public class ClassRepository(AppDbContext dbContext, IDbContextFactory<AppDbContext> contextFactory) : IClassRepository
@@ -67,6 +69,21 @@ namespace BgituGrades.Repositories
         public async Task<IEnumerable<Class>> GetAllClassesAsync(CancellationToken cancellationToken)
         {
             return await _dbContext.Classes.AsNoTracking().ToListAsync(cancellationToken: cancellationToken);
+        }
+
+        public async Task<Dictionary<(int GroupId, int DisciplineId), IEnumerable<Class>>> GetClassesByGroupIdsAndDisciplineIdsAsync(
+            List<int> groupIds, List<int> disciplineIds, CancellationToken cancellationToken)
+        {
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            var classes = await context.Classes
+                .Where(c => groupIds.Contains(c.GroupId) && disciplineIds.Contains(c.DisciplineId))
+                .ToListAsync(cancellationToken);
+
+            return classes
+                .GroupBy(c => (c.GroupId, c.DisciplineId))
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.AsEnumerable());
         }
     }
 }

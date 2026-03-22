@@ -3,6 +3,7 @@ using BgituGrades.Entities;
 using BgituGrades.DTO;
 using BgituGrades.Models.Group;
 using Microsoft.EntityFrameworkCore;
+using EFCore.BulkExtensions;
 
 namespace BgituGrades.Repositories
 {
@@ -15,6 +16,7 @@ namespace BgituGrades.Repositories
         Task<bool> DeleteGroupAsync(int id, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
         Task<IEnumerable<Group>> GetGroupsByIdsAsync(int[] groupIds, CancellationToken cancellationToken);
+        Task<List<Group>> GetByIdsAsync(List<int> groupIds, CancellationToken cancellationToken);
     }
 
     public class GroupRepository(IDbContextFactory<AppDbContext> contextFactory) : IGroupRepository
@@ -58,6 +60,14 @@ namespace BgituGrades.Repositories
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entity = await context.Groups.FindAsync([id], cancellationToken: cancellationToken);
             return entity;
+        }
+
+        public async Task<List<Group>> GetByIdsAsync(List<int> groupIds, CancellationToken cancellationToken)
+        {
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            return await context.Groups
+                .Where(g => groupIds.Contains(g.Id))
+                .ToListAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<Group>> GetGroupsByDisciplineAsync(int disciplineId, CancellationToken cancellationToken)

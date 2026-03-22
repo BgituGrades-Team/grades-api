@@ -22,9 +22,14 @@ namespace BgituGrades.Services
         Task DeleteAllAsync(CancellationToken cancellationToken);
     }
     public class StudentService(IStudentRepository studentRepository, IPresenceRepository presenceRepository,
-        IClassService classService, IDisciplineRepository disciplineRepository, IGroupService groupService, IMapper mapper) : IStudentService
+        IClassService classService, IDisciplineRepository disciplineRepository, IGroupService groupService,
+        IGroupRepository groupRepository, IClassRepository classRepository, ITransferRepository transferRepository, IMapper mapper) : IStudentService
+        
     {
         private readonly IStudentRepository _studentRepository = studentRepository;
+        private readonly IGroupRepository _groupRepository = groupRepository;
+        private readonly IClassRepository _classRepository = classRepository;
+        private readonly ITransferRepository _transferRepository = transferRepository;
         private readonly IPresenceRepository _presenceRepository = presenceRepository;
         private readonly IDisciplineRepository _disciplineRepository = disciplineRepository;
         private readonly IClassService _classService = classService;
@@ -192,26 +197,100 @@ namespace BgituGrades.Services
         private async Task<Dictionary<int, Dictionary<int, IEnumerable<DateOnly>>>> BuildPresencesDictAsync(
             List<Student> students, CancellationToken cancellationToken)
         {
-            var byGroup = students.GroupBy(s => s.GroupId);
+            var groupIds = students.Select(s => s.GroupId).Distinct().ToList();
+
+            var groups = await _groupRepository.GetByIdsAsync(groupIds, cancellationToken);
+            var groupById = groups.ToDictionary(g => g.Id);
+
+            var disciplinesByGroup = await _disciplineRepository.GetDictByGroupIdsAsync(groupIds, cancellationToken);
+
+            var allPairs = disciplinesByGroup
+                .SelectMany(kvp => kvp.Value.Select(d => new { GroupId = kvp.Key, DisciplineId = d.Id }))
+                .ToList();
+
+            var allDisciplineIds = allPairs.Select(p => p.DisciplineId).Distinct().ToList();
+
+            var classesByGroupAndDiscipline = await _classRepository
+                .GetClassesByGroupIdsAndDisciplineIdsAsync(groupIds, allDisciplineIds, cancellationToken);
+
+            var transfersByGroupAndDiscipline = await _transferRepository
+                .GetTransfersByGroupIdsAsync(groupIds, cancellationToken);
+
+            var scheduleByGroupAndDiscipline = new Dictionary<(int GroupId, int DisciplineId), IEnumerable<DateOnly>>();
+
+            foreach (var pair in allPairs)
+            {
+                var group = groupById[pair.GroupId];
+                var key = (pair.GroupId, pair.DisciplineId);
+
+                classesByGroupAndDiscipline.TryGetValue(key, out var classes);
+                transfersByGroupAndDiscipline.TryGetValue(key, out var transfers);
+
+                var dates = GenerateScheduleDatesInMemory(group, classes ?? [], transfers ?? []);
+                scheduleByGroupAndDiscipline[key] = dates;
+            }
+
             var result = new Dictionary<int, Dictionary<int, IEnumerable<DateOnly>>>();
 
-            foreach (var group in byGroup)
+            foreach (var student in students)
             {
-                var disciplines = await _disciplineRepository
-                    .GetByGroupIdAsync(group.Key, cancellationToken: cancellationToken);
+                if (!disciplinesByGroup.TryGetValue(student.GroupId, out var disciplines))
+                {
+                    result[student.Id] = [];
+                    continue;
+                }
 
                 var disciplineSchedules = new Dictionary<int, IEnumerable<DateOnly>>();
-                var scheduleTasks = disciplines.Select(d =>
-                    _classService.GenerateScheduleDatesAsync(group.Key, d.Id, cancellationToken: cancellationToken)
-                        .ContinueWith(t => (d.Id, Dates: t.Result.Select(c => c.Date))));
+                foreach (var discipline in disciplines)
+                {
+                    var key = (student.GroupId, discipline.Id);
+                    scheduleByGroupAndDiscipline.TryGetValue(key, out var dates);
+                    disciplineSchedules[discipline.Id] = dates ?? [];
+                }
 
-                foreach (var (disciplineId, dates) in await Task.WhenAll(scheduleTasks))
-                    disciplineSchedules[disciplineId] = dates;
-
-                foreach (var student in group)
-                    result[student.Id] = disciplineSchedules;
+                result[student.Id] = disciplineSchedules;
             }
+
             return result;
+        }
+
+        private static List<DateOnly> GenerateScheduleDatesInMemory(
+            Group group, IEnumerable<Class> classes, IEnumerable<Transfer> transfers)
+        {
+            var startDate = group.StudyStartDate;
+            var endDate = group.StudyEndDate;
+            var firstWeekStart = group.StartWeekNumber;
+
+            var studyStartDayOfWeek = startDate.DayOfWeek;
+            var daysToMonday = ((int)DayOfWeek.Monday - (int)studyStartDayOfWeek + 7) % 7;
+            var firstMonday = startDate.AddDays(daysToMonday);
+            var week1Start = firstMonday.AddDays(-7 * (firstWeekStart - 1));
+
+            var transferMap = transfers.ToDictionary(t => t.OriginalDate, t => t.NewDate);
+
+            if (week1Start > endDate.AddDays(7)) return [];
+
+            var dates = new List<DateOnly>();
+            var currentWeekStart = week1Start;
+            while (currentWeekStart <= endDate.AddDays(7))
+            {
+                foreach (var c in classes)
+                {
+                    var lessonDate = currentWeekStart
+                        .AddDays(c.WeekDay - 1)
+                        .AddDays(7 * (c.Weeknumber - 1));
+
+                    if (lessonDate < startDate || lessonDate > endDate) continue;
+
+                    var actualDate = transferMap.TryGetValue(lessonDate, out var newDate)
+                        ? newDate : lessonDate;
+
+                    dates.Add(actualDate);
+                }
+                currentWeekStart = currentWeekStart.AddDays(14);
+            }
+
+            return dates.Distinct().Order().ToList();
         }
 
         public async Task DeleteAllAsync(CancellationToken cancellationToken)

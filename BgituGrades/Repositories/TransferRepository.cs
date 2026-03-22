@@ -13,6 +13,8 @@ namespace BgituGrades.Repositories
         Task<bool> DeleteTransferAsync(int id, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
         Task<IEnumerable<Transfer>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken);
+        Task<Dictionary<(int GroupId, int DisciplineId), IEnumerable<Transfer>>> GetTransfersByGroupIdsAsync(
+            List<int> groupIds, CancellationToken cancellationToken);
     }
 
     public class TransferRepository(IDbContextFactory<AppDbContext> contextFactory) : ITransferRepository
@@ -73,6 +75,21 @@ namespace BgituGrades.Repositories
                 .AsNoTracking()
                 .ToListAsync(cancellationToken: cancellationToken);
             return entities;
+        }
+
+        public async Task<Dictionary<(int GroupId, int DisciplineId), IEnumerable<Transfer>>> GetTransfersByGroupIdsAsync(
+            List<int> groupIds, CancellationToken cancellationToken)
+        {
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            var transfers = await context.Transfers
+                .Where(t => groupIds.Contains(t.GroupId))
+                .ToListAsync(cancellationToken);
+
+            return transfers
+                .GroupBy(t => (t.GroupId, t.DisciplineId))
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.AsEnumerable());
         }
     }
 

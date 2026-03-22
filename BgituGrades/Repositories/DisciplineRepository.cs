@@ -9,11 +9,12 @@ namespace BgituGrades.Repositories
         Task<Discipline> CreateDisciplineAsync(Discipline entity, CancellationToken cancellationToken);
         Task<Discipline?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<Discipline?>> GetByGroupIdAsync(int groupId, CancellationToken cancellationToken);
-        Task<IEnumerable<Discipline?>> GetByGroupIdsAsync(int[] groupIds, CancellationToken cancellationToken);
+        Task<IEnumerable<Discipline?>> GetByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken);
         Task<bool> UpdateDisciplineAsync(Discipline entity, CancellationToken cancellationToken);
         Task<bool> DeleteDisciplineAsync(int id, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
         Task<IEnumerable<Discipline>> GetDisciplinesByIdsAsync(int[] disciplineIds, CancellationToken cancellationToken);
+        Task<Dictionary<int, IEnumerable<Discipline>>> GetDictByGroupIdsAsync(List<int> groupIds, CancellationToken cancellationToken);
     }
 
     public class DisciplineRepository(IDbContextFactory<AppDbContext> contextFactory) : IDisciplineRepository
@@ -56,7 +57,7 @@ namespace BgituGrades.Repositories
                 .ToListAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<Discipline?>> GetByGroupIdsAsync(int[] groupIds, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Discipline?>> GetByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Disciplines
@@ -86,6 +87,23 @@ namespace BgituGrades.Repositories
             context.Disciplines.Update(entity);
             await context.SaveChangesAsync(cancellationToken: cancellationToken);
             return true;
+        }
+
+        public async Task<Dictionary<int, IEnumerable<Discipline>>> GetDictByGroupIdsAsync(
+            List<int> groupIds, CancellationToken cancellationToken)
+        {
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            var disciplines = await context.Classes
+                .Where(c => groupIds.Contains(c.GroupId))
+                .Select(c => new { c.GroupId, c.Discipline })
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            return disciplines
+                .GroupBy(x => x.GroupId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(x => x.Discipline!).DistinctBy(d => d.Id) as IEnumerable<Discipline>);
         }
     }
 }
