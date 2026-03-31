@@ -100,7 +100,7 @@ namespace BgituGrades.Services
                 }
             }
 
-            return results;
+            return results.DistinctBy(d => d.Id);
         }
 
         public async Task<DisciplineResponse?> GetDisciplineByIdAsync(int id, CancellationToken cancellationToken)
