@@ -13,5 +13,12 @@ namespace BgituGrades.Models.Key
     {
         [Required]
         public Role Role { get; set; }
+        public int? GroupId { get; set; } = null;
+    }
+
+    public class CreateSharedKeyRequest
+    {
+        [Required]
+        public int GroupId { get; set; }
     }
 }

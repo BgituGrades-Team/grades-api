@@ -3,6 +3,7 @@ using BgituGrades.Repositories;
 using BgituGrades.Services;
 using BgituGrades.Validators;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace BgituGrades.Features
@@ -39,7 +40,7 @@ namespace BgituGrades.Features
             services.AddScoped<IKeyService, KeyService>();
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<ISettingService, SettingService>();
-
+            services.AddScoped<IAuthorizationHandler, GroupAccessHandler>();
 
 
             services.AddSingleton<ITokenHasher, TokenHasher>();

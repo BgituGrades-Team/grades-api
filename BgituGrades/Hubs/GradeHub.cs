@@ -1,6 +1,7 @@
 ﻿using BgituGrades.Models.Class;
 using BgituGrades.Models.Mark;
 using BgituGrades.Models.Presence;
+using BgituGrades.Models.Report;
 using BgituGrades.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -21,6 +22,15 @@ namespace BgituGrades.Hubs
         [SubscribeOperation(typeof(IEnumerable<FullGradeMarkResponse>), Summary = "Событие: Получение списка оценок (ответ на GetMarkGrade)", OperationId = "ReceiveMarks")]
         public async Task GetMarkGrade(GetClassDateRequest request)
         {
+            var groupClaim = Context.User?.FindFirst("group_id")?.Value;
+            if (Context.User?.IsInRole("STUDENT") == true)
+            {
+                if (groupClaim == null || groupClaim != request.GroupId.ToString())
+                {
+                    await Clients.Caller.SendAsync("PermissionDenied", "Доступ запрещён");
+                    return;
+                }
+            }
             var cancellationToken = Context.ConnectionAborted;
             var marks = await _classService.GetMarksByWorksAsync(request, cancellationToken);
             await Clients.Caller.SendAsync("ReceiveMarks", marks);
@@ -32,6 +42,15 @@ namespace BgituGrades.Hubs
         [SubscribeOperation(typeof(IEnumerable<FullGradePresenceResponse>), Summary = "Событие: Получение данных о посещаемости (ответ на GetPresenceGrade)", OperationId = "ReceivePresences")]
         public async Task GetPresenceGrade(GetClassDateRequest request)
         {
+            var groupClaim = Context.User?.FindFirst("group_id")?.Value;
+            if (Context.User?.IsInRole("STUDENT") == true)
+            {
+                if (groupClaim == null || groupClaim != request.GroupId.ToString())
+                {
+                    await Clients.Caller.SendAsync("PermissionDenied", "Доступ запрещён");
+                    return;
+                }
+            }
             var cancellationToken = Context.ConnectionAborted;
             var classDates = await _classService.GetPresenceByScheduleAsync(request, cancellationToken);
             await Clients.Caller.SendAsync("ReceivePresences", classDates);
@@ -58,5 +77,11 @@ namespace BgituGrades.Hubs
             var response = await _presenceService.UpdateOrCreatePresenceAsync(request, cancellationToken: cancellationToken);
             await Clients.All.SendAsync("UpdatedPresence", response);
         }
+
+        public record PermissionDeniedResponse(string Message);
+
+        [Channel("hubs/grade/PermissionDenied")]
+        [SubscribeOperation(typeof(PermissionDeniedResponse), Summary = "Событие: Доступ запрещён, т.к. group_id не соответствует запрашиваемому", OperationId = "PermissionDenied")]
+        public void PermissionDenied(PermissionDeniedResponse response) { }
     }
 }

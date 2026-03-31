@@ -11,8 +11,21 @@ namespace BgituGrades.Entities
         public string? LookupHash { get; set; }
         public string OwnerName { get; set; }
         public string? Role { get; set; }
+        public int? GroupId { get; set; }
         public DateTime? ExpiryDate { get; set; }
         [NotMapped]
-        public IReadOnlyCollection<Claim> Claims => [new Claim(ClaimTypes.Role, Role ?? "STUDENT")];
+        public IReadOnlyCollection<Claim> Claims
+        {
+            get
+            {
+                var claims = new List<Claim>{ new(ClaimTypes.Role, Role ?? "STUDENT") };
+
+                if (GroupId.HasValue)
+                {
+                    claims.Add(new Claim("group_id", GroupId.Value.ToString()));
+                }
+                return claims.AsReadOnly();
+            }
+        }
     }
 }

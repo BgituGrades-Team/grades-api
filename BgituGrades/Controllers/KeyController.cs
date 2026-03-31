@@ -31,7 +31,7 @@ namespace BgituGrades.Controllers
         [ProducesResponseType(typeof(KeyResponse), StatusCodes.Status201Created)]
         public async Task<ActionResult<KeyResponse>> CreateKey(CreateKeyRequest request, CancellationToken cancellationToken)
         {
-            var key = await _keyService.GenerateKeyAsync(request.Role, cancellationToken: cancellationToken);
+            var key = await _keyService.GenerateKeyAsync(request.Role, request.GroupId, cancellationToken: cancellationToken);
             return CreatedAtAction(nameof(GetKey), new { key = key.Key }, key);
         }
 
@@ -45,30 +45,15 @@ namespace BgituGrades.Controllers
         }
 
         [HttpGet("shared")]
-        [ApiVersion("1.0")]
-        [Obsolete("deprecated")]
-        [Authorize(Policy = "Edit")]
-        [ProducesResponseType(typeof(SharedKeyResponse), StatusCodes.Status200OK)]
-        public async Task<ActionResult<KeyResponse>> CreateSharedKey(int groupId, int disciplineId, CancellationToken cancellationToken)
-        {
-            var key = await _keyService.GenerateKeyAsync(Role.STUDENT, cancellationToken: cancellationToken);
-            var response = new SharedKeyResponse
-            {
-                Link = $"{Request.Scheme}://{Request.Host}/visit?key={key.Key}"
-            };
-            return Ok(response);
-        }
-
-        [HttpGet("shared")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Edit")]
         [ProducesResponseType(typeof(SharedKeyResponse), StatusCodes.Status200OK)]
-        public async Task<ActionResult<KeyResponse>> CreateSharedKeyV2(CancellationToken cancellationToken)
+        public async Task<ActionResult<KeyResponse>> CreateSharedKeyV2([FromBody] CreateSharedKeyRequest request, CancellationToken cancellationToken)
         {
-            var key = await _keyService.GenerateKeyAsync(Role.STUDENT, cancellationToken: cancellationToken);
+            var key = await _keyService.GenerateKeyAsync(Role.STUDENT, groupId: request.GroupId, cancellationToken: cancellationToken);
             var response = new SharedKeyResponse
             {
-                Link = $"{Request.Scheme}://{Request.Host}/visit?key={key.Key}"
+                Link = $"https://{Request.Host}/visit?key={key.Key}"
             };
             return Ok(response);
         }

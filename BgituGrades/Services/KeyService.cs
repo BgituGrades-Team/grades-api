@@ -11,7 +11,7 @@ namespace BgituGrades.Services
     {
         Task<IEnumerable<KeyResponse>> GetKeysAsync(CancellationToken cancellationToken);
         Task<KeyResponse> GetKeyAsync(string key, CancellationToken cancellationToken);
-        Task<KeyResponse> GenerateKeyAsync(Role role, CancellationToken cancellationToken);
+        Task<KeyResponse> GenerateKeyAsync(Role role, int? groupId, CancellationToken cancellationToken);
         Task<bool> DeleteKeyAsync(string key, CancellationToken cancellationToken);
     }
     public class KeyService(IKeyRepository keyRepository, ITokenHasher hasher, IMapper mapper) : IKeyService
@@ -19,7 +19,7 @@ namespace BgituGrades.Services
         private readonly IKeyRepository _keyRepository = keyRepository;
         private readonly IMapper _mapper = mapper;
         private readonly ITokenHasher _hasher = hasher;
-        public async Task<KeyResponse> GenerateKeyAsync(Role role, CancellationToken cancellationToken)
+        public async Task<KeyResponse> GenerateKeyAsync(Role role, int? groupId, CancellationToken cancellationToken)
         {
             var newKey = RandomNumberGenerator.GetHexString(64, true);
 
@@ -30,6 +30,7 @@ namespace BgituGrades.Services
                 StoredHash = _hasher.Hash(newKey),        
                 OwnerName = "bgitugrades",
                 Role = role.ToString(),
+                GroupId = groupId,
                 ExpiryDate = role == Role.STUDENT ? DateTime.UtcNow.AddDays(30) : null
             };
 

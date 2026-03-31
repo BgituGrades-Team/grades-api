@@ -92,9 +92,13 @@ namespace BgituGrades
             });
 
             builder.Services.AddAuthorizationBuilder()
-                .AddPolicy("ViewOnly", policy => policy.RequireRole("STUDENT", "TEACHER", "ADMIN"))
-                .AddPolicy("Edit", policy => policy.RequireRole("TEACHER", "ADMIN"))
-                .AddPolicy("Admin", policy => policy.RequireRole("ADMIN"));
+            .AddPolicy("ViewOnly", policy =>
+            {
+                policy.RequireRole("STUDENT", "TEACHER", "ADMIN");
+                policy.AddRequirements(new GroupAccessRequirement());
+            })
+            .AddPolicy("Edit", policy => policy.RequireRole("TEACHER", "ADMIN"))
+            .AddPolicy("Admin", policy => policy.RequireRole("ADMIN"));
 
             builder.Services.AddControllers(
                 options =>
@@ -156,7 +160,7 @@ namespace BgituGrades
 
                     if (!existingKeys.Any())
                     {
-                        var key = await keyService.GenerateKeyAsync(Role.ADMIN, cancellationToken: tokenSource.Token);
+                        var key = await keyService.GenerateKeyAsync(Role.ADMIN, groupId: null, cancellationToken: tokenSource.Token);
                         Console.WriteLine($"##################################");
                         Console.WriteLine($"### INITIAL KEY: {key.Key} ###");
                         Console.WriteLine($"##################################");
