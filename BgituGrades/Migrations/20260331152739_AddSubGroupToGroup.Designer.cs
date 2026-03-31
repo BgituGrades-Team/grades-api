@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BgituGrades.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260331141201_AddSubGroupToGroup")]
+    [Migration("20260331152739_AddSubGroupToGroup")]
     partial class AddSubGroupToGroup
     {
         /// <inheritdoc />
