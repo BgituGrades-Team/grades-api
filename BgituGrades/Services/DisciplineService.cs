@@ -107,7 +107,7 @@ namespace BgituGrades.Services
         public async Task<IEnumerable<DisciplineResponse>?> GetArchivedDisciplinesByGroupIdsAsync(int[] groupIds, CancellationToken cancellationToken)
         {
             var disciplines = await _disciplineRepository.GetArchivedByGroupIdsAsync(groupIds, cancellationToken);
-            var results = _mapper.Map<List<DisciplineResponse>>(disciplines);
+            var results = _mapper.Map<IEnumerable<DisciplineResponse>>(disciplines);
             return results;
         }
 

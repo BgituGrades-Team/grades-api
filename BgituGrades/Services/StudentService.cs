@@ -302,7 +302,7 @@ namespace BgituGrades.Services
         public async Task<IEnumerable<StudentResponse>> GetArchivedStudentsByGroupAsync(GetStudentsByGroupRequest request, CancellationToken cancellationToken)
         {
             var students = _studentRepository.GetArchivedByGroupIdsAsync(request.GroupIds, cancellationToken);
-            var results = _mapper.Map<List<StudentResponse>>(students);
+            var results = _mapper.Map<IEnumerable<StudentResponse>>(students);
             return results;
         }
     }

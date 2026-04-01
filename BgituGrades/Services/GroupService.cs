@@ -112,7 +112,7 @@ namespace BgituGrades.Services
         public async Task<IEnumerable<GroupResponse>> GetArchivedGroupsByPeriodAsync(int semester, int year, CancellationToken cancellationToken)
         {
             var archived = _groupRepository.GetArchivedByPeriod(semester, year, cancellationToken);
-            var results = _mapper.Map<List<GroupResponse>>(archived);
+            var results = _mapper.Map<IEnumerable<GroupResponse>>(archived);
             return results;
         }
 
