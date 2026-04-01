@@ -6,7 +6,7 @@ namespace BgituGrades.Models.Key
     public class DeleteKeyRequest
     {
         [Required]
-        public string? Key { get; set; }
+        public required string DeleteKey { get; set; }
     }
 
     public class CreateKeyRequest

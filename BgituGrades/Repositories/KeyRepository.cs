@@ -22,10 +22,10 @@ namespace BgituGrades.Repositories
             return entity;
         }
 
-        public async Task<bool> DeleteKeyAsync(string key, CancellationToken cancellationToken)
+        public async Task<bool> DeleteKeyAsync(string hash, CancellationToken cancellationToken)
         {
             var result = await _dbContext.ApiKeys
-                .Where(k => k.Key == key)
+                .Where(k => k.LookupHash == hash)
                 .ExecuteDeleteAsync(cancellationToken: cancellationToken);
             return result > 0;
         }
