@@ -65,9 +65,9 @@ namespace BgituGrades.Controllers
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteKey([FromQuery] DeleteKeyRequest request, CancellationToken cancellationToken)
         {
-            var success = await _keyService.DeleteKeyAsync(request.Key, cancellationToken: cancellationToken);
+            var success = await _keyService.DeleteKeyAsync(request.DeleteKey, cancellationToken: cancellationToken);
             if (!success)
-                return NotFound(request.Key);
+                return NotFound(request.DeleteKey);
 
             return NoContent();
         }
