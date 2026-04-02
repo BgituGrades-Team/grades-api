@@ -295,7 +295,7 @@ namespace BgituGrades.Services
                     )
                 );
 
-            int currentRow = 2;
+            int currentRow = 1;
             foreach (var group in sortedGroups)
             {
                 var groupRowRange = worksheet.Cells[currentRow, 1, currentRow, maxCols + 1];

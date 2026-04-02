@@ -45,6 +45,8 @@ namespace BgituGrades.Services
             using var scope = scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
+            var classService = scope.ServiceProvider.GetRequiredService<IClassService>();
+
             var now = DateOnly.FromDateTime(DateTime.Now);
             var semester = IMigrationService.GetCurrentSemester(now);
             var year = now.Year;
@@ -87,11 +89,35 @@ namespace BgituGrades.Services
             var groupDict = groups.ToDictionary(g => g.Id);
             var disciplineDict = disciplines.ToDictionary(d => d.Id);
 
+            var groupDisciplinePairs = students
+                .Select(s => s.GroupId)
+                .Distinct()
+                .SelectMany(gId => disciplines.Select(d => (GroupId: gId, DisciplineId: d.Id)))
+                .ToList();
+
+            var scheduleTasks = groupDisciplinePairs.Select(async pair =>
+            {
+                var dates = await classService.GenerateScheduleDatesAsync(pair.GroupId, pair.DisciplineId, cancellationToken);
+                return (pair.GroupId, pair.DisciplineId, Total: dates.Count());
+            });
+
+            var scheduleResults = await Task.WhenAll(scheduleTasks);
+            var scheduleTotalDict = scheduleResults
+                .ToDictionary(r => (r.GroupId, r.DisciplineId), r => r.Total);
+
+            var studentGroupDict = students.ToDictionary(s => s.Id, s => s.GroupId);
+
             var presenceDict = presences
                 .GroupBy(p => (p.StudentId, p.DisciplineId))
                 .ToDictionary(
                     g => g.Key,
-                    g => $"{g.Count(p => p.IsPresent == PresenceType.PRESENT)}/{g.Count()}"
+                    g =>
+                    {
+                        var absent = g.Count(p => p.IsPresent != PresenceType.PRESENT);
+                        var total = studentGroupDict.TryGetValue(g.Key.StudentId, out var gId)
+                            && scheduleTotalDict.TryGetValue((gId, g.Key.DisciplineId), out var t) ? t : 0;
+                        return $"{total - absent}/{total}";
+                    }
                 );
 
             var markDict = marks
@@ -142,8 +168,6 @@ namespace BgituGrades.Services
 
             try
             {
-                await db.BulkInsertAsync(archives, cancellationToken: cancellationToken);
-
                 await db.Presences.ExecuteDeleteAsync(cancellationToken);
                 await db.Marks.ExecuteDeleteAsync(cancellationToken);
 
@@ -154,6 +178,8 @@ namespace BgituGrades.Services
                 await transaction.RollbackAsync(cancellationToken);
                 throw;
             }
+
+            await db.BulkInsertAsync(archives, cancellationToken: cancellationToken);
         }
     }
 }
