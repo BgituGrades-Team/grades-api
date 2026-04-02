@@ -96,13 +96,6 @@ namespace BgituGrades.Services
                 .Distinct()
                 .ToList();
 
-            var sw = System.Diagnostics.Stopwatch.StartNew();
-
-            
-            
-            Console.WriteLine($"Загрузка классов и трансферов: {sw.ElapsedMilliseconds}ms");
-            sw.Restart();
-
             var scheduleTotalDict = new Dictionary<(int GroupId, int DisciplineId), int>();
 
             foreach (var pair in groupDisciplinePairs)
@@ -113,8 +106,6 @@ namespace BgituGrades.Services
                 var dates = await classService.GenerateScheduleDatesAsync(group, classes, transfers);
                 scheduleTotalDict[(pair.GroupId, pair.DisciplineId)] = dates.Count();
             }
-            Console.WriteLine($"Расчёт расписания: {sw.ElapsedMilliseconds}ms, пар: {groupDisciplinePairs.Count}");
-            sw.Restart();
 
             var presenceDict = presences
                 .GroupBy(p => (p.StudentId, p.DisciplineId))
@@ -173,9 +164,6 @@ namespace BgituGrades.Services
                 };
             }).ToList();
 
-            Console.WriteLine($"Формирование архивов: {sw.ElapsedMilliseconds}ms");
-            sw.Restart();
-
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try
             {
@@ -189,8 +177,6 @@ namespace BgituGrades.Services
                 throw;
             }
             await db.BulkInsertAsync(archives, cancellationToken: cancellationToken);
-            Console.WriteLine($"BulkInsert: {sw.ElapsedMilliseconds}ms, записей: {archives.Count}");
-
         }
     }
 }
