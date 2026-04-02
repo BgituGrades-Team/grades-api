@@ -26,6 +26,8 @@ namespace BgituGrades.Features
             services.AddScoped<ITransferRepository, TransferRepository>();
             services.AddScoped<IKeyRepository, KeyRepository>();
             services.AddScoped<ISettingRepository, SettingRepository>();
+            services.AddScoped<IReportSnapshotRepository, ReportSnapshotRepository>();
+
             return services;
         }
 

@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using BgituGrades.Models.Report;
 using BgituGrades.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,15 +7,15 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BgituGrades.Controllers
 {
-    [Route("api")]
+    [Route("api/migrations")]
     [ApiVersion("2.0")]
-    [Authorize(Policy = "Admin")]
     [ApiController]
     public class MIgrationController(IMigrationService migrationService) : ControllerBase
     {
         private readonly IMigrationService _migrationService = migrationService;
 
-        [HttpDelete("clearDb")]
+        [HttpDelete("truncate")]
+        [Authorize(Policy = "Admin")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> Delete(CancellationToken cancellationToken)
         {
@@ -23,6 +24,7 @@ namespace BgituGrades.Controllers
         }
 
         [HttpPost("migrate")]
+        [Authorize(Policy = "Admin")]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> MigrateAsync(CancellationToken cancellationToken)
         {
@@ -35,6 +37,15 @@ namespace BgituGrades.Controllers
             {
                 return Conflict(ex.Message);
             }
+        }
+
+        [HttpGet("periods/all")]
+        [Authorize(Policy = "Edit")]
+        [ProducesResponseType(typeof(IEnumerable<PeriodResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetPeriodsAsync(CancellationToken cancellationToken)
+        {
+            var periods = await _migrationService.GetAllPeriods(cancellationToken: cancellationToken);
+            return Ok(periods);
         }
     }
 }

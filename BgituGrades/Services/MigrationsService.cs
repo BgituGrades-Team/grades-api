@@ -1,5 +1,6 @@
 ﻿using BgituGrades.Data;
 using BgituGrades.Entities;
+using BgituGrades.Models.Report;
 using BgituGrades.Repositories;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
@@ -10,14 +11,15 @@ namespace BgituGrades.Services
     public interface IMigrationService
     {
         Task DeleteAll(CancellationToken cancellationToken);
-        public Task ArchiveCurrentSemesterAsync(CancellationToken cancellationToken);
+        Task ArchiveCurrentSemesterAsync(CancellationToken cancellationToken);
+        Task<IEnumerable<PeriodResponse>> GetAllPeriods(CancellationToken cancellationToken);
         public static int GetCurrentSemester(DateOnly date) =>
                 date.Month >= 9 ? 1 : 2;
         public static int GetCurrentSemester() =>
                 GetCurrentSemester(DateOnly.FromDateTime(DateTime.Now));
     }
     public class MigrationsService(IClassRepository classRepository, IDisciplineRepository disciplineRepository,
-        IGroupRepository groupRepository, IMarkRepository markRepository,
+        IGroupRepository groupRepository, IMarkRepository markRepository, IReportSnapshotRepository reportSnapshotRepository,
         IPresenceRepository presenceRepository, ITransferRepository transferRepository, 
         IWorkRepository workRepository, IServiceScopeFactory scopeFactory) : IMigrationService
     {
@@ -28,6 +30,15 @@ namespace BgituGrades.Services
         private readonly ITransferRepository _transferRepository = transferRepository;
         private readonly IWorkRepository _workRepository = workRepository;
         private readonly IMarkRepository _markRepository = markRepository;
+        private readonly IReportSnapshotRepository _reportSnapshotRepository = reportSnapshotRepository;
+        
+        public async Task<IEnumerable<PeriodResponse>>GetAllPeriods(CancellationToken cancellationToken)
+        {
+            var periods = await _reportSnapshotRepository.GetAllReportSnapshotsAsync(cancellationToken: cancellationToken);
+            return periods
+                .DistinctBy(r => r.Year)
+                .Select(r => new PeriodResponse { Semester = r.Semester, Year = r.Year });
+        }
         public async Task DeleteAll(CancellationToken cancellationToken)
         {
             await _markRepository.DeleteAllAsync(cancellationToken: cancellationToken);

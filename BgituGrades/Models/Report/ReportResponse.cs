@@ -2,7 +2,7 @@
 
 namespace BgituGrades.Models.Report
 {
-    public class ProgressReportResponse
+    public class ReportResponse
     {
         public required string ReportId {  get; set; }
         public int Progress {  get; set; }
@@ -14,5 +14,11 @@ namespace BgituGrades.Models.Report
         public required string ReportId { get; set; }
         public required string Link { get; set; }
         public ReportPreviewDto? Preview { get; set; }
+    }
+
+    public class PeriodResponse
+    {
+        public int Semester {  get; set; }
+        public int Year { get; set; }
     }
 }

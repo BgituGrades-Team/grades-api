@@ -29,8 +29,8 @@ namespace BgituGrades.Hubs
         public void ReportStarted(Guid reportId) { }
 
         [Channel("hubs/report/ReportProgress")]
-        [SubscribeOperation(typeof(ProgressReportResponse), Summary = "Событие: Уведомление о прогрессе формирования (0-100%)", OperationId = "ReportProgress")]
-        public void ReportProgress(ProgressReportResponse response) { }
+        [SubscribeOperation(typeof(ReportResponse), Summary = "Событие: Уведомление о прогрессе формирования (0-100%)", OperationId = "ReportProgress")]
+        public void ReportProgress(ReportResponse response) { }
 
         [Channel("hubs/report/ReportReady")]
         [SubscribeOperation(typeof(ReadyReportResponse), Summary = "Событие: Отчёт готов (содержит ссылку на скачивание)", OperationId = "ReportReady")]
