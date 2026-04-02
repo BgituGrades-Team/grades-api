@@ -289,7 +289,7 @@ namespace BgituGrades.Services
                 .ToDictionary(
                     g => (g.Key.StudentId, g.Key.DisciplineId),
                     g => (
-                        Present: g.Count(m => m.IsPresent == PresenceType.PRESENT),
+                        Absent: g.Count(m => m.IsPresent != PresenceType.PRESENT),
                         Total: studentGroupDict.TryGetValue(g.Key.StudentId, out var gId)
                             && scheduleTotalDict.TryGetValue((gId, g.Key.DisciplineId), out var t) ? t : 0
                     )
@@ -330,8 +330,8 @@ namespace BgituGrades.Services
                         var cell = worksheet.Cells[currentRow, i + 2];
                         var disciplineId = groupDisciplines[i]!.Id;
                         var total = scheduleTotalDict.TryGetValue((group.Id, disciplineId), out var t) ? t : 0;
-
-                        var present = presenceDict.TryGetValue((student.Id, disciplineId), out var stats) ? stats.Present : 0;
+                        var absent = presenceDict.TryGetValue((student.Id, disciplineId), out var stats) ? stats.Absent : 0;
+                        var present = total - absent;
 
                         cell.Value = $"{present}/{total}";
                         cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
@@ -371,8 +371,8 @@ namespace BgituGrades.Services
                     scells.AddRange(groupDisciplines.Select(d =>
                     {
                         var total = scheduleTotalDict.TryGetValue((group.Id, d!.Id), out var t) ? t : 0;
-                        var present = presenceDict.TryGetValue((student.Id, d!.Id), out var stats) ? stats.Present : 0;
-                        return $"{present}/{total}";
+                        var absent = presenceDict.TryGetValue((student.Id, d!.Id), out var stats) ? stats.Absent : 0;
+                        return $"{total - absent}/{total}";
                     }));
 
                     preview.Rows.Add(new PreviewRow
