@@ -2,8 +2,8 @@
 {
     public class TablePreview
     {
-        public byte[] ExcelBytes { get; set; }
-        public ReportPreviewDto Preview { get; set; }
+        public byte[]? ExcelBytes { get; set; }
+        public ReportPreviewDto? Preview { get; set; }
     }
     public class ReportPreviewDto
     {

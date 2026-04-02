@@ -51,7 +51,7 @@ namespace BgituGrades.Repositories
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var groups = await context.Groups
-                .Include(g => g.Classes)
+                .Include(g => g.Classes!)
                     .ThenInclude(c => c.Discipline)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken: cancellationToken);
@@ -91,7 +91,7 @@ namespace BgituGrades.Repositories
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Groups
-                .Where(g => g.Classes.Any(c => c.DisciplineId == disciplineId))
+                .Where(g => g.Classes!.Any(c => c.DisciplineId == disciplineId))
                 .AsNoTracking()
                 .ToListAsync(cancellationToken: cancellationToken);
             return entities;
@@ -102,7 +102,7 @@ namespace BgituGrades.Repositories
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Groups
                 .Where(g => groupIds.Contains(g.Id))
-                .Include(g => g.Classes)
+                .Include(g => g.Classes!)
                     .ThenInclude(c => c.Discipline)
                 .AsNoTracking()
                 .AsSplitQuery()

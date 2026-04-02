@@ -1,10 +1,14 @@
-﻿using AspNetCore.Authentication.ApiKey;
+﻿using Asp.Versioning.ApiExplorer;
+using AspNetCore.Authentication.ApiKey;
 using BgituGrades.Repositories;
 using BgituGrades.Services;
 using BgituGrades.Validators;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Options;
+using Microsoft.OpenApi;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace BgituGrades.Features
 {
@@ -41,7 +45,7 @@ namespace BgituGrades.Features
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<ISettingService, SettingService>();
             services.AddScoped<IAuthorizationHandler, GroupAccessHandler>();
-
+            services.ConfigureOptions<ConfigureSwaggerOptions>();
 
             services.AddSingleton<ITokenHasher, TokenHasher>();
             return services;
@@ -52,6 +56,23 @@ namespace BgituGrades.Features
         {
             services.AddValidatorsFromAssemblyContaining<CreateClassRequestValidator>();
             return services;
+        }
+    }
+
+    public class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) : IConfigureOptions<SwaggerGenOptions>
+    {
+        public void Configure(SwaggerGenOptions options)
+        {
+            options.DescribeAllParametersInCamelCase();
+            foreach (var description in provider.ApiVersionDescriptions)
+            {
+                options.SwaggerDoc(description.GroupName, new OpenApiInfo
+                {
+                    Title = "BGITU.GRADES API",
+                    Version = description.GroupName.ToUpperInvariant(),
+                    Description = description.IsDeprecated ? "This API version is deprecated." : null
+                });
+            }
         }
     }
 }

@@ -13,7 +13,7 @@
     public class GradeMarkResponse
     {
         public int WorkId { get; set; }
-        public string Name { get; set; }
+        public required string Name { get; set; }
         public string? Value { get; set; }
     }
 }

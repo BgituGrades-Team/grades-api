@@ -43,8 +43,8 @@ namespace BgituGrades.Repositories
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Marks
-                .Where(m => m.Work.DisciplineId == disciplineId &&
-                           m.Student.GroupId == groupId)
+                .Where(m => m.Work!.DisciplineId == disciplineId &&
+                           m.Student!.GroupId == groupId)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken: cancellationToken);
             return entities;
@@ -87,13 +87,13 @@ namespace BgituGrades.Repositories
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var marks = await context.Marks
-                .Where(m => m.StudentId == studentId && m.Work.DisciplineId == disciplineId)
+                .Where(m => m.StudentId == studentId && m.Work!.DisciplineId == disciplineId)
                 .Select(m => m.Value)
                 .ToListAsync(cancellationToken: cancellationToken);
 
             var validMarks = marks
                 .Where(m => double.TryParse(m, out _))
-                .Select(double.Parse)
+                .Select(double.Parse!)
                 .ToList();
 
             return validMarks.Count > 0 ? validMarks.Average() : 0;
@@ -103,7 +103,7 @@ namespace BgituGrades.Repositories
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Marks
-                .Where(m => disciplineIds.Contains(m.Work.DisciplineId) && groupIds.Contains(m.Student.GroupId))
+                .Where(m => disciplineIds.Contains(m.Work!.DisciplineId) && groupIds.Contains(m.Student!.GroupId))
                 .AsNoTracking()
                 .ToListAsync(cancellationToken: cancellationToken);
             return entities;

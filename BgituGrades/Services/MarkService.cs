@@ -111,6 +111,7 @@ namespace BgituGrades.Services
                 Marks = [new GradeMarkResponse
                 {
                     WorkId = request.WorkId,
+                    Name = mark.Work!.Name!,
                     Value = request.Value,
                 }]
             };

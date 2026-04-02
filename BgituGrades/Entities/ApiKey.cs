@@ -6,10 +6,10 @@ namespace BgituGrades.Entities
 {
     public class ApiKey : IApiKey
     {
-        public string Key { get; set; }
+        public required string Key { get; set; }
         public string? StoredHash { get; set; }
         public string? LookupHash { get; set; }
-        public string OwnerName { get; set; }
+        public required string OwnerName { get; set; }
         public string? Role { get; set; }
         public int? GroupId { get; set; }
         public DateTime? ExpiryDate { get; set; }

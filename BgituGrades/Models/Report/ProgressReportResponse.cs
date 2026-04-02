@@ -4,15 +4,15 @@ namespace BgituGrades.Models.Report
 {
     public class ProgressReportResponse
     {
-        public string ReportId {  get; set; }
+        public required string ReportId {  get; set; }
         public int Progress {  get; set; }
-        public string Description {  get; set; }
+        public required string Description {  get; set; }
     }
 
     public class ReadyReportResponse
     {
-        public string ReportId { get; set; }
-        public string Link { get; set; }
-        public ReportPreviewDto Preview { get; set; }
+        public required string ReportId { get; set; }
+        public required string Link { get; set; }
+        public ReportPreviewDto? Preview { get; set; }
     }
 }

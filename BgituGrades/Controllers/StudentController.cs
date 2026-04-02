@@ -110,7 +110,7 @@ namespace BgituGrades.Controllers
                 return BadRequest("Поддерживается только .xlsx формат");
 
             await using var stream = file.OpenReadStream();
-            var result = await studentService.ImportStudentsFromXlsxAsync(stream, cancellationToken: cancellationToken);
+            var result = await _studentService.ImportStudentsFromXlsxAsync(stream, cancellationToken: cancellationToken);
 
             return Ok(result);
         }

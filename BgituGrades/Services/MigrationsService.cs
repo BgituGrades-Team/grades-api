@@ -17,7 +17,7 @@ namespace BgituGrades.Services
                 GetCurrentSemester(DateOnly.FromDateTime(DateTime.Now));
     }
     public class MigrationsService(IClassRepository classRepository, IDisciplineRepository disciplineRepository,
-        IGroupRepository groupRepository, IMarkRepository markRepository, IStudentRepository studentRepository,
+        IGroupRepository groupRepository, IMarkRepository markRepository,
         IPresenceRepository presenceRepository, ITransferRepository transferRepository, 
         IWorkRepository workRepository, IServiceScopeFactory scopeFactory) : IMigrationService
     {
@@ -28,7 +28,6 @@ namespace BgituGrades.Services
         private readonly ITransferRepository _transferRepository = transferRepository;
         private readonly IWorkRepository _workRepository = workRepository;
         private readonly IMarkRepository _markRepository = markRepository;
-        private readonly IStudentRepository _studentRepository = studentRepository;
         public async Task DeleteAll(CancellationToken cancellationToken)
         {
             await _markRepository.DeleteAllAsync(cancellationToken: cancellationToken);
@@ -44,7 +43,6 @@ namespace BgituGrades.Services
         {
             using var scope = scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
             var classService = scope.ServiceProvider.GetRequiredService<IClassService>();
 
             var now = DateOnly.FromDateTime(DateTime.Now);
@@ -88,6 +86,7 @@ namespace BgituGrades.Services
             var studentDict = students.ToDictionary(s => s.Id);
             var groupDict = groups.ToDictionary(g => g.Id);
             var disciplineDict = disciplines.ToDictionary(d => d.Id);
+            var studentGroupDict = students.ToDictionary(s => s.Id, s => s.GroupId);
 
             var groupDisciplinePairs = students
                 .Select(s => s.GroupId)
@@ -105,19 +104,11 @@ namespace BgituGrades.Services
             var scheduleTotalDict = scheduleResults
                 .ToDictionary(r => (r.GroupId, r.DisciplineId), r => r.Total);
 
-            var studentGroupDict = students.ToDictionary(s => s.Id, s => s.GroupId);
-
             var presenceDict = presences
                 .GroupBy(p => (p.StudentId, p.DisciplineId))
                 .ToDictionary(
                     g => g.Key,
-                    g =>
-                    {
-                        var absent = g.Count(p => p.IsPresent != PresenceType.PRESENT);
-                        var total = studentGroupDict.TryGetValue(g.Key.StudentId, out var gId)
-                            && scheduleTotalDict.TryGetValue((gId, g.Key.DisciplineId), out var t) ? t : 0;
-                        return $"{total - absent}/{total}";
-                    }
+                    g => g.Count(p => p.IsPresent != PresenceType.PRESENT)
                 );
 
             var markDict = marks
@@ -138,8 +129,8 @@ namespace BgituGrades.Services
                     g => g.Average(m => m.ParsedValue!.Value).ToString("0.0", CultureInfo.InvariantCulture)
                 );
 
-            var pairs = presenceDict.Keys
-                .Union(markDict.Keys)
+            var pairs = students
+                .SelectMany(s => disciplines.Select(d => (StudentId: s.Id, DisciplineId: d.Id)))
                 .Distinct();
 
             var archives = pairs.Select(pair =>
@@ -147,6 +138,10 @@ namespace BgituGrades.Services
                 studentDict.TryGetValue(pair.StudentId, out var student);
                 groupDict.TryGetValue(student?.GroupId ?? 0, out var group);
                 disciplineDict.TryGetValue(pair.DisciplineId, out var discipline);
+
+                var total = studentGroupDict.TryGetValue(pair.StudentId, out var gId)
+                    && scheduleTotalDict.TryGetValue((gId, pair.DisciplineId), out var t) ? t : 0;
+                var absent = presenceDict.TryGetValue(pair, out var a) ? a : 0;
 
                 return new ReportSnapshot
                 {
@@ -159,18 +154,16 @@ namespace BgituGrades.Services
                     GroupName = group?.Name ?? string.Empty,
                     DisciplineId = pair.DisciplineId,
                     DisciplineName = discipline?.Name ?? string.Empty,
-                    Presences = presenceDict.TryGetValue(pair, out var p) ? p : "0/0",
+                    Presences = $"{total - absent}/{total}",
                     Marks = markDict.TryGetValue(pair, out var m) ? m : "0.0"
                 };
             }).ToList();
 
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-
             try
             {
                 await db.Presences.ExecuteDeleteAsync(cancellationToken);
                 await db.Marks.ExecuteDeleteAsync(cancellationToken);
-
                 await transaction.CommitAsync(cancellationToken);
             }
             catch

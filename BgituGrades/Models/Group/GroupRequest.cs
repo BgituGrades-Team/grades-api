@@ -25,7 +25,7 @@ namespace BgituGrades.Models.Group
     public class CreateGroupRequest
     {
         [Required]
-        public string Name { get; set; }
+        public required string Name { get; set; }
         [Required]
         public DateOnly StudyStartDate { get; set; }
         [Required]
@@ -40,7 +40,7 @@ namespace BgituGrades.Models.Group
         [Required]
         public int Id { get; set; }
         [Required]
-        public string Name { get; set; }
+        public required string Name { get; set; }
         [Required]
         public DateOnly StudyStartDate { get; set; }
         [Required]

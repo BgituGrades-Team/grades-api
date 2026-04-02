@@ -23,14 +23,10 @@ namespace BgituGrades.Services
         Task DeleteAllAsync(CancellationToken cancellationToken);
     }
     public class StudentService(IStudentRepository studentRepository, IPresenceRepository presenceRepository,
-        IClassService classService, IDisciplineRepository disciplineRepository, IGroupService groupService,
-        IGroupRepository groupRepository, IClassRepository classRepository, ITransferRepository transferRepository, IMapper mapper) : IStudentService
+        IClassService classService, IDisciplineRepository disciplineRepository, IGroupService groupService, IMapper mapper) : IStudentService
         
     {
         private readonly IStudentRepository _studentRepository = studentRepository;
-        private readonly IGroupRepository _groupRepository = groupRepository;
-        private readonly IClassRepository _classRepository = classRepository;
-        private readonly ITransferRepository _transferRepository = transferRepository;
         private readonly IPresenceRepository _presenceRepository = presenceRepository;
         private readonly IDisciplineRepository _disciplineRepository = disciplineRepository;
         private readonly IClassService _classService = classService;
@@ -60,7 +56,7 @@ namespace BgituGrades.Services
             var disciplinesDict = new Dictionary<int, IEnumerable<DateOnly>>();
             foreach (var d in disciplines)
             {
-                var classes = await _classService.GenerateScheduleDatesAsync(request.GroupId, d.Id, cancellationToken);
+                var classes = await _classService.GenerateScheduleDatesAsync(request.GroupId, d!.Id, cancellationToken);
                 disciplinesDict[d.Id] = classes.Select(c => c.Date);
             }
 
@@ -210,7 +206,7 @@ namespace BgituGrades.Services
 
         public async Task DeleteAllAsync(CancellationToken cancellationToken)
         {
-            await studentRepository.DeleteAllAsync(cancellationToken);
+            await _studentRepository.DeleteAllAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<StudentResponse>> GetArchivedStudentsByGroupAsync(GetStudentsByGroupRequest request, CancellationToken cancellationToken)

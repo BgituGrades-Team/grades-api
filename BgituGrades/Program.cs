@@ -9,7 +9,6 @@ using BgituGrades.Hubs;
 using BgituGrades.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi;
 using OfficeOpenXml;
 using Saunter;
 using Saunter.AsyncApiSchema.v2;
@@ -60,7 +59,7 @@ namespace BgituGrades
                 options.PayloadSerializerOptions.Converters.Add(
                     new JsonStringEnumConverter());
             })
-            .AddStackExchangeRedis(redisConnectionString);
+            .AddStackExchangeRedis(redisConnectionString!);
 
             builder.Services.AddStackExchangeRedisCache(options =>
             {
@@ -125,23 +124,7 @@ namespace BgituGrades
 
             builder.Services.AddEndpointsApiExplorer();
 
-            builder.Services.AddSwaggerGen(c =>
-            {
-                c.DescribeAllParametersInCamelCase();
-
-                var provider = builder.Services.BuildServiceProvider()
-                    .GetRequiredService<IApiVersionDescriptionProvider>();
-
-                foreach (var description in provider.ApiVersionDescriptions)
-                {
-                    c.SwaggerDoc(description.GroupName, new OpenApiInfo
-                    {
-                        Title = $"BGITU.GRADES API",
-                        Version = description.GroupName.ToUpperInvariant(),
-                        Description = description.IsDeprecated ? "This API version is deprecated." : null
-                    });
-                }
-            });
+            builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
 

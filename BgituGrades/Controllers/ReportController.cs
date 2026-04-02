@@ -18,7 +18,7 @@ namespace BgituGrades.Controllers
         [Authorize(Policy = "Edit")]
         public async Task<IActionResult> DownloadReport(Guid reportId)
         {
-            byte[] excelBytes = await _cache.GetAsync($"report_{reportId}");
+            byte[]? excelBytes = await _cache.GetAsync($"report_{reportId}");
 
             if (excelBytes == null)
             {
