@@ -3,6 +3,7 @@ using BgituGrades.Entities;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
+using NetTopologySuite.Noding;
 using System.Text.RegularExpressions;
 
 namespace BgituGrades.Repositories
@@ -13,7 +14,7 @@ namespace BgituGrades.Repositories
         Task<Presence> CreatePresenceAsync(Presence entity, CancellationToken cancellationToken);
         Task<IEnumerable<Presence>> GetPresencesByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
         Task<IEnumerable<Presence>> GetPresencesByDisciplinesAndGroupsAsync(List<int> disciplineIds, List<int> groupIds, CancellationToken cancellationToken);
-        Task<Presence?> GetAsync(int disciplineId, int studentId, DateOnly date, CancellationToken cancellationToken);
+        Task<Presence?> GetAsync(int disciplineId, int studentId, int classId, CancellationToken cancellationToken);
         Task<bool> DeletePresenceByStudentAndDateAsync(int studentId, DateOnly date, CancellationToken cancellationToken);
         Task UpdatePresenceAsync(Presence entity, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
@@ -74,14 +75,14 @@ namespace BgituGrades.Repositories
             await context.Presences.ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<Presence?> GetAsync(int disciplineId, int studentId, DateOnly date, CancellationToken cancellationToken)
+        public async Task<Presence?> GetAsync(int disciplineId, int studentId, int classId, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var presence = await context.Presences
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.DisciplineId == disciplineId &&
                                          p.StudentId == studentId &&
-                                         p.Date == date, cancellationToken: cancellationToken);
+                                         p.ClassId == classId, cancellationToken: cancellationToken);
             return presence;
         }
 

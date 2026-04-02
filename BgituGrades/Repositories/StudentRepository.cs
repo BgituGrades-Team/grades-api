@@ -76,9 +76,10 @@ namespace BgituGrades.Repositories
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var studentsWithPresence = await context.Students
                 .Where(s => s.GroupId == groupId)
-                .Include(s => s.Presences)
+                    .Include(s => s.Presences)
                 .OrderBy(s => s.Name)
                 .AsNoTracking()
+                .AsSplitQuery()
                 .ToListAsync(cancellationToken: cancellationToken);
 
             var presenceByStudent = studentsWithPresence.Select(s => new
@@ -117,6 +118,7 @@ namespace BgituGrades.Repositories
                     .ThenInclude(m => m.Work)
                 .OrderBy(s => s.Name)
                 .AsNoTracking()
+                .AsSplitQuery()
                 .ToListAsync(cancellationToken: cancellationToken);
 
             var marksByStudent = studentsWithMarks.Select(s => new

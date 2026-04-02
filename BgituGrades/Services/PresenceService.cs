@@ -84,7 +84,7 @@ namespace BgituGrades.Services
 
         public async Task<FullGradePresenceResponse> UpdateOrCreatePresenceAsync(UpdatePresenceGradeRequest request, CancellationToken cancellationToken)
         {
-            var presence = await _presenceRepository.GetAsync(request.DisciplineId, request.StudentId, request.Date, cancellationToken: cancellationToken);
+            var presence = await _presenceRepository.GetAsync(request.DisciplineId, request.StudentId, request.ClassId, cancellationToken: cancellationToken);
 
             if (presence != null)
             {
