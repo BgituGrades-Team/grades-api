@@ -43,6 +43,7 @@ namespace BgituGrades.Services
             var studentRepo = scope.ServiceProvider.GetRequiredService<IStudentRepository>();
             var markRepo = scope.ServiceProvider.GetRequiredService<IMarkRepository>();
             var presenceRepo = scope.ServiceProvider.GetRequiredService<IPresenceRepository>();
+            var classService = scope.ServiceProvider.GetRequiredService<IClassService>();
 
             var cacheOptions = new DistributedCacheEntryOptions()
                 .SetAbsoluteExpiration(TimeSpan.FromHours(24));
@@ -64,14 +65,14 @@ namespace BgituGrades.Services
                 {
                     disciplines = await disciplineRepo.GetDisciplinesByIdsAsync(request.DisciplineIds, cancellationToken: cancellationToken);
                 } else {
-                    disciplines = await disciplineRepo.GetByGroupIdsAsync(groups.Select(g => g.Id).ToArray(), cancellationToken: cancellationToken);
+                    disciplines = await disciplineRepo.GetByGroupIdsAsync([.. groups.Select(g => g.Id)], cancellationToken: cancellationToken);
                 }
 
                 IEnumerable<Student> students;
                 if (request.StudentIds != null) {
                     students = await studentRepo.GetStudentsByIdsAsync(request.StudentIds, cancellationToken: cancellationToken);
                 } else {
-                    students = await studentRepo.GetStudentsByGroupIdsAsync(groups.Select(g => g.Id).ToArray(), cancellationToken: cancellationToken);
+                    students = await studentRepo.GetStudentsByGroupIdsAsync([.. groups.Select(g => g.Id)], cancellationToken: cancellationToken);
                 }
 
                 if (!groups.Any() || !disciplines.Any())
@@ -89,7 +90,7 @@ namespace BgituGrades.Services
                 }
                 else
                 {
-                    result = await GeneratePresenceExcelAsync(presenceRepo, groups, disciplines, students, cancellationToken);
+                    result = await GeneratePresenceExcelAsync(presenceRepo, groups, disciplines, students, classService, cancellationToken);
                 }
 
                 await _hubContext.Clients.Group(reportId.ToString())
@@ -123,8 +124,8 @@ namespace BgituGrades.Services
                 g => g.Id,
                 g => g.Classes?.Where(c => c.Discipline != null && allowedDisciplineIds.Contains(c.Discipline.Id))
                                .Select(c => c.Discipline)
-                               .DistinctBy(d => d.Id)
-                               .OrderBy(d => d.Name).ToList() ?? new List<Discipline>()
+                               .DistinctBy(d => d!.Id)
+                               .OrderBy(d => d!.Name).ToList() ?? []
             );
 
 
@@ -135,12 +136,12 @@ namespace BgituGrades.Services
                 .Where(m => m.Work != null && !string.IsNullOrEmpty(m.Value))
                 .Select(m => new {
                     m.StudentId,
-                    m.Work.DisciplineId,
-                    ParsedValue = double.TryParse(m.Value.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val) ? val : (double?)null
+                    m.Work!.DisciplineId,
+                    ParsedValue = double.TryParse(m.Value!.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val) ? val : (double?)null
                 })
                 .Where(m => m.ParsedValue.HasValue)
                 .GroupBy(m => new { m.StudentId, m.DisciplineId })
-                .ToDictionary(g => (g.Key.StudentId, g.Key.DisciplineId), g => g.Average(m => m.ParsedValue.Value));
+                .ToDictionary(g => (g.Key.StudentId, g.Key.DisciplineId), g => g.Average(m => m.ParsedValue!.Value));
 
             int currentRow = 2;
             foreach (var group in sortedGroups)
@@ -155,7 +156,7 @@ namespace BgituGrades.Services
                 for (int i = 0; i < groupDisciplines.Count; i++)
                 {
                     var cell = worksheet.Cells[currentRow, i + 2];
-                    cell.Value = groupDisciplines[i].Name;
+                    cell.Value = groupDisciplines[i]!.Name;
                     cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
                 }
                 currentRow++;
@@ -176,7 +177,7 @@ namespace BgituGrades.Services
                     for (int i = 0; i < groupDisciplines.Count; i++)
                     {
                         var cell = worksheet.Cells[currentRow, i + 2];
-                        if (markDict.TryGetValue((student.Id, groupDisciplines[i].Id), out var avgMark))
+                        if (markDict.TryGetValue((student.Id, groupDisciplines[i]!.Id), out var avgMark))
                         {
                             cell.Value = avgMark;
                             cell.Style.Numberformat.Format = "0.0";
@@ -200,8 +201,8 @@ namespace BgituGrades.Services
             foreach (var group in sortedGroups)
             {
                 var groupDisciplines = disciplinesByGroup[group.Id];
-                var cells = new List<string> { group.Name };
-                cells.AddRange(groupDisciplines.Select(d => d.Name));
+                var cells = new List<string> { group.Name! };
+                cells.AddRange(groupDisciplines.Select(d => d!.Name)!);
                 preview.Rows.Add(new PreviewRow
                 {
                     IsGroupHeader = true,
@@ -215,9 +216,9 @@ namespace BgituGrades.Services
 
                 foreach (var student in groupStudents)
                 {
-                    var scells = new List<string> { student.Name };
+                    var scells = new List<string> { student.Name! };
                     scells.AddRange(groupDisciplines.Select(d =>
-                        markDict.TryGetValue((student.Id, d.Id), out var mark)
+                        markDict.TryGetValue((student.Id, d!.Id), out var mark)
                             ? mark.ToString("0.0", CultureInfo.InvariantCulture)
                             : "0"
                     ));
@@ -240,7 +241,7 @@ namespace BgituGrades.Services
         }
 
         private static async Task<TablePreview> GeneratePresenceExcelAsync(IPresenceRepository _presenceRepository, IEnumerable<Group> groups, 
-            IEnumerable<Discipline> disciplines, IEnumerable<Student> students, CancellationToken cancellationToken)
+            IEnumerable<Discipline> disciplines, IEnumerable<Student> students, IClassService _classService, CancellationToken cancellationToken)
         {
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Отчёт посещаемости");
@@ -255,19 +256,43 @@ namespace BgituGrades.Services
                 g => g.Id,
                 g => g.Classes?.Where(c => c.Discipline != null && allowedDisciplineIds.Contains(c.Discipline.Id))
                                .Select(c => c.Discipline)
-                               .DistinctBy(d => d.Id)
-                               .OrderBy(d => d.Name).ToList() ?? new List<Discipline>()
+                               .DistinctBy(d => d!.Id)
+                               .OrderBy(d => d!.Name).ToList() ?? []
             );
-
+            
 
             int maxCols = disciplinesByGroup.Count != 0 ? disciplinesByGroup.Max(g => g.Value.Count) : 1;
 
-            var allPresences = await _presenceRepository.GetPresencesByDisciplinesAndGroupsAsync(disciplines.Select(d => d.Id).ToList(), sortedGroups.Select(g => g.Id).ToList(), cancellationToken: cancellationToken);
+            var allPresences = await _presenceRepository.GetPresencesByDisciplinesAndGroupsAsync([.. disciplines.Select(d => d.Id)], [.. sortedGroups.Select(g => g.Id)], cancellationToken: cancellationToken);
+            var groupDisciplinePairs = sortedGroups
+                .SelectMany(g => disciplinesByGroup[g.Id]
+                    .Select(d => (GroupId: g.Id, DisciplineId: d!.Id)))
+                .Distinct()
+                .ToList();
+
+            var scheduleTasks = groupDisciplinePairs.Select(async pair =>
+            {
+                var dates = await _classService.GenerateScheduleDatesAsync(pair.GroupId, pair.DisciplineId, cancellationToken);
+                return (pair.GroupId, pair.DisciplineId, Total: dates.Count());
+            });
+            var scheduleResults = await Task.WhenAll(scheduleTasks);
+
+
+            var scheduleTotalDict = scheduleResults
+                .ToDictionary(
+                    r => (r.GroupId, r.DisciplineId),
+                    r => r.Total
+                );
+            var studentGroupDict = students.ToDictionary(s => s.Id, s => s.GroupId);
             var presenceDict = allPresences
                 .GroupBy(m => new { m.StudentId, m.DisciplineId })
                 .ToDictionary(
                     g => (g.Key.StudentId, g.Key.DisciplineId),
-                    g => (Present: g.Count(m => m.IsPresent == PresenceType.PRESENT), Total: g.Count())
+                    g => (
+                        Present: g.Count(m => m.IsPresent == PresenceType.PRESENT),
+                        Total: studentGroupDict.TryGetValue(g.Key.StudentId, out var gId)
+                            && scheduleTotalDict.TryGetValue((gId, g.Key.DisciplineId), out var t) ? t : 0
+                    )
                 );
 
             int currentRow = 2;
@@ -283,7 +308,7 @@ namespace BgituGrades.Services
                 for (int i = 0; i < groupDisciplines.Count; i++)
                 {
                     var cell = worksheet.Cells[currentRow, i + 2];
-                    cell.Value = groupDisciplines[i].Name;
+                    cell.Value = groupDisciplines[i]!.Name;
                     cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
                 }
                 currentRow++;
@@ -300,13 +325,15 @@ namespace BgituGrades.Services
                         rowRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
                         rowRange.Style.Fill.BackgroundColor.SetColor(zebraColor);
                     }
-
                     for (int i = 0; i < groupDisciplines.Count; i++)
                     {
                         var cell = worksheet.Cells[currentRow, i + 2];
-                        if (presenceDict.TryGetValue((student.Id, groupDisciplines[i].Id), out var stats))
-                            cell.Value = $"{stats.Present}/{stats.Total}";
-                        else cell.Value = "0/0";
+                        var disciplineId = groupDisciplines[i]!.Id;
+                        var total = scheduleTotalDict.TryGetValue((group.Id, disciplineId), out var t) ? t : 0;
+
+                        var present = presenceDict.TryGetValue((student.Id, disciplineId), out var stats) ? stats.Present : 0;
+
+                        cell.Value = $"{present}/{total}";
                         cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                     }
                     currentRow++;
@@ -325,8 +352,8 @@ namespace BgituGrades.Services
             foreach (var group in sortedGroups)
             {
                 var groupDisciplines = disciplinesByGroup[group.Id];
-                var cells = new List<string> { group.Name };
-                cells.AddRange(groupDisciplines.Select(d => d.Name));
+                var cells = new List<string> { group.Name! };
+                cells.AddRange(groupDisciplines.Select(d => d!.Name)!);
                 preview.Rows.Add(new PreviewRow
                 {
                     IsGroupHeader = true,
@@ -340,12 +367,13 @@ namespace BgituGrades.Services
 
                 foreach (var student in groupStudents)
                 {
-                    var scells = new List<string> { student.Name };
+                    var scells = new List<string> { student.Name! };
                     scells.AddRange(groupDisciplines.Select(d =>
-                        presenceDict.TryGetValue((student.Id, d.Id), out var stats)
-                            ? $"{stats.Present}/{stats.Total}"
-                            : "0/0"
-                    ));
+                    {
+                        var total = scheduleTotalDict.TryGetValue((group.Id, d!.Id), out var t) ? t : 0;
+                        var present = presenceDict.TryGetValue((student.Id, d!.Id), out var stats) ? stats.Present : 0;
+                        return $"{present}/{total}";
+                    }));
 
                     preview.Rows.Add(new PreviewRow
                     {

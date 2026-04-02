@@ -47,7 +47,7 @@ namespace BgituGrades.Repositories
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Presences
                 .Where(p => p.DisciplineId == disciplineId &&
-                           p.Student.GroupId == groupId)
+                           p.Student!.GroupId == groupId)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken: cancellationToken);
             return entities;
@@ -91,7 +91,7 @@ namespace BgituGrades.Repositories
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Presences
                 .Where(p => disciplineIds.Contains(p.DisciplineId) &&
-                           groupIds.Contains(p.Student.GroupId))
+                           groupIds.Contains(p.Student!.GroupId))
                 .AsNoTracking()
                 .ToListAsync(cancellationToken: cancellationToken);
             return entities;

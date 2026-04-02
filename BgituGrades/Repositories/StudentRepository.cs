@@ -86,7 +86,7 @@ namespace BgituGrades.Repositories
             {
                 s.Id,
                 s.Name,
-                PresencesByDate = s.Presences
+                PresencesByDate = s.Presences!
                     .Where(p => p.DisciplineId == disciplineId)
                     .ToLookup(p => p.Date, p => p.IsPresent)
             }).ToList();
@@ -114,8 +114,8 @@ namespace BgituGrades.Repositories
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var studentsWithMarks = await context.Students
                 .Where(s => s.GroupId == groupId)
-                .Include(s => s.Marks)
-                    .ThenInclude(m => m.Work)
+                    .Include(s => s.Marks!)
+                        .ThenInclude(m => m.Work)
                 .OrderBy(s => s.Name)
                 .AsNoTracking()
                 .AsSplitQuery()
@@ -125,8 +125,8 @@ namespace BgituGrades.Repositories
             {
                 s.Id,
                 s.Name,
-                MarksByWorkId = s.Marks
-                    .Where(m => m.Work.DisciplineId == disciplineId)
+                MarksByWorkId = s.Marks!
+                    .Where(m => m.Work!.DisciplineId == disciplineId)
                     .ToLookup(m => m.WorkId, m => m.Value)
             }).ToList();
 
@@ -138,7 +138,7 @@ namespace BgituGrades.Repositories
                 Marks = worksList.Select(work => new GradeMarkResponse
                 {
                     WorkId = work.Id,
-                    Name = work.Name,
+                    Name = work.Name!,
                     Value = s.MarksByWorkId[work.Id].FirstOrDefault() ?? ""
                 }).ToList()
             });
@@ -176,8 +176,8 @@ namespace BgituGrades.Repositories
         public async Task BulkInsertAsync(List<Student> students, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
-            var bulkConfig = new BulkConfig { SetOutputIdentity = true };
-            await context.BulkInsertAsync(students, bulkConfig, cancellationToken: cancellationToken);
+            var bulkConfig = new BulkConfig { UpdateByProperties = [nameof(Student.OfficialId)] };
+            await context.BulkInsertOrUpdateAsync(students, bulkConfig, cancellationToken: cancellationToken);
         }
 
         

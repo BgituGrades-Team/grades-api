@@ -10,7 +10,7 @@ namespace BgituGrades.Repositories
         Task<Discipline> CreateDisciplineAsync(Discipline entity, CancellationToken cancellationToken);
         Task<Discipline?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<Discipline?>> GetByGroupIdAsync(int groupId, CancellationToken cancellationToken);
-        Task<IEnumerable<Discipline?>> GetByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken);
+        Task<IEnumerable<Discipline>> GetByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken);
         Task<IEnumerable<Discipline>> GetArchivedByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken);
         Task<bool> UpdateDisciplineAsync(Discipline entity, CancellationToken cancellationToken);
         Task<bool> DeleteDisciplineAsync(int id, CancellationToken cancellationToken);
@@ -59,12 +59,12 @@ namespace BgituGrades.Repositories
                 .ToListAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<Discipline?>> GetByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Discipline>> GetByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Disciplines
-                .Where(d => d.Classes.Any(c => groupIds.Contains(c.GroupId)))
-                    .Include(d => d.Classes.Where(c => groupIds.Contains(c.GroupId)))
+                .Where(d => d.Classes!.Any(c => groupIds.Contains(c.GroupId)))
+                    .Include(d => d.Classes!.Where(c => groupIds.Contains(c.GroupId)))
                 .AsNoTracking()
                 .Distinct()
                 .ToListAsync(cancellationToken: cancellationToken);
