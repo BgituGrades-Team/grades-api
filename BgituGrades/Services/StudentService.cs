@@ -37,13 +37,16 @@ namespace BgituGrades.Services
         private readonly IGroupService _groupService = groupService;
         private readonly IMapper _mapper = mapper;
 
-        private const byte STATUS_STUDYING = 1;
-        private const short BATCH_SIZE = 500;
+        private const sbyte STATUS_STUDYING = 1;
+        private const sbyte STATUS_ACADEMIC_LEAVE = -1;
+        private const sbyte STATUS_EXPELLED = 3;
+        private const short BATCH_SIZE = 2000;
         private const byte COL_CODE = 0;
         private const byte COL_LASTNAME = 1;
         private const byte COL_FIRSTNAME = 2;
         private const byte COL_MIDDLENAME = 3;
         private const byte COL_STATUS = 4;
+        private const byte COL_GROUP_CODE = 6;
         private const byte COL_GROUP_NAME = 7;
 
 
@@ -115,15 +118,16 @@ namespace BgituGrades.Services
         public async Task<ImportResult> ImportStudentsFromXlsxAsync(Stream fileStream, CancellationToken cancellationToken)
         {
             var groupsByName = await _groupService
-            .GetAllAsync(cancellationToken)
-            .ContinueWith(t => t.Result.ToDictionary(
-                g => g.Name,
-                g => g.Id,
-                StringComparer.OrdinalIgnoreCase));
+                .GetAllAsync(cancellationToken)
+                .ContinueWith(t => t.Result.ToDictionary(
+                    g => g.Name,
+                    g => g.Id,
+                    StringComparer.OrdinalIgnoreCase));
 
             var result = new ImportResult();
             var batch = new List<Student>(BATCH_SIZE);
             var unknownGroups = new HashSet<string>();
+            var leavedStudents = new List<int>();
 
             using var package = new ExcelPackage(fileStream);
             var sheet = package.Workbook.Worksheets[0];
@@ -137,8 +141,15 @@ namespace BgituGrades.Services
                 var statusCell = sheet.Cells[row, COL_STATUS + 1].Value;
                 if (statusCell == null) continue;
 
+                var officialId = sheet.Cells[row, COL_CODE + 1].GetValue<int>();
+
                 sbyte status = Convert.ToSByte(statusCell);
-                if (status != STATUS_STUDYING) continue;
+                if (status == STATUS_EXPELLED || status == STATUS_ACADEMIC_LEAVE)
+                {
+                    leavedStudents.Add(officialId);
+                    continue;
+                }
+                        
 
                 var groupName = sheet.Cells[row, COL_GROUP_NAME + 1].GetValue<string>()?.Trim();
                 if (string.IsNullOrEmpty(groupName))
@@ -154,42 +165,48 @@ namespace BgituGrades.Services
                     continue;
                 }
 
-                var officialId = sheet.Cells[row, COL_CODE + 1].GetValue<int>();
                 var lastName = sheet.Cells[row, COL_LASTNAME + 1].GetValue<string>()?.Trim() ?? "";
                 var firstName = sheet.Cells[row, COL_FIRSTNAME + 1].GetValue<string>()?.Trim() ?? "";
                 var middleName = sheet.Cells[row, COL_MIDDLENAME + 1].GetValue<string>()?.Trim() ?? "";
+
+                var officialGroupId = sheet.Cells[row, COL_GROUP_CODE + 1].GetValue<int>();
 
                 var fullName = string.Join(" ",
                     new[] { lastName, firstName, middleName }
                         .Where(s => !string.IsNullOrEmpty(s) && s != "NULL"));
 
+
+
                 batch.Add(new Student
                 {
                     OfficialId = officialId,
                     Name = fullName,
-                    GroupId = groupId
+                    GroupId = groupId,
+                    OfficialGroupId = officialGroupId,
                 });
 
                 result.ProcessedRows++;
 
                 if (batch.Count >= BATCH_SIZE)
                 {
-                    await FlushBatchAsync(batch, cancellationToken);
+                    await FlushBatchAsync(batch, leavedStudents, cancellationToken);
                     batch.Clear();
+                    leavedStudents.Clear();
                 }
             }
 
             if (batch.Count > 0)
-                await FlushBatchAsync(batch, cancellationToken);
+                await FlushBatchAsync(batch, leavedStudents, cancellationToken);
 
             result.UnknownGroups = unknownGroups;
             return result;
         }
 
-        private async Task FlushBatchAsync(List<Student> batch, CancellationToken cancellationToken)
+        private async Task FlushBatchAsync(List<Student> batch, List<int> leavedIds, CancellationToken cancellationToken)
         {
+            await _studentRepository.DeleteByIdsAsync(leavedIds, cancellationToken: cancellationToken);
             await _studentRepository.BulkInsertAsync(batch, cancellationToken: cancellationToken);
-            // Великая ъуйня batch возвращается уже с Id из бд
+            // batch возвращается уже с Id студента из бд
 
             var presencesDict = await BuildPresencesDictAsync(batch, cancellationToken: cancellationToken);
             await _presenceRepository.BulkInsertPresencesAsync(presencesDict, cancellationToken: cancellationToken);

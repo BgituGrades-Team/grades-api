@@ -22,6 +22,7 @@ namespace BgituGrades.Repositories
         Task<IEnumerable<Student>> GetArchivedByGroupIdsAsync(int[] groupIds, CancellationToken cancellationToken);
         Task<IEnumerable<Student>> GetStudentsByIdsAsync(int[] studentIds, CancellationToken cancellationToken);
         Task BulkInsertAsync(List<Student> students, CancellationToken cancellationToken);
+        Task DeleteByIdsAsync(List<int> studentsIds, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
     }
 
@@ -177,6 +178,8 @@ namespace BgituGrades.Repositories
             await context.BulkInsertAsync(students, bulkConfig, cancellationToken: cancellationToken);
         }
 
+        
+
         public async Task DeleteAllAsync(CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
@@ -198,6 +201,13 @@ namespace BgituGrades.Repositories
                 .Select(r => new Student { Id = r.StudentId, Name = r.StudentName })
                 .ToListAsync(cancellationToken: cancellationToken);
             return archivedStudents;
+        }
+
+        public async Task DeleteByIdsAsync(List<int> studentsIds, CancellationToken cancellationToken)
+        {
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            await context.Students.Where(s => studentsIds.Contains(s.Id))
+                .ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
     }
 }
