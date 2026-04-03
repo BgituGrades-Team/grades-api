@@ -30,6 +30,7 @@ namespace BgituGradesLoader.Save
         {
             var manager = new SaveManager();
             string? tableLink = await DatabaseManager.GetTableLink();
+            Console.WriteLine($"ССЫЛКА:::::::::::::::: {tableLink}");
             if (tableLink != null)
             {
                 manager._data.TableLink.Data = tableLink;

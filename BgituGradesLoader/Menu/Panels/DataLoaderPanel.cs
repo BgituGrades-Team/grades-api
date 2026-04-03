@@ -88,7 +88,6 @@ namespace BgituGradesLoader.Menu.Panels
                 if (databaseGroup == null)
                 {
                     Console.WriteLine($"Не удалось получить информацию о группе {group.Name}");
-                    Console.ReadLine();
                     continue;
                 }
 

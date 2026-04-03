@@ -16,7 +16,6 @@ namespace BgituGrades.Services
             var loaderPath = _config["ScheduleLoader:ExecutablePath"];
             if (string.IsNullOrEmpty(loaderPath) || !File.Exists(loaderPath))
             {
-                _logger.LogError("Loader executable not found at path: {LoaderPath}", loaderPath);
                 return false;
             }
 
@@ -24,6 +23,7 @@ namespace BgituGrades.Services
             {
                 FileName = loaderPath,
                 Arguments = "--headless",
+                WorkingDirectory = Path.GetDirectoryName(loaderPath),
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -34,6 +34,7 @@ namespace BgituGrades.Services
 
             using var process = new Process { StartInfo = psi };
             process.Start();
+
 
             await process.WaitForExitAsync(cancellationToken);
 

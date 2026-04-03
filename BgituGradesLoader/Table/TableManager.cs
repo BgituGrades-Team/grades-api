@@ -15,7 +15,7 @@ namespace BgituGradesLoader.Table
         private TableData? _nowTableData;
         private CompassConfig? _config;
 
-        private const string FILE_PATH = "table.xlsx";
+        private static readonly string FILE_PATH = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "table.xlsx");
 
         public TableManager(SaveManager saveManager)
         {
@@ -53,15 +53,17 @@ namespace BgituGradesLoader.Table
         private async Task LoadTable()
         {
             string? url = _saveManager.SaveData.TableLink.Data;
-            if (url == null)
-                return;
+            if (string.IsNullOrEmpty(url))
+                throw new Exception("URL таблицы не получен от API (возможно, ошибка авторизации).");
 
-            HttpRequestMessage request = new(HttpMethod.Get, url);
-            HttpClient client = new();
-            HttpResponseMessage response = await client.SendAsync(request);
+            using HttpClient client = new();
+            HttpResponseMessage response = await client.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
-                return;
+            {
+                string body = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Ошибка скачивания таблицы! Код: {response.StatusCode}, Ответ: {body}");
+            }
 
             File.WriteAllBytes(FILE_PATH, await response.Content.ReadAsByteArrayAsync());
         }

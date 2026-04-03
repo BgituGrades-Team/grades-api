@@ -6,7 +6,7 @@ namespace BgituGradesLoader.Database
 {
     public static class DatabaseManager
     {
-        private const string API_LINK = "https://localhost:7219/api/";
+        private const string API_LINK = "http://localhost:8080/api/";
         private const string API_NUKE = API_LINK + "migrations/truncate";
         private const string API_GROUP = API_LINK + "group";
         private const string API_DISCIPLINE = API_LINK + "discipline";
@@ -69,6 +69,8 @@ namespace BgituGradesLoader.Database
         {
             HttpRequestMessage request = new(method, link);
             string? apiKey = Environment.GetEnvironmentVariable("GRADES_API_KEY");
+            Console.WriteLine(apiKey);
+            apiKey = apiKey?.Trim(' ', '"');
             if (String.IsNullOrEmpty(apiKey))
                 apiKey = "";
 
@@ -79,9 +81,9 @@ namespace BgituGradesLoader.Database
         public static async Task<string?> GetTableLink()
         {
             using HttpClient client = new();
-            HttpRequestMessage request = CreateNewRequest(HttpMethod.Get, API_LINK + "v2/settings");
+            HttpRequestMessage request = CreateNewRequest(HttpMethod.Get, API_LINK + "settings");
             string? apiKey = Environment.GetEnvironmentVariable("GRADES_API_KEY");
-            request.Headers.Add("key", apiKey);
+            Console.WriteLine($"КЛЮЧЕГ:::::: {apiKey}");
             using HttpResponseMessage response = await client.SendAsync(request);
             if (!response.IsSuccessStatusCode)
                 return null;

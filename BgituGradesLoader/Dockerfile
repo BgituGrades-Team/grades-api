@@ -5,9 +5,11 @@ RUN dotnet restore "./BgituGradesLoader.csproj"
 COPY . .
 RUN dotnet publish "./BgituGradesLoader.csproj" \
     -c Release \
-    -r linux-x64 \
+    -r linux-musl-x64 \
     --self-contained true \
     -o /app/publish
 
-FROM scratch
-COPY --from=build /app/publish /app/publish
+FROM alpine:latest
+RUN apk add --no-cache libstdc++ gcompat icu-libs
+WORKDIR /app
+COPY --from=build /app/publish ./internal_publish

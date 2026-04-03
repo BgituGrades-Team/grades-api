@@ -27,7 +27,9 @@ services:
       context: ./BgituGradesLoader
       dockerfile: Dockerfile
     volumes:
-      - loader-bin:/app/publish
+      - loader-bin:/app/target_volume
+    command: >
+      sh -c "cp -rp /app/internal_publish/. /app/target_volume/ && chmod -R 777 /app/target_volume/"
 
   db:
     image: postgres:17-alpine
