@@ -12,7 +12,7 @@ namespace BgituGrades.Hubs
     {
         private readonly IReportService _reportService = reportService;
         private readonly IArchivedReportService _archivedReportService = archivedReportService;
-        
+
         [Channel("hubs/report/GenerateReport")]
         [PublishOperation(typeof(ReportRequest), Summary = "Запросить формирование отчёта", OperationId = nameof(GenerateReport))]
         public async Task GenerateReport(ReportRequest request)
@@ -25,7 +25,7 @@ namespace BgituGrades.Hubs
         }
 
         [Channel("hubs/report/GenerateArchivedReport")]
-        [PublishOperation(typeof(ArchivedReportRequest), Summary = "Запросить формирование архивного отчёта", OperationId = nameof(GenerateReport))]
+        [PublishOperation(typeof(ArchivedReportRequest), Summary = "Запросить формирование архивного отчёта", OperationId = nameof(GenerateArchivedReport))]
         public async Task GenerateArchivedReport(ArchivedReportRequest request)
         {
             var cancellationToken = Context.ConnectionAborted;

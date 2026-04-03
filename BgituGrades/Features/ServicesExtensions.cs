@@ -5,7 +5,6 @@ using BgituGrades.Services;
 using BgituGrades.Validators;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -48,6 +47,7 @@ namespace BgituGrades.Features
             services.AddScoped<IArchivedReportService, ArchivedReportService>();
             services.AddScoped<ISettingService, SettingService>();
             services.AddScoped<IAuthorizationHandler, GroupAccessHandler>();
+            services.AddScoped<IScheduleLoaderService, ScheduleLoaderService>();
             services.ConfigureOptions<ConfigureSwaggerOptions>();
 
             services.AddSingleton<ITokenHasher, TokenHasher>();
