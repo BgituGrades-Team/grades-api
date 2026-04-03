@@ -6,7 +6,7 @@ namespace BgituGradesLoader.Database
 {
     public static class DatabaseManager
     {
-        private const string API_LINK = "http://localhost:8080/api/";
+        private const string API_LINK = "https://maxim.pamagiti.site/api/";
         private const string API_NUKE = API_LINK + "migrations/truncate";
         private const string API_GROUP = API_LINK + "group";
         private const string API_DISCIPLINE = API_LINK + "discipline";
