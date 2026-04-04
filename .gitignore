@@ -1,4 +1,5 @@
-﻿/BgituGradesLoader/BgituGradesLoader.csproj
-.vs/
+﻿BgituGradesLoader/*
+BgituGrades/*
+.vs
 
 
