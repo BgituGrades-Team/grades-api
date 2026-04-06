@@ -88,7 +88,7 @@ namespace BgituGrades.Repositories
                 s.Name,
                 PresencesByDate = s.Presences!
                     .Where(p => p.DisciplineId == disciplineId)
-                    .ToLookup(p => p.Date, p => p.IsPresent)
+                    .ToLookup(p => (p.ClassId, p.Date), p => p.IsPresent)
             }).ToList();
 
             var scheduleDatesList = scheduleDates.ToList();
@@ -101,7 +101,7 @@ namespace BgituGrades.Repositories
                     ClassId = date.Id,
                     ClassType = date.ClassType,
                     Date = date.Date,
-                    IsPresent = s.PresencesByDate[date.Date].FirstOrDefault(PresenceType.PRESENT)
+                    IsPresent = s.PresencesByDate[(date.Id, date.Date)].FirstOrDefault(PresenceType.PRESENT)
                 }).ToList()
             });
 

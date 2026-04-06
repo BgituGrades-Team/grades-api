@@ -121,7 +121,7 @@ namespace BgituGrades.Services
                 currentWeekStart = currentWeekStart.AddDays(14);
             }
 
-            return dates.OrderBy(d => d.Date).DistinctBy(d => (d.Date, d.ClassType)).ToList();
+            return dates.OrderBy(d => d.Date).ToList();
         }
 
         public async Task<IEnumerable<ClassDateResponse>> GenerateScheduleDatesAsync(Group group, IEnumerable<Class> classes,
@@ -176,7 +176,7 @@ namespace BgituGrades.Services
                 currentWeekStart = currentWeekStart.AddDays(14);
             }
 
-            return dates.OrderBy(d => d.Date).DistinctBy(d => (d.Date, d.ClassType)).ToList();
+            return dates.OrderBy(d => d.Date).ToList();
         }
 
         public async Task<bool> DeleteClassAsync(int id, CancellationToken cancellationToken)

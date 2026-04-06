@@ -1,5 +1,6 @@
 ﻿using BgituGrades.Data;
 using BgituGrades.Entities;
+using BgituGrades.Models.Presence;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +12,7 @@ namespace BgituGrades.Repositories
         Task<Presence> CreatePresenceAsync(Presence entity, CancellationToken cancellationToken);
         Task<IEnumerable<Presence>> GetPresencesByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
         Task<IEnumerable<Presence>> GetPresencesByDisciplinesAndGroupsAsync(List<int> disciplineIds, List<int> groupIds, CancellationToken cancellationToken);
-        Task<Presence?> GetAsync(int disciplineId, int studentId, int classId, CancellationToken cancellationToken);
+        Task<Presence?> GetAsync(UpdatePresenceGradeRequest request, CancellationToken cancellationToken);
         Task<bool> DeletePresenceByStudentAndDateAsync(int studentId, DateOnly date, CancellationToken cancellationToken);
         Task UpdatePresenceAsync(Presence entity, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
@@ -72,14 +73,15 @@ namespace BgituGrades.Repositories
             await context.Presences.ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<Presence?> GetAsync(int disciplineId, int studentId, int classId, CancellationToken cancellationToken)
+        public async Task<Presence?> GetAsync(UpdatePresenceGradeRequest request, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var presence = await context.Presences
                 .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.DisciplineId == disciplineId &&
-                                         p.StudentId == studentId &&
-                                         p.ClassId == classId, cancellationToken: cancellationToken);
+                .FirstOrDefaultAsync(p => p.DisciplineId == request.DisciplineId &&
+                                         p.StudentId == request.StudentId &&
+                                         p.ClassId == request.ClassId &&
+                                         p.Date == request.Date, cancellationToken: cancellationToken);
             return presence;
         }
 
