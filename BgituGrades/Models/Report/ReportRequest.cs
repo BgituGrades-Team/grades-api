@@ -10,8 +10,6 @@ namespace BgituGrades.Models.Report
         public int[]? StudentIds { get; set; }
         [Required]
         public ReportType ReportType { get; set; }
-        [Required]
-        public required bool[] IsReverse { get; set; }
     }
 
     public class ArchivedReportRequest
@@ -25,7 +23,5 @@ namespace BgituGrades.Models.Report
         public int[]? StudentIds { get; set; }
         [Required]
         public ReportType ReportType { get; set; }
-        [Required]
-        public required bool[] IsReverse { get; set; }
     }
 }
