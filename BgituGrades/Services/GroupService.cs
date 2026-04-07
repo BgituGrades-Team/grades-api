@@ -14,6 +14,7 @@ namespace BgituGrades.Services
         Task<IEnumerable<GroupResponse>> GetGroupsByDisciplineAsync(int disciplineId, CancellationToken cancellationToken);
         Task<IEnumerable<GroupResponse>> GetAllAsync(CancellationToken cancellationToken);
         Task<GroupResponse> CreateGroupAsync(CreateGroupRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<GroupResponse>> CreateGroupAsync(CreateGroupBulkRequest request, CancellationToken cancellationToken);
         Task<GroupResponse?> GetGroupByIdAsync(int id, CancellationToken cancellationToken);
         Task<bool> UpdateGroupAsync(UpdateGroupRequest request, CancellationToken cancellationToken);
         Task<bool> DeleteGroupAsync(int id, CancellationToken cancellationToken);
@@ -44,6 +45,15 @@ namespace BgituGrades.Services
 
             await _cache.RemoveAsync(AllGroupsKey);
             return _mapper.Map<GroupResponse>(createdEntity);
+        }
+
+        public async Task<IEnumerable<GroupResponse>> CreateGroupAsync(CreateGroupBulkRequest request, CancellationToken cancellationToken)
+        {
+            var entities = _mapper.Map<IEnumerable<Group>>(request.Groups);
+            entities.Select(e => e.CourseNumber = GroupCourseParser.Parse(e.Name));
+            var createdEntities = await _groupRepository.CreateGroupAsync(entities, cancellationToken: cancellationToken);
+            await _cache.RemoveAsync(AllGroupsKey);
+            return _mapper.Map<IEnumerable<GroupResponse>>(createdEntities);
         }
 
         public async Task<bool> DeleteGroupAsync(int id, CancellationToken cancellationToken)

@@ -14,6 +14,7 @@ namespace BgituGrades.Services
         Task<IEnumerable<FullGradeMarkResponse>> GetMarksByWorksAsync(GetClassDateRequest request, CancellationToken cancellationToken);
         Task<IEnumerable<FullGradePresenceResponse>> GetPresenceByScheduleAsync(GetClassDateRequest request, CancellationToken cancellationToken);
         Task<ClassResponse> CreateClassAsync(CreateClassRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<ClassResponse>> CreateClassAsync(CreateClassBulkRequest request, CancellationToken cancellationToken);
         Task<ClassResponse?> GetClassByIdAsync(int id, CancellationToken cancellationToken);
         Task<bool> DeleteClassAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<ClassDateResponse>> GenerateScheduleDatesAsync(int groupId, int disciplineId, CancellationToken cancellationToken,
@@ -40,6 +41,13 @@ namespace BgituGrades.Services
             var entity = _mapper.Map<Class>(request);
             var createdEntity = await _classRepository.CreateClassAsync(entity, cancellationToken: cancellationToken);
             return _mapper.Map<ClassResponse>(createdEntity);
+        }
+
+        public async Task<IEnumerable<ClassResponse>> CreateClassAsync(CreateClassBulkRequest request, CancellationToken cancellationToken)
+        {
+            var entities = _mapper.Map<IEnumerable<Class>>(request.Classes);
+            var createdEntities = await _classRepository.CreateClassAsync(entities, cancellationToken: cancellationToken);
+            return _mapper.Map<IEnumerable<ClassResponse>>(createdEntities);
         }
 
         public async Task<IEnumerable<ClassDateResponse>> GetClassDatesAsync(GetClassDateRequest request, CancellationToken cancellationToken)

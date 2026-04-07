@@ -26,4 +26,10 @@ namespace BgituGrades.Models.Class
         [Required]
         public int GroupId { get; set; }
     }
+
+    public class CreateClassBulkRequest
+    {
+        [Required]
+        public required List<CreateClassRequest> Classes { get; set; }
+    }
 }

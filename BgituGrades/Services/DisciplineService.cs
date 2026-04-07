@@ -12,6 +12,7 @@ namespace BgituGrades.Services
     {
         Task<IEnumerable<DisciplineResponse>> GetAllDisciplinesAsync(CancellationToken cancellationToken);
         Task<DisciplineResponse> CreateDisciplineAsync(CreateDisciplineRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<DisciplineResponse>> CreateDisciplineAsync(CreateDisciplineBulkRequest request, CancellationToken cancellationToken);
         Task<DisciplineResponse?> GetDisciplineByIdAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<DisciplineResponse>?> GetDisciplineByGroupIdAsync(int[] groupId, CancellationToken cancellationToken);
         Task<bool> UpdateDisciplineAsync(UpdateDisciplineRequest request, CancellationToken cancellationToken);
@@ -35,6 +36,14 @@ namespace BgituGrades.Services
             var createdEntity = await _disciplineRepository.CreateDisciplineAsync(entity, cancellationToken: cancellationToken);
             await _cache.RemoveAsync(AllDisciplinesKey);
             return _mapper.Map<DisciplineResponse>(createdEntity);
+        }
+
+        public async Task<IEnumerable<DisciplineResponse>> CreateDisciplineAsync(CreateDisciplineBulkRequest request, CancellationToken cancellationToken)
+        {
+            var entities = _mapper.Map<IEnumerable<Discipline>>(request.Disciplines);
+            var createdEntities = await _disciplineRepository.CreateDisciplineAsync(entities, cancellationToken: cancellationToken);
+            await _cache.RemoveAsync(AllDisciplinesKey);
+            return _mapper.Map<IEnumerable<DisciplineResponse>>(createdEntities);
         }
 
         public async Task<bool> DeleteDisciplineAsync(int id, CancellationToken cancellationToken)
@@ -174,8 +183,5 @@ namespace BgituGrades.Services
 
             }
         }
-
-
     }
-
 }

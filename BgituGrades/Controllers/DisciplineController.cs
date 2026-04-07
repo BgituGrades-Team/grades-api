@@ -49,8 +49,18 @@ namespace BgituGrades.Controllers
         [ProducesResponseType(typeof(DisciplineResponse), StatusCodes.Status201Created)]
         public async Task<ActionResult<DisciplineResponse>> CreateDiscipline([FromBody] CreateDisciplineRequest request, CancellationToken cancellationToken)
         {
-            var Discipline = await _disciplineService.CreateDisciplineAsync(request, cancellationToken: cancellationToken);
-            return CreatedAtAction(nameof(GetDiscipline), new { id = Discipline.Id }, Discipline);
+            var discipline = await _disciplineService.CreateDisciplineAsync(request, cancellationToken: cancellationToken);
+            return CreatedAtAction(nameof(GetDiscipline), new { id = discipline.Id }, discipline);
+        }
+
+        [HttpPost("bulk")]
+        [ApiVersion("2.0")]
+        [Authorize(Policy = "Admin")]
+        [ProducesResponseType(typeof(DisciplineResponse), StatusCodes.Status201Created)]
+        public async Task<ActionResult<DisciplineResponse>> CreateDisciplineBulk([FromBody] CreateDisciplineBulkRequest request, CancellationToken cancellationToken)
+        {
+            var disciplines = await _disciplineService.CreateDisciplineAsync(request, cancellationToken: cancellationToken);
+            return Created(string.Empty, disciplines);
         }
 
         [HttpGet("{id}")]
@@ -60,10 +70,10 @@ namespace BgituGrades.Controllers
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<DisciplineResponse>> GetDiscipline([FromRoute] int id, CancellationToken cancellationToken)
         {
-            var Discipline = await _disciplineService.GetDisciplineByIdAsync(id, cancellationToken: cancellationToken);
-            if (Discipline == null)
+            var discipline = await _disciplineService.GetDisciplineByIdAsync(id, cancellationToken: cancellationToken);
+            if (discipline == null)
                 return NotFound(id);
-            return Ok(Discipline);
+            return Ok(discipline);
         }
 
         [HttpPut]

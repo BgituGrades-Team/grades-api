@@ -1,5 +1,6 @@
 ﻿using BgituGrades.Data;
 using BgituGrades.Entities;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace BgituGrades.Repositories
@@ -8,6 +9,7 @@ namespace BgituGrades.Repositories
     {
         Task<IEnumerable<Class>> GetClassesByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
         Task<Class> CreateClassAsync(Class entity, CancellationToken cancellationToken);
+        Task<IEnumerable<Class>> CreateClassAsync(IEnumerable<Class> entities, CancellationToken cancellationToken);
         Task<Class?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<bool> UpdateClassAsync(Class entity, CancellationToken cancellationToken);
         Task<bool> DeleteClassAsync(int id, CancellationToken cancellationToken);
@@ -26,6 +28,14 @@ namespace BgituGrades.Repositories
             await _dbContext.Classes.AddAsync(entity, cancellationToken: cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
             return entity;
+        }
+
+        public async Task<IEnumerable<Class>> CreateClassAsync(IEnumerable<Class> entities, CancellationToken cancellationToken)
+        {
+            var entityList = entities.ToList();
+            var bulkConfig = new BulkConfig { SetOutputIdentity = true };
+            await _dbContext.BulkInsertAsync(entityList, bulkConfig, cancellationToken: cancellationToken);
+            return entityList;
         }
 
         public async Task DeleteAllAsync(CancellationToken cancellationToken)

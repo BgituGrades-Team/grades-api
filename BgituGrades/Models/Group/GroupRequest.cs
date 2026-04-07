@@ -50,6 +50,12 @@ namespace BgituGrades.Models.Group
         public int StartWeekNumber { get; set; }
     }
 
+    public class CreateGroupBulkRequest
+    {
+        [Required]
+        public required List<CreateGroupRequest> Groups { get; set; }
+    }
+
     public class UpdateGroupRequest
     {
         [Required]

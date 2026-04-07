@@ -39,6 +39,21 @@ namespace BgituGradesLoader.Database
             await AddObjectToDatabase(pair, API_PAIR, "пару");
         }
 
+        public static async Task<List<DatabaseGroup>> AddGroups(List<DatabaseGroup> groups)
+        {
+            return await AddObjectToDatabase(groups, API_GROUP + "/bulk", "группы", "groups");
+        }
+
+        public static async Task<List<DatabaseDiscipline>> AddDisciplines(List<DatabaseDiscipline> disciplines)
+        {
+            return await AddObjectToDatabase(disciplines, API_DISCIPLINE + "/bulk", "дисциплины", "disciplines");
+        }
+
+        public static async Task AddPairs(List<DatabasePair> pairs)
+        {
+            await AddObjectToDatabase(pairs, API_PAIR + "/bulk", "пары", "classes");
+        }
+
         private static async Task<T> AddObjectToDatabase<T>(T obj, string apiLink, string objName)
         {
             using HttpClient client = new();
@@ -65,6 +80,32 @@ namespace BgituGradesLoader.Database
             return resultObject;
         }
 
+        private static async Task<List<T>> AddObjectToDatabase<T>(List<T> objects, string apiLink, string objName, string wrapperKey)
+        {
+            using HttpClient client = new();
+            HttpRequestMessage request = CreateNewRequest(HttpMethod.Post, apiLink);
+
+            string content = JsonConvert.SerializeObject(new Dictionary<string, object> { [wrapperKey] = objects });
+            request.Content = new StringContent(content, Encoding.UTF8, "application/json");
+            using HttpResponseMessage response = await client.SendAsync(request);
+
+            string result = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Отправили {objects.Count} {objName}");
+            Console.WriteLine($"Получили ответ: {result[..Math.Min(500, result.Length)]}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Не удалось добавить {objName}: {response.StatusCode}");
+                Console.ReadLine();
+                return objects;
+            }
+
+            List<T>? resultObjects = JsonConvert.DeserializeObject<List<T>>(result);
+            Console.WriteLine($"Десериализовали: {resultObjects?.Count ?? 0} {objName}");
+
+            return resultObjects ?? objects;
+        }
+
         private static HttpRequestMessage CreateNewRequest(HttpMethod method, string link)
         {
             HttpRequestMessage request = new(method, link);
@@ -83,7 +124,6 @@ namespace BgituGradesLoader.Database
             using HttpClient client = new();
             HttpRequestMessage request = CreateNewRequest(HttpMethod.Get, API_LINK + "settings");
             string? apiKey = Environment.GetEnvironmentVariable("GRADES_API_KEY");
-            Console.WriteLine($"КЛЮЧЕГ:::::: {apiKey}");
             using HttpResponseMessage response = await client.SendAsync(request);
             if (!response.IsSuccessStatusCode)
                 return null;

@@ -38,17 +38,18 @@ namespace BgituGradesLoader.Menu.Panels
             HashSet<string> disciplinesNames = [];
             List<CompassPair> pairs = [];
 
-            for (int i = 0; i < groups.Count; i++)
+            var tasks = groups.Select(async (group, i) => (group, pairs: await CompassManager.GetGroupPairs(group.Id)));
+            IEnumerable<(CompassGroup group, List<CompassPair> pairs)> results = await Task.WhenAll(tasks);
+
+            List<int> toRemove = [];
+            foreach (var (group, groupPairs) in results)
             {
-                CompassGroup group = groups[i];
-                List<CompassPair>? groupPairs = await CompassManager.GetGroupPairs(group.Id);
                 if (groupPairs is null || groupPairs.Count == 0)
                     continue;
 
                 if (groupPairs[0].IsPlug())
                 {
-                    groups.RemoveAt(i);
-                    i--;
+                    toRemove.Add(groups.IndexOf(group));
                     continue;
                 }
 
@@ -59,6 +60,9 @@ namespace BgituGradesLoader.Menu.Panels
                     pair.SetGroupName(group.Name);
                 }
             }
+
+            foreach (int idx in toRemove.OrderByDescending(x => x))
+                groups.RemoveAt(idx);
 
             Console.WriteLine("Нормализуем названия дисциплин...");
             Dictionary<string, string> normalizedDisciplineNames = [];
@@ -82,6 +86,7 @@ namespace BgituGradesLoader.Menu.Panels
 
             Console.WriteLine("Добавляем группы...");
             Dictionary<string, DatabaseGroup> groupsDictionary = [];
+            List<DatabaseGroup> groupsToAdd = [];
             foreach (CompassGroup group in groups)
             {
                 DatabaseGroup? databaseGroup = _tableManager.GetGroupData(group.Name);
@@ -92,33 +97,51 @@ namespace BgituGradesLoader.Menu.Panels
                 }
 
                 databaseGroup.SetName(group.Name);
-                databaseGroup = await DatabaseManager.AddGroup(databaseGroup);
-                groupsDictionary.Add(group.Name, databaseGroup);
+                groupsToAdd.Add(databaseGroup);
+            }
+
+            List<DatabaseGroup> addedGroups = await DatabaseManager.AddGroups(groupsToAdd);
+            foreach (DatabaseGroup group in addedGroups)
+            {
+                groupsDictionary.TryAdd(group.Name, group);
             }
 
             Console.WriteLine("Добавляем дисциплины...");
             Dictionary<string, DatabaseDiscipline> disciplinesDictionary = [];
-            foreach (var disciplineNames in normalizedDisciplineNames)
-            {
-                DatabaseDiscipline databaseDiscipline = new(disciplineNames.Value);
-                databaseDiscipline = await DatabaseManager.AddDiscipline(databaseDiscipline);
-                disciplinesDictionary.Add(disciplineNames.Key, databaseDiscipline);
-            }
+            List<string> normalizedKeys = normalizedDisciplineNames.Keys.ToList();
+            List<DatabaseDiscipline> disciplinesToAdd = normalizedKeys
+                .Select(key => new DatabaseDiscipline(normalizedDisciplineNames[key]))
+                .ToList();
+
+            List<DatabaseDiscipline> addedDisciplines = await DatabaseManager.AddDisciplines(disciplinesToAdd);
+
+            foreach (var (disciplineNames, addedDiscipline) in normalizedDisciplineNames.Zip(addedDisciplines))
+                disciplinesDictionary.Add(disciplineNames.Key, addedDiscipline);
 
             Console.WriteLine("Добавляем пары...");
+            List<DatabasePair> pairsToAdd = [];
             foreach (CompassPair pair in pairs)
             {
                 DatabasePair databasePair = new(pair);
 
                 string normalizedDiscipline = pair.DisciplineName.NormalizeDisciplineForFiltering();
-                databasePair.SetDiscipline(disciplinesDictionary[normalizedDiscipline]);
+                if (!disciplinesDictionary.TryGetValue(normalizedDiscipline, out DatabaseDiscipline? discipline))
+                {
+                    Console.WriteLine($"Не найдена дисциплина: '{normalizedDiscipline}' (оригинал: '{pair.DisciplineName}', группа: '{pair.GroupName}')");
+                    continue;
+                }
+                databasePair.SetDiscipline(discipline);
 
-                DatabaseGroup group = groupsDictionary[pair.GroupName];
+                if (!groupsDictionary.TryGetValue(pair.GroupName, out DatabaseGroup? group))
+                {
+                    Console.WriteLine($"Не найдена группа: '{pair.GroupName}'");
+                    continue;
+                }
                 databasePair.SetGroup(group);
 
-                await DatabaseManager.AddPair(databasePair);
+                pairsToAdd.Add(databasePair);
             }
-
+            await DatabaseManager.AddPairs(pairsToAdd);
             Console.WriteLine("Готово!");
         }
     }

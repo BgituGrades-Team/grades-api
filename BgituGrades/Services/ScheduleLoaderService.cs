@@ -32,8 +32,21 @@ namespace BgituGrades.Services
                 }
             };
 
-            using var process = new Process { StartInfo = psi };
+            using var process = new Process { StartInfo = psi, EnableRaisingEvents = true };
+            process.OutputDataReceived += (_, e) =>
+            {
+                if (e.Data is not null)
+                    _logger.LogInformation("[Loader] {Line}", e.Data);
+            };
+
+            process.ErrorDataReceived += (_, e) =>
+            {
+                if (e.Data is not null)
+                    _logger.LogError("[Loader] {Line}", e.Data);
+            };
             process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
 
 
             await process.WaitForExitAsync(cancellationToken);

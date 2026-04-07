@@ -95,6 +95,16 @@ namespace BgituGrades.Controllers
             return CreatedAtAction(nameof(GetGroup), new { id = group.Id }, group);
         }
 
+        [HttpPost("bulk")]
+        [ApiVersion("2.0")]
+        [Authorize(Policy = "Admin")]
+        [ProducesResponseType(typeof(IEnumerable<GroupResponse>), StatusCodes.Status201Created)]
+        public async Task<ActionResult<IEnumerable<GroupResponse>>> CreateGroupBulk([FromBody] CreateGroupBulkRequest request, CancellationToken cancellationToken)
+        {
+            var groups = await _groupService.CreateGroupAsync(request, cancellationToken: cancellationToken);
+            return Created(string.Empty, groups);
+        }
+
         [HttpGet("{id}")]
         [ApiVersion("1.0")]
         [Obsolete("deprecated")]

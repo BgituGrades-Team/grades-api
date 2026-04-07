@@ -9,6 +9,12 @@ namespace BgituGrades.Models.Discipline
         public string? Name { get; set; }
     }
 
+    public class CreateDisciplineBulkRequest
+    {
+        [Required]
+        public required List<CreateDisciplineRequest> Disciplines { get; set; }
+    }
+
     public class UpdateDisciplineRequest
     {
         [Required]

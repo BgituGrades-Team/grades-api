@@ -2,6 +2,7 @@
 using BgituGrades.Data;
 using BgituGrades.Entities;
 using BgituGrades.Models.Group;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace BgituGrades.Repositories
@@ -11,6 +12,7 @@ namespace BgituGrades.Repositories
         Task<IEnumerable<Group>> GetGroupsByDisciplineAsync(int disciplineId, CancellationToken cancellationToken);
         Task<IEnumerable<Group>> GetAllAsync(CancellationToken cancellationToken);
         Task<Group> CreateGroupAsync(Group entity, CancellationToken cancellationToken);
+        Task<IEnumerable<Group>> CreateGroupAsync(IEnumerable<Group> entities, CancellationToken cancellationToken);
         Task<Group?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<Group>> GetArchivedByPeriod(int semester, int year, CancellationToken cancellationToken);
         Task<IEnumerable<CourseReponse>> GetCoursesAsync(CancellationToken cancellationToken);
@@ -34,6 +36,15 @@ namespace BgituGrades.Repositories
             await context.Groups.AddAsync(entity, cancellationToken);
             await context.SaveChangesAsync(cancellationToken: cancellationToken);
             return entity;
+        }
+
+        public async Task<IEnumerable<Group>> CreateGroupAsync(IEnumerable<Group> entities, CancellationToken cancellationToken)
+        {
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            var entityList = entities.ToList();
+            var bulkConfig = new BulkConfig { SetOutputIdentity = true };
+            await context.BulkInsertAsync(entityList, bulkConfig, cancellationToken: cancellationToken);
+            return entityList;
         }
 
         public async Task DeleteAllAsync(CancellationToken cancellationToken)
