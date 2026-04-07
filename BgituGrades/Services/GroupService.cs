@@ -50,7 +50,10 @@ namespace BgituGrades.Services
         public async Task<IEnumerable<GroupResponse>> CreateGroupAsync(CreateGroupBulkRequest request, CancellationToken cancellationToken)
         {
             var entities = _mapper.Map<IEnumerable<Group>>(request.Groups);
-            entities.Select(e => e.CourseNumber = GroupCourseParser.Parse(e.Name));
+            foreach (var entity in entities)
+            {
+                entity.CourseNumber = GroupCourseParser.Parse(entity.Name);
+            }
             var createdEntities = await _groupRepository.CreateGroupAsync(entities, cancellationToken: cancellationToken);
             await _cache.RemoveAsync(AllGroupsKey);
             return _mapper.Map<IEnumerable<GroupResponse>>(createdEntities);
