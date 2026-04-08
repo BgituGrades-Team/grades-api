@@ -27,11 +27,11 @@ namespace BgituGradesLoader.Table
         {
             name = GroupNameUtils.SimplyfyGroupName(name);
             if (_groupsData.TryGetValue(name, out DatabaseGroup? value))
-                return value;
+                return value.Copy();
 
             name = GroupNameUtils.AddMasterToGroupName(name);
             if (_groupsData.TryGetValue(name, out DatabaseGroup? masterValue))
-                return masterValue;
+                return masterValue.Copy();
 
             return null;
         }

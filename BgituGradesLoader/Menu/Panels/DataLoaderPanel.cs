@@ -130,7 +130,6 @@ namespace BgituGradesLoader.Menu.Panels
                 string normalizedDiscipline = pair.DisciplineName.NormalizeDisciplineForFiltering();
                 if (!disciplinesDictionary.TryGetValue(normalizedDiscipline, out DatabaseDiscipline? discipline))
                 {
-                    Console.WriteLine($"Не найдена дисциплина: '{normalizedDiscipline}' (оригинал: '{pair.DisciplineName}', группа: '{pair.GroupName}')");
                     continue;
                 }
                 databasePair.SetDiscipline(discipline);
