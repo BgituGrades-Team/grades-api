@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace BgituGradesLoader.Table
 {
-    public static class GroupNameUtils
+    public static partial class GroupNameUtils
     {
         private static readonly Dictionary<string, string> _groupNamesExceptions = new() {
             { "Программная инженерия", "ПРИ" },
@@ -32,6 +32,9 @@ namespace BgituGradesLoader.Table
             { "Технологические машины и оборудование", "ТМО"}
         };
 
+        [GeneratedRegex(@"\((а|б|А|Б)\)", RegexOptions.Compiled)]
+        private static partial Regex SubgroupSuffixRegex();
+
         public static string GenerateGroupName(string groupName, DirectionType directionType, int course)
         {
             StringBuilder result = new();
@@ -58,8 +61,7 @@ namespace BgituGradesLoader.Table
 
         public static string SimplyfyGroupName(string groupName)
         {
-            Regex regex = new(@"\((а|б|А|Б)\)");
-            groupName = regex.Replace(groupName, "");
+            groupName = SubgroupSuffixRegex().Replace(groupName, "");
 
             string[] groupParts = groupName.Split("-");
             bool isSpecial = groupParts[0].EndsWith('м') || groupParts[0].EndsWith('у');
@@ -69,7 +71,7 @@ namespace BgituGradesLoader.Table
                 char lastSymbol = groupParts[0][^1];
                 groupParts[0] = groupParts[0][..^1] + lastSymbol.ToString().ToLower();
             }
-            if (groupParts.Count() == 3)
+            if (groupParts.Length == 3)
             {
                 groupParts = groupParts[..^1];
             }
@@ -77,8 +79,7 @@ namespace BgituGradesLoader.Table
 
             if (!groupName.EndsWith("01") && !groupName.EndsWith("09") && !groupName.EndsWith("11"))
             {
-                groupName = groupName[..^2];
-                groupName += "01";
+                groupName = string.Concat(groupName.AsSpan(0, groupName.Length - 2), "01");
             }
 
             return groupName;
@@ -106,9 +107,10 @@ namespace BgituGradesLoader.Table
 
         public static string AddMasterToGroupName(string name)
         {
-            string[] groupParts = name.Split("-");
-            groupParts[0] = groupParts[0] + "м";
-            return string.Join("-", groupParts);
+            int dashIdx = name.IndexOf('-');
+            if (dashIdx < 0)
+                return name + "м";
+            return string.Concat(name.AsSpan(0, dashIdx), "м", name.AsSpan(dashIdx));
         }
     }
 }

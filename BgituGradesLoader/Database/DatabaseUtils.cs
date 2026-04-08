@@ -2,11 +2,14 @@
 
 namespace BgituGradesLoader.Database
 {
-    public static class DatabaseUtils
+    public static partial class DatabaseUtils
     {
         private const string LECTURE_VALUE = "LECTURE";
         private const string PRACTICE_VALUE = "PRACTICE";
         private const string EXTRA_SYMBOLS = " .,-";
+
+        [GeneratedRegex(@"[\s.,-]+", RegexOptions.Compiled)]
+        private static partial Regex NormalizeRegex(); // Компилируем один раз, чтобы не создавать его каждый раз при вызове метода
 
         public static string GetPairType(bool isLecture)
         {
@@ -17,22 +20,18 @@ namespace BgituGradesLoader.Database
 
         public static string NormalizeDisciplineForDatabase(string? disciplineName)
         {
-            if (disciplineName == null)
+            if (string.IsNullOrEmpty(disciplineName))
                 return string.Empty;
 
-            disciplineName = disciplineName.Trim();
-            disciplineName = Regex.Replace(disciplineName, @"\s+", " ");
-            return disciplineName;
+            return NormalizeRegex().Replace(disciplineName, "").ToLower();
         }
 
         public static string NormalizeDisciplineForFiltering(this string? disciplineName)
         {
-            if (disciplineName == null)
+            if (string.IsNullOrEmpty(disciplineName))
                 return string.Empty;
 
-            disciplineName = Regex.Replace(disciplineName, @"[\s.,-]+", "");
-            disciplineName = disciplineName.ToLower();
-            return disciplineName;
+            return NormalizeRegex().Replace(disciplineName, "").ToLower();
         }
 
         public static int CountExtraSymbols(this string? disciplineName)
