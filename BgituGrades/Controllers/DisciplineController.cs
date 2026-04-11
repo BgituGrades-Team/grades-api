@@ -1,7 +1,7 @@
 ﻿using Asp.Versioning;
-using BgituGrades.Models.Discipline;
-using BgituGrades.Models.Student;
-using BgituGrades.Services;
+using BgituGrades.Application.Interfaces;
+using BgituGrades.Application.Models.Discipline;
+using BgituGrades.Application.Models.Student;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

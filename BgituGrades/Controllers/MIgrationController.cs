@@ -1,6 +1,6 @@
 ﻿using Asp.Versioning;
-using BgituGrades.Models.Report;
-using BgituGrades.Services;
+using BgituGrades.Application.Interfaces;
+using BgituGrades.Application.Models.Report;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

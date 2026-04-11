@@ -1,7 +1,7 @@
-﻿using BgituGrades.Models.Class;
-using BgituGrades.Models.Mark;
-using BgituGrades.Models.Presence;
-using BgituGrades.Services;
+﻿using BgituGrades.Application.Interfaces;
+using BgituGrades.Application.Models.Class;
+using BgituGrades.Application.Models.Mark;
+using BgituGrades.Application.Models.Presence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Saunter.Attributes;

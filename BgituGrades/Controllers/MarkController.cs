@@ -1,9 +1,9 @@
 ﻿using Asp.Versioning;
+using BgituGrades.Application.Interfaces;
+using BgituGrades.Application.Models.Mark;
+using BgituGrades.Application.Models.Student;
 using BgituGrades.Data;
-using BgituGrades.Entities;
-using BgituGrades.Models.Mark;
-using BgituGrades.Models.Student;
-using BgituGrades.Services;
+using BgituGrades.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

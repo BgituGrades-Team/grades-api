@@ -1,8 +1,9 @@
 ﻿using Asp.Versioning;
-using BgituGrades.Entities;
+using BgituGrades.Application.Interfaces;
+using BgituGrades.Application.Models.Key;
+using BgituGrades.Application.Models.Student;
+using BgituGrades.Domain.Enums;
 using BgituGrades.Models.Key;
-using BgituGrades.Models.Student;
-using BgituGrades.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

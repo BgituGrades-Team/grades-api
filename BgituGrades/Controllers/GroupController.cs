@@ -1,11 +1,12 @@
 ﻿using Asp.Versioning;
-using BgituGrades.Models.Group;
-using BgituGrades.Models.Student;
-using BgituGrades.Services;
+using BgituGrades.Application.Interfaces;
+using BgituGrades.Application.Models.Group;
+using BgituGrades.Application.Models.Student;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ApiVersion = Asp.Versioning.ApiVersion;
 
-namespace BgituGrades.Controllers
+namespace BgituGrades.API.Controllers
 {
     [Route("api/group")]
     [ApiController]
