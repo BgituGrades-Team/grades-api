@@ -9,9 +9,17 @@ namespace BgituGrades.Models.Transfer
         [Required]
         public DateOnly NewDate { get; set; }
         [Required]
+        public int ClassId { get; set; }
+        [Required]
         public int DisciplineId { get; set; }
         [Required]
         public int GroupId { get; set; }
+    }
+
+    public class GetTransferRequest
+    {
+        [Required]
+        public int ClassId { get; set; }
     }
 
     public class UpdateTransferRequest
@@ -19,12 +27,6 @@ namespace BgituGrades.Models.Transfer
         [Required]
         public int Id { get; set; }
         [Required]
-        public DateOnly OriginalDate { get; set; }
-        [Required]
         public DateOnly NewDate { get; set; }
-        [Required]
-        public int DisciplineId { get; set; }
-        [Required]
-        public int GroupId { get; set; }
     }
 }

@@ -19,7 +19,7 @@ namespace BgituGrades.Services
         Task<bool> DeleteClassAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<ClassDateResponse>> GenerateScheduleDatesAsync(int groupId, int disciplineId, CancellationToken cancellationToken,
             DateOnly? startDateOverride = null, DateOnly? endDateOverride = null);
-        Task<IEnumerable<ClassDateResponse>> GenerateScheduleDatesAsync(Group group, IEnumerable<Class> classes,
+        Task<List<ClassDateResponse>> GenerateScheduleDatesAsync(Group group, IEnumerable<Class> classes,
             IEnumerable<Transfer> transfers, DateOnly? startDateOverride = null, DateOnly? endDateOverride = null);
         Task<IEnumerable<ClassDTO>> GetAllClassesDtoAsync(CancellationToken cancellationToken);
         Task<ClassDTO?> GetClassDtoByIdAsync(int id, CancellationToken cancellationToken);
@@ -132,7 +132,7 @@ namespace BgituGrades.Services
             return dates.OrderBy(d => d.Date).ToList();
         }
 
-        public async Task<IEnumerable<ClassDateResponse>> GenerateScheduleDatesAsync(Group group, IEnumerable<Class> classes,
+        public async Task<List<ClassDateResponse>> GenerateScheduleDatesAsync(Group group, IEnumerable<Class> classes,
             IEnumerable<Transfer> transfers, DateOnly? startDateOverride = null, DateOnly? endDateOverride = null)
         {
             var startDate = startDateOverride ?? group.StudyStartDate;

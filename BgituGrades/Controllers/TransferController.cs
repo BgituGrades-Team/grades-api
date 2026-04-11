@@ -13,14 +13,26 @@ namespace BgituGrades.Controllers
     {
         private readonly ITransferService _transferService = TransferService;
 
-        [HttpGet]
+        [HttpGet("all")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(IEnumerable<TransferResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<TransferResponse>>> GetTransfers(CancellationToken cancellationToken)
+        public async Task<ActionResult<IEnumerable<TransferResponse>>> GetAllTransfers(CancellationToken cancellationToken)
         {
             var transfers = await _transferService.GetAllTransfersAsync(cancellationToken: cancellationToken);
             return Ok(transfers);
+        }
+
+        [HttpGet]
+        [ApiVersion("2.0")]
+        [Authorize(Policy = "ViewOnly")]
+        [ProducesResponseType(typeof(TransferResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<TransferResponse>> GetTransfers([FromQuery] GetTransferRequest request, CancellationToken cancellationToken)
+        {
+            var transfer = await _transferService.GetTransferByClassIdAsync(request.ClassId, cancellationToken: cancellationToken);
+
+            return transfer == null ? NotFound() : Ok(transfer);
         }
 
         [HttpPost]
@@ -43,6 +55,7 @@ namespace BgituGrades.Controllers
             var transfer = await _transferService.GetTransferByIdAsync(id, cancellationToken: cancellationToken);
             if (transfer == null)
                 return NotFound(id);
+
             return Ok(transfer);
         }
 
@@ -50,7 +63,7 @@ namespace BgituGrades.Controllers
         [ApiVersion("2.0")]
         [Authorize(Policy = "Edit")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(UpdateTransferRequest), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateTransfer([FromBody] UpdateTransferRequest request, CancellationToken cancellationToken)
         {
             var success = await _transferService.UpdateTransferAsync(request, cancellationToken: cancellationToken);

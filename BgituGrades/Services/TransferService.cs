@@ -10,6 +10,7 @@ namespace BgituGrades.Services
     {
         Task<IEnumerable<TransferResponse>> GetAllTransfersAsync(CancellationToken cancellationToken);
         Task<TransferResponse> CreateTransferAsync(CreateTransferRequest request, CancellationToken cancellationToken);
+        Task<TransferResponse?> GetTransferByClassIdAsync(int classId, CancellationToken cancellationToken);
         Task<TransferResponse?> GetTransferByIdAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<TransferResponse>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken);
         Task<bool> UpdateTransferAsync(UpdateTransferRequest request, CancellationToken cancellationToken);
@@ -40,6 +41,12 @@ namespace BgituGrades.Services
             return entity == null ? null : _mapper.Map<TransferResponse>(entity);
         }
 
+        public async Task<TransferResponse?> GetTransferByClassIdAsync(int classId, CancellationToken cancellationToken)
+        {
+            var entity = await _transferRepository.GetByClassIdAsync(classId, cancellationToken: cancellationToken);
+            return entity == null ? null : _mapper.Map<TransferResponse>(entity);
+        }
+
         public async Task<IEnumerable<TransferResponse>> GetAllTransfersAsync(CancellationToken cancellationToken)
         {
             var entities = await _transferRepository.GetAllTransfersAsync(cancellationToken: cancellationToken);
@@ -48,7 +55,11 @@ namespace BgituGrades.Services
 
         public async Task<bool> UpdateTransferAsync(UpdateTransferRequest request, CancellationToken cancellationToken)
         {
-            var entity = _mapper.Map<Transfer>(request);
+            var entity = await _transferRepository.GetByIdAsync(request.Id, cancellationToken: cancellationToken);
+            if (entity == null)
+                return false;
+
+            entity.NewDate = request.NewDate;
             return await _transferRepository.UpdateTransferAsync(entity, cancellationToken: cancellationToken);
         }
 

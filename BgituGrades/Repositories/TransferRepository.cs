@@ -9,6 +9,7 @@ namespace BgituGrades.Repositories
         Task<IEnumerable<Transfer>> GetAllTransfersAsync(CancellationToken cancellationToken);
         Task<Transfer> CreateTransferAsync(Transfer entity, CancellationToken cancellationToken);
         Task<Transfer?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<Transfer?> GetByClassIdAsync(int classId, CancellationToken cancellationToken);
         Task<bool> UpdateTransferAsync(Transfer entity, CancellationToken cancellationToken);
         Task<bool> DeleteTransferAsync(int id, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
@@ -43,6 +44,13 @@ namespace BgituGrades.Repositories
             return entity;
         }
 
+        public async Task<Transfer?> GetByClassIdAsync(int classId, CancellationToken cancellationToken)
+        {
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            var entity = await context.Transfers.FirstOrDefaultAsync(t => t.ClassId == classId, cancellationToken: cancellationToken);
+            return entity;
+        }
+
         public async Task<IEnumerable<Transfer>> GetAllTransfersAsync(CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
@@ -55,7 +63,13 @@ namespace BgituGrades.Repositories
         public async Task<bool> UpdateTransferAsync(Transfer entity, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
-            context.Update(entity);
+
+            var storedTransfer = await context.Transfers.FindAsync([entity.Id], cancellationToken: cancellationToken);
+            if (storedTransfer == null)
+                return false;
+
+            storedTransfer.NewDate = entity.NewDate;
+
             await context.SaveChangesAsync(cancellationToken: cancellationToken);
             return true;
         }
@@ -93,5 +107,4 @@ namespace BgituGrades.Repositories
                     g => g.AsEnumerable());
         }
     }
-
 }
