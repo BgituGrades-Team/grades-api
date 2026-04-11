@@ -16,8 +16,8 @@ namespace BgituGrades.Controllers
         [HttpGet("all")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(IEnumerable<TransferResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<TransferResponse>>> GetAllTransfers(CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<TransferResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<TransferResponse>>> GetAllTransfers(CancellationToken cancellationToken)
         {
             var transfers = await _transferService.GetAllTransfersAsync(cancellationToken: cancellationToken);
             return Ok(transfers);

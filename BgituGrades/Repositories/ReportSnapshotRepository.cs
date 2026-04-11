@@ -6,14 +6,14 @@ namespace BgituGrades.Repositories
 {
     public interface IReportSnapshotRepository
     {
-        Task<IEnumerable<ReportSnapshot>> GetAllReportSnapshotsAsync(CancellationToken cancellationToken);
+        Task<List<ReportSnapshot>> GetAllReportSnapshotsAsync(CancellationToken cancellationToken);
         Task<ReportSnapshot?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<bool> DeleteReportSnapshotAsync(int id, CancellationToken cancellationToken);
-        Task<IEnumerable<ReportSnapshot>> GetReportSnapshotsByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken);
-        Task<IEnumerable<ReportSnapshot>> GetReportSnapshotsByYearAndSemesterAsync(
+        Task<List<ReportSnapshot>> GetReportSnapshotsByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken);
+        Task<List<ReportSnapshot>> GetReportSnapshotsByYearAndSemesterAsync(
             int year, int semester, CancellationToken cancellationToken);
-        Task<Dictionary<(int GroupId, int DisciplineId), IEnumerable<ReportSnapshot>>> GetReportSnapshotsByGroupIdsAsync(
-            List<int> groupIds, CancellationToken cancellationToken);
+        Task<Dictionary<(int GroupId, int DisciplineId), List<ReportSnapshot>>> GetReportSnapshotsByGroupIdsAsync(
+            IEnumerable<int> groupIds, CancellationToken cancellationToken);
     }
 
     public class ReportSnapshotRepository(IDbContextFactory<AppDbContext> contextFactory) : IReportSnapshotRepository
@@ -34,7 +34,7 @@ namespace BgituGrades.Repositories
             return entity;
         }
 
-        public async Task<IEnumerable<ReportSnapshot>> GetAllReportSnapshotsAsync(CancellationToken cancellationToken)
+        public async Task<List<ReportSnapshot>> GetAllReportSnapshotsAsync(CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.ReportSnapshots
@@ -43,7 +43,7 @@ namespace BgituGrades.Repositories
             return entities;
         }
 
-        public async Task<IEnumerable<ReportSnapshot>> GetReportSnapshotsByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken)
+        public async Task<List<ReportSnapshot>> GetReportSnapshotsByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.ReportSnapshots
@@ -54,8 +54,8 @@ namespace BgituGrades.Repositories
             return entities;
         }
 
-        public async Task<Dictionary<(int GroupId, int DisciplineId), IEnumerable<ReportSnapshot>>> GetReportSnapshotsByGroupIdsAsync(
-            List<int> groupIds, CancellationToken cancellationToken)
+        public async Task<Dictionary<(int GroupId, int DisciplineId), List<ReportSnapshot>>> GetReportSnapshotsByGroupIdsAsync(
+            IEnumerable<int> groupIds, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var ReportSnapshots = await context.ReportSnapshots
@@ -67,10 +67,10 @@ namespace BgituGrades.Repositories
                 .GroupBy(t => (t.GroupId, t.DisciplineId))
                 .ToDictionary(
                     g => g.Key,
-                    g => g.AsEnumerable());
+                    g => g.ToList());
         }
 
-        public async Task<IEnumerable<ReportSnapshot>> GetReportSnapshotsByYearAndSemesterAsync(int year, int semester, CancellationToken cancellationToken)
+        public async Task<List<ReportSnapshot>> GetReportSnapshotsByYearAndSemesterAsync(int year, int semester, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
             return await context.ReportSnapshots

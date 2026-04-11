@@ -7,16 +7,16 @@ namespace BgituGrades.Repositories
 {
     public interface IClassRepository
     {
-        Task<IEnumerable<Class>> GetClassesByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
+        Task<List<Class>> GetClassesByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
         Task<Class> CreateClassAsync(Class entity, CancellationToken cancellationToken);
-        Task<IEnumerable<Class>> CreateClassAsync(IEnumerable<Class> entities, CancellationToken cancellationToken);
+        Task<List<Class>> CreateClassAsync(IEnumerable<Class> entities, CancellationToken cancellationToken);
         Task<Class?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<bool> UpdateClassAsync(Class entity, CancellationToken cancellationToken);
         Task<bool> DeleteClassAsync(int id, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
-        Task<IEnumerable<Class>> GetAllClassesAsync(CancellationToken cancellationToken);
-        Task<Dictionary<(int GroupId, int DisciplineId), IEnumerable<Class>>> GetClassesByGroupIdsAndDisciplineIdsAsync(
-            List<int> groupIds, List<int> disciplineIds, CancellationToken cancellationToken);
+        Task<List<Class>> GetAllClassesAsync(CancellationToken cancellationToken);
+        Task<Dictionary<(int GroupId, int DisciplineId), List<Class>>> GetClassesByGroupIdsAndDisciplineIdsAsync(
+            IEnumerable<int> groupIds, IEnumerable<int> disciplineIds, CancellationToken cancellationToken);
     }
 
     public class ClassRepository(AppDbContext dbContext, IDbContextFactory<AppDbContext> contextFactory) : IClassRepository
@@ -30,7 +30,7 @@ namespace BgituGrades.Repositories
             return entity;
         }
 
-        public async Task<IEnumerable<Class>> CreateClassAsync(IEnumerable<Class> entities, CancellationToken cancellationToken)
+        public async Task<List<Class>> CreateClassAsync(IEnumerable<Class> entities, CancellationToken cancellationToken)
         {
             var entityList = entities.ToList();
             var bulkConfig = new BulkConfig { SetOutputIdentity = true };
@@ -57,13 +57,14 @@ namespace BgituGrades.Repositories
             return entity;
         }
 
-        public async Task<IEnumerable<Class>> GetClassesByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken)
+        public async Task<List<Class>> GetClassesByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Classes
                 .Where(c => c.GroupId == groupId && c.DisciplineId == disciplineId)
                 .OrderBy(c => c.Weeknumber)
-                .ThenBy(c => c.WeekDay)
+                    .ThenBy(c => c.WeekDay)
+                .AsNoTracking()
                 .ToListAsync(cancellationToken: cancellationToken);
             return entities;
         }
@@ -71,17 +72,18 @@ namespace BgituGrades.Repositories
         public async Task<bool> UpdateClassAsync(Class entity, CancellationToken cancellationToken)
         {
             _dbContext.Update(entity);
-            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
-            return true;
+            return await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken) > 0;
         }
 
-        public async Task<IEnumerable<Class>> GetAllClassesAsync(CancellationToken cancellationToken)
+        public async Task<List<Class>> GetAllClassesAsync(CancellationToken cancellationToken)
         {
-            return await _dbContext.Classes.AsNoTracking().ToListAsync(cancellationToken: cancellationToken);
+            return await _dbContext.Classes
+                .AsNoTracking()
+                .ToListAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<Dictionary<(int GroupId, int DisciplineId), IEnumerable<Class>>> GetClassesByGroupIdsAndDisciplineIdsAsync(
-            List<int> groupIds, List<int> disciplineIds, CancellationToken cancellationToken)
+        public async Task<Dictionary<(int GroupId, int DisciplineId), List<Class>>> GetClassesByGroupIdsAndDisciplineIdsAsync(
+            IEnumerable<int> groupIds, IEnumerable<int> disciplineIds, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var classes = await context.Classes
@@ -92,7 +94,7 @@ namespace BgituGrades.Repositories
                 .GroupBy(c => (c.GroupId, c.DisciplineId))
                 .ToDictionary(
                     g => g.Key,
-                    g => g.AsEnumerable());
+                    g => g.ToList());
         }
     }
 }

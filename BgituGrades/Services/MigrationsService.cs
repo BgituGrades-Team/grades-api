@@ -12,10 +12,10 @@ namespace BgituGrades.Services
     {
         Task DeleteAll(CancellationToken cancellationToken);
         Task ArchiveCurrentSemesterAsync(CancellationToken cancellationToken);
-        Task<IEnumerable<PeriodResponse>> GetAllPeriods(CancellationToken cancellationToken);
-        public static int GetCurrentSemester(DateOnly date) =>
+        Task<List<PeriodResponse>> GetAllPeriods(CancellationToken cancellationToken);
+        protected static int GetCurrentSemester(DateOnly date) =>
                 date.Month >= 9 ? 1 : 2;
-        public static int GetCurrentSemester() =>
+        protected static int GetCurrentSemester() =>
                 GetCurrentSemester(DateOnly.FromDateTime(DateTime.Now));
     }
     public class MigrationsService(IClassRepository classRepository, IDisciplineRepository disciplineRepository,
@@ -32,12 +32,13 @@ namespace BgituGrades.Services
         private readonly IMarkRepository _markRepository = markRepository;
         private readonly IReportSnapshotRepository _reportSnapshotRepository = reportSnapshotRepository;
 
-        public async Task<IEnumerable<PeriodResponse>> GetAllPeriods(CancellationToken cancellationToken)
+        public async Task<List<PeriodResponse>> GetAllPeriods(CancellationToken cancellationToken)
         {
             var periods = await _reportSnapshotRepository.GetAllReportSnapshotsAsync(cancellationToken: cancellationToken);
             return periods
                 .DistinctBy(r => r.Year)
-                .Select(r => new PeriodResponse { Semester = r.Semester, Year = r.Year });
+                .Select(r => new PeriodResponse { Semester = r.Semester, Year = r.Year })
+                .ToList();
         }
         public async Task DeleteAll(CancellationToken cancellationToken)
         {
@@ -115,7 +116,7 @@ namespace BgituGrades.Services
                 var classes = allClasses.Where(c => c.GroupId == pair.GroupId && c.DisciplineId == pair.DisciplineId);
                 var transfers = allTransfers.Where(t => t.GroupId == pair.GroupId && t.DisciplineId == pair.DisciplineId);
                 var dates = await classService.GenerateScheduleDatesAsync(group, classes, transfers);
-                scheduleTotalDict[(pair.GroupId, pair.DisciplineId)] = dates.Count();
+                scheduleTotalDict[(pair.GroupId, pair.DisciplineId)] = dates.Count;
             }
 
             var presenceDict = presences
@@ -144,10 +145,10 @@ namespace BgituGrades.Services
                 );
 
             var pairs = allClasses
-            .SelectMany(c => students
+                .SelectMany(c => students
                 .Where(s => s.GroupId == c.GroupId)
                 .Select(s => (StudentId: s.Id, DisciplineId: c.DisciplineId)))
-            .Distinct();
+                .Distinct();
 
             var archives = pairs.Select(pair =>
             {

@@ -25,11 +25,9 @@ namespace BgituGrades.Repositories
             var existing = await _dbContext.Settings.FirstOrDefaultAsync(cancellationToken: cancellationToken);
 
             if (existing is null)
-                _dbContext.Settings.Add(setting);
+                await _dbContext.Settings.AddAsync(setting, cancellationToken: cancellationToken);
             else
-            {
                 existing.CalendarUrl = setting.CalendarUrl;
-            }
 
             await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
         }

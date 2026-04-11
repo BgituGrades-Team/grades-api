@@ -18,7 +18,7 @@ namespace BgituGrades.Hubs
         [Channel("hubs/grade/GetMarkGrade")]
         [Authorize(Policy = "ViewOnly")]
         [PublishOperation(typeof(GetClassDateRequest), Summary = "Запросить оценки по работам", OperationId = nameof(GetMarkGrade))]
-        [SubscribeOperation(typeof(IEnumerable<FullGradeMarkResponse>), Summary = "Событие: Получение списка оценок (ответ на GetMarkGrade)", OperationId = "ReceiveMarks")]
+        [SubscribeOperation(typeof(List<FullGradeMarkResponse>), Summary = "Событие: Получение списка оценок (ответ на GetMarkGrade)", OperationId = "ReceiveMarks")]
         public async Task GetMarkGrade(GetClassDateRequest request)
         {
             var groupClaim = Context.User?.FindFirst("group_id")?.Value;
@@ -38,7 +38,7 @@ namespace BgituGrades.Hubs
         [Channel("hubs/grade/GetPresenceGrade")]
         [Authorize(Policy = "ViewOnly")]
         [PublishOperation(typeof(GetClassDateRequest), Summary = "Запросить данные о посещаемости", OperationId = nameof(GetPresenceGrade))]
-        [SubscribeOperation(typeof(IEnumerable<FullGradePresenceResponse>), Summary = "Событие: Получение данных о посещаемости (ответ на GetPresenceGrade)", OperationId = "ReceivePresences")]
+        [SubscribeOperation(typeof(List<FullGradePresenceResponse>), Summary = "Событие: Получение данных о посещаемости (ответ на GetPresenceGrade)", OperationId = "ReceivePresences")]
         public async Task GetPresenceGrade(GetClassDateRequest request)
         {
             var groupClaim = Context.User?.FindFirst("group_id")?.Value;

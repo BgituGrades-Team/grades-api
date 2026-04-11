@@ -6,16 +6,16 @@ namespace BgituGrades.Repositories
 {
     public interface ITransferRepository
     {
-        Task<IEnumerable<Transfer>> GetAllTransfersAsync(CancellationToken cancellationToken);
+        Task<List<Transfer>> GetAllTransfersAsync(CancellationToken cancellationToken);
         Task<Transfer> CreateTransferAsync(Transfer entity, CancellationToken cancellationToken);
         Task<Transfer?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<Transfer?> GetByClassIdAsync(int classId, CancellationToken cancellationToken);
         Task<bool> UpdateTransferAsync(Transfer entity, CancellationToken cancellationToken);
         Task<bool> DeleteTransferAsync(int id, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
-        Task<IEnumerable<Transfer>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken);
-        Task<Dictionary<(int GroupId, int DisciplineId), IEnumerable<Transfer>>> GetTransfersByGroupIdsAsync(
-            List<int> groupIds, CancellationToken cancellationToken);
+        Task<List<Transfer>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken);
+        Task<Dictionary<(int GroupId, int DisciplineId), List<Transfer>>> GetTransfersByGroupIdsAsync(
+            IEnumerable<int> groupIds, CancellationToken cancellationToken);
     }
 
     public class TransferRepository(IDbContextFactory<AppDbContext> contextFactory) : ITransferRepository
@@ -51,7 +51,7 @@ namespace BgituGrades.Repositories
             return entity;
         }
 
-        public async Task<IEnumerable<Transfer>> GetAllTransfersAsync(CancellationToken cancellationToken)
+        public async Task<List<Transfer>> GetAllTransfersAsync(CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Transfers
@@ -80,7 +80,7 @@ namespace BgituGrades.Repositories
             await context.Transfers.ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<Transfer>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken)
+        public async Task<List<Transfer>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Transfers
@@ -91,8 +91,8 @@ namespace BgituGrades.Repositories
             return entities;
         }
 
-        public async Task<Dictionary<(int GroupId, int DisciplineId), IEnumerable<Transfer>>> GetTransfersByGroupIdsAsync(
-            List<int> groupIds, CancellationToken cancellationToken)
+        public async Task<Dictionary<(int GroupId, int DisciplineId), List<Transfer>>> GetTransfersByGroupIdsAsync(
+            IEnumerable<int> groupIds, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var transfers = await context.Transfers
@@ -104,7 +104,7 @@ namespace BgituGrades.Repositories
                 .GroupBy(t => (t.GroupId, t.DisciplineId))
                 .ToDictionary(
                     g => g.Key,
-                    g => g.AsEnumerable());
+                    g => g.ToList());
         }
     }
 }

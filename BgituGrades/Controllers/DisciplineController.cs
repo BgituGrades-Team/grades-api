@@ -16,8 +16,8 @@ namespace BgituGrades.Controllers
         [HttpGet("all")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(IEnumerable<DisciplineResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<DisciplineResponse>>> GetDisciplines(CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<DisciplineResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<DisciplineResponse>>> GetDisciplines(CancellationToken cancellationToken)
         {
             var Disciplines = await _disciplineService.GetAllDisciplinesAsync(cancellationToken: cancellationToken);
             return Ok(Disciplines);
@@ -26,20 +26,20 @@ namespace BgituGrades.Controllers
         [HttpGet]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(IEnumerable<DisciplineResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<DisciplineResponse>>> GetDisciplinesByGroupIds([FromQuery] GetDisciplineByGroupIdsRequest request, CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<DisciplineResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<DisciplineResponse>>> GetDisciplinesByGroupIds([FromQuery] GetDisciplineByGroupIdsRequest request, CancellationToken cancellationToken)
         {
-            var disciplines = await _disciplineService.GetDisciplineByGroupIdAsync(request.GroupIds, cancellationToken: cancellationToken);
+            var disciplines = await _disciplineService.GetDisciplineByGroupIdAsync(request.GroupIds.Values, cancellationToken: cancellationToken);
             return Ok(disciplines);
         }
 
         [HttpGet("archived")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(IEnumerable<DisciplineResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<DisciplineResponse>>> GetArchivedDisciplinesByGroupIds([FromQuery] GetDisciplineByGroupIdsRequest request, CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<DisciplineResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<DisciplineResponse>>> GetArchivedDisciplinesByGroupIds([FromQuery] GetDisciplineByGroupIdsRequest request, CancellationToken cancellationToken)
         {
-            var disciplines = await _disciplineService.GetArchivedDisciplinesByGroupIdsAsync(request.GroupIds, cancellationToken: cancellationToken);
+            var disciplines = await _disciplineService.GetArchivedDisciplinesByGroupIdsAsync(request.GroupIds.Values, cancellationToken: cancellationToken);
             return Ok(disciplines);
         }
 

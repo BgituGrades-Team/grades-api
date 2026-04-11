@@ -9,7 +9,7 @@ namespace BgituGrades.Services
 {
     public interface IKeyService
     {
-        Task<IEnumerable<KeyResponse>> GetKeysAsync(CancellationToken cancellationToken);
+        Task<List<KeyResponse>> GetKeysAsync(CancellationToken cancellationToken);
         Task<KeyResponse> GetKeyAsync(string key, CancellationToken cancellationToken);
         Task<KeyResponse> GenerateKeyAsync(Role role, int? groupId, CancellationToken cancellationToken);
         Task<bool> DeleteKeyAsync(string key, CancellationToken cancellationToken);
@@ -45,10 +45,10 @@ namespace BgituGrades.Services
             return await _keyRepository.DeleteKeyAsync(lookupHash, cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<KeyResponse>> GetKeysAsync(CancellationToken cancellationToken)
+        public async Task<List<KeyResponse>> GetKeysAsync(CancellationToken cancellationToken)
         {
             var storedKeys = await _keyRepository.GetKeysAsync(cancellationToken: cancellationToken);
-            var response = _mapper.Map<IEnumerable<KeyResponse>>(storedKeys);
+            var response = _mapper.Map<List<KeyResponse>>(storedKeys);
             return response;
         }
 

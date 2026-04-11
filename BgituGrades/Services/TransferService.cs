@@ -8,14 +8,14 @@ namespace BgituGrades.Services
 {
     public interface ITransferService
     {
-        Task<IEnumerable<TransferResponse>> GetAllTransfersAsync(CancellationToken cancellationToken);
+        Task<List<TransferResponse>> GetAllTransfersAsync(CancellationToken cancellationToken);
         Task<TransferResponse> CreateTransferAsync(CreateTransferRequest request, CancellationToken cancellationToken);
         Task<TransferResponse?> GetTransferByClassIdAsync(int classId, CancellationToken cancellationToken);
         Task<TransferResponse?> GetTransferByIdAsync(int id, CancellationToken cancellationToken);
-        Task<IEnumerable<TransferResponse>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken);
+        Task<List<TransferResponse>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken);
         Task<bool> UpdateTransferAsync(UpdateTransferRequest request, CancellationToken cancellationToken);
         Task<bool> DeleteTransferAsync(int id, CancellationToken cancellationToken);
-        Task<IEnumerable<TransferDTO>> GetAllTransfersDtoAsync(CancellationToken cancellationToken);
+        Task<List<TransferDTO>> GetAllTransfersDtoAsync(CancellationToken cancellationToken);
         Task<TransferDTO?> GetTransferDtoByIdAsync(int id, CancellationToken cancellationToken);
     }
     public class TransferService(ITransferRepository transferRepository, IMapper mapper) : ITransferService
@@ -47,10 +47,10 @@ namespace BgituGrades.Services
             return entity == null ? null : _mapper.Map<TransferResponse>(entity);
         }
 
-        public async Task<IEnumerable<TransferResponse>> GetAllTransfersAsync(CancellationToken cancellationToken)
+        public async Task<List<TransferResponse>> GetAllTransfersAsync(CancellationToken cancellationToken)
         {
             var entities = await _transferRepository.GetAllTransfersAsync(cancellationToken: cancellationToken);
-            return _mapper.Map<IEnumerable<TransferResponse>>(entities);
+            return _mapper.Map<List<TransferResponse>>(entities);
         }
 
         public async Task<bool> UpdateTransferAsync(UpdateTransferRequest request, CancellationToken cancellationToken)
@@ -63,10 +63,10 @@ namespace BgituGrades.Services
             return await _transferRepository.UpdateTransferAsync(entity, cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<TransferDTO>> GetAllTransfersDtoAsync(CancellationToken cancellationToken)
+        public async Task<List<TransferDTO>> GetAllTransfersDtoAsync(CancellationToken cancellationToken)
         {
             var entities = await _transferRepository.GetAllTransfersAsync(cancellationToken: cancellationToken);
-            return _mapper.Map<IEnumerable<TransferDTO>>(entities);
+            return _mapper.Map<List<TransferDTO>>(entities);
         }
 
         public async Task<TransferDTO?> GetTransferDtoByIdAsync(int id, CancellationToken cancellationToken)
@@ -75,10 +75,10 @@ namespace BgituGrades.Services
             return entity == null ? null : _mapper.Map<TransferDTO>(entity);
         }
 
-        public async Task<IEnumerable<TransferResponse>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken)
+        public async Task<List<TransferResponse>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken)
         {
             var entities = await _transferRepository.GetTransfersByGroupAndDisciplineAsync(groupId, disciplineId, cancellationToken: cancellationToken);
-            var response = _mapper.Map<IEnumerable<TransferResponse>>(entities);
+            var response = _mapper.Map<List<TransferResponse>>(entities);
             return response;
         }
     }

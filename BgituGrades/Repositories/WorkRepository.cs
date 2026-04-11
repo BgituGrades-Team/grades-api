@@ -6,10 +6,10 @@ namespace BgituGrades.Repositories
 {
     public interface IWorkRepository
     {
-        Task<IEnumerable<Work>> GetAllWorksAsync(CancellationToken cancellationToken);
+        Task<List<Work>> GetAllWorksAsync(CancellationToken cancellationToken);
         Task<Work> CreateWorkAsync(Work entity, CancellationToken cancellationToken);
         Task<Work?> GetByIdAsync(int id, CancellationToken cancellationToken);
-        Task<IEnumerable<Work>> GetByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
+        Task<List<Work>> GetByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
         Task<bool> UpdateWorkAsync(Work entity, CancellationToken cancellationToken);
         Task<bool> DeleteWorkAsync(int id, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
@@ -40,7 +40,7 @@ namespace BgituGrades.Repositories
             return entity;
         }
 
-        public async Task<IEnumerable<Work>> GetAllWorksAsync(CancellationToken cancellationToken)
+        public async Task<List<Work>> GetAllWorksAsync(CancellationToken cancellationToken)
         {
             var entities = await _dbContext.Works
                 .AsNoTracking()
@@ -48,7 +48,7 @@ namespace BgituGrades.Repositories
             return entities;
         }
 
-        public async Task<IEnumerable<Work>> GetByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken)
+        public async Task<List<Work>> GetByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken)
         {
             var entities = await _dbContext.Works
                 .Where(w => w.DisciplineId == disciplineId && w.GroupId == groupId)
@@ -61,8 +61,7 @@ namespace BgituGrades.Repositories
         public async Task<bool> UpdateWorkAsync(Work entity, CancellationToken cancellationToken)
         {
             _dbContext.Update(entity);
-            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
-            return true;
+            return await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken) > 0;
         }
 
         public async Task DeleteAllAsync(CancellationToken cancellationToken)
@@ -70,5 +69,4 @@ namespace BgituGrades.Repositories
             await _dbContext.Works.ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
     }
-
 }

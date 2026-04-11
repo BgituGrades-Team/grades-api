@@ -6,7 +6,7 @@ namespace BgituGrades.Repositories
 {
     public interface IKeyRepository
     {
-        Task<IEnumerable<ApiKey>> GetKeysAsync(CancellationToken cancellationToken);
+        Task<List<ApiKey>> GetKeysAsync(CancellationToken cancellationToken);
         Task<ApiKey> CreateKeyAsync(ApiKey entity, CancellationToken cancellationToken);
         Task<ApiKey?> GetAsync(string key, CancellationToken cancellationToken);
         Task<bool> DeleteKeyAsync(string key, CancellationToken cancellationToken);
@@ -38,13 +38,17 @@ namespace BgituGrades.Repositories
 
         public async Task<ApiKey?> GetByLookupHashAsync(string lookupHash)
         {
-            var storedKey = await _dbContext.ApiKeys.Where(k => k.LookupHash == lookupHash).FirstOrDefaultAsync();
+            var storedKey = await _dbContext.ApiKeys
+                .Where(k => k.LookupHash == lookupHash)
+                .FirstOrDefaultAsync();
             return storedKey;
         }
 
-        public async Task<IEnumerable<ApiKey>> GetKeysAsync(CancellationToken cancellationToken)
+        public async Task<List<ApiKey>> GetKeysAsync(CancellationToken cancellationToken)
         {
-            var keys = await _dbContext.ApiKeys.AsNoTracking().ToListAsync(cancellationToken: cancellationToken);
+            var keys = await _dbContext.ApiKeys
+                .AsNoTracking()
+                .ToListAsync(cancellationToken: cancellationToken);
             return keys;
         }
     }

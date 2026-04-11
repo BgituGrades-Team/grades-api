@@ -10,19 +10,18 @@ namespace BgituGrades.Services
 {
     public interface IClassService
     {
-        Task<IEnumerable<ClassDateResponse>> GetClassDatesAsync(GetClassDateRequest request, CancellationToken cancellationToken);
-        Task<IEnumerable<FullGradeMarkResponse>> GetMarksByWorksAsync(GetClassDateRequest request, CancellationToken cancellationToken);
-        Task<IEnumerable<FullGradePresenceResponse>> GetPresenceByScheduleAsync(GetClassDateRequest request, CancellationToken cancellationToken);
+        Task<List<ClassDateResponse>> GetClassDatesAsync(GetClassDateRequest request, CancellationToken cancellationToken);
+        Task<List<FullGradeMarkResponse>> GetMarksByWorksAsync(GetClassDateRequest request, CancellationToken cancellationToken);
+        Task<List<FullGradePresenceResponse>> GetPresenceByScheduleAsync(GetClassDateRequest request, CancellationToken cancellationToken);
         Task<ClassResponse> CreateClassAsync(CreateClassRequest request, CancellationToken cancellationToken);
-        Task<IEnumerable<ClassResponse>> CreateClassAsync(CreateClassBulkRequest request, CancellationToken cancellationToken);
+        Task<List<ClassResponse>> CreateClassAsync(CreateClassBulkRequest request, CancellationToken cancellationToken);
         Task<ClassResponse?> GetClassByIdAsync(int id, CancellationToken cancellationToken);
         Task<bool> DeleteClassAsync(int id, CancellationToken cancellationToken);
-        Task<IEnumerable<ClassDateResponse>> GenerateScheduleDatesAsync(int groupId, int disciplineId, CancellationToken cancellationToken,
+        Task<List<ClassDateResponse>> GenerateScheduleDatesAsync(int groupId, int disciplineId, CancellationToken cancellationToken,
             DateOnly? startDateOverride = null, DateOnly? endDateOverride = null);
         Task<List<ClassDateResponse>> GenerateScheduleDatesAsync(Group group, IEnumerable<Class> classes,
             IEnumerable<Transfer> transfers, DateOnly? startDateOverride = null, DateOnly? endDateOverride = null);
-        Task<IEnumerable<ClassDTO>> GetAllClassesDtoAsync(CancellationToken cancellationToken);
-        Task<ClassDTO?> GetClassDtoByIdAsync(int id, CancellationToken cancellationToken);
+        Task<List<ClassDTO>> GetAllClassesDtoAsync(CancellationToken cancellationToken);
     }
     public class ClassService(IClassRepository classRepository, IGroupRepository groupRepository, ITransferService transferService,
         IStudentRepository studentRepository, IWorkRepository workRepository, IMapper mapper, IDistributedCache cache) : IClassService
@@ -43,18 +42,18 @@ namespace BgituGrades.Services
             return _mapper.Map<ClassResponse>(createdEntity);
         }
 
-        public async Task<IEnumerable<ClassResponse>> CreateClassAsync(CreateClassBulkRequest request, CancellationToken cancellationToken)
+        public async Task<List<ClassResponse>> CreateClassAsync(CreateClassBulkRequest request, CancellationToken cancellationToken)
         {
-            var entities = _mapper.Map<IEnumerable<Class>>(request.Classes);
+            var entities = _mapper.Map<List<Class>>(request.Classes);
             var createdEntities = await _classRepository.CreateClassAsync(entities, cancellationToken: cancellationToken);
-            return _mapper.Map<IEnumerable<ClassResponse>>(createdEntities);
+            return _mapper.Map<List<ClassResponse>>(createdEntities);
         }
 
-        public async Task<IEnumerable<ClassDateResponse>> GetClassDatesAsync(GetClassDateRequest request, CancellationToken cancellationToken)
+        public async Task<List<ClassDateResponse>> GetClassDatesAsync(GetClassDateRequest request, CancellationToken cancellationToken)
         {
             var cacheKey = $"{CacheKeyPrefix}group:{request.GroupId}:discipline:{request.DisciplineId}";
 
-            var cached = await GetFromCacheAsync<IEnumerable<ClassDateResponse>>(cacheKey);
+            var cached = await GetFromCacheAsync<List<ClassDateResponse>>(cacheKey);
             if (cached != null)
                 return cached;
 
@@ -69,7 +68,7 @@ namespace BgituGrades.Services
         }
 
 
-        public async Task<IEnumerable<ClassDateResponse>> GenerateScheduleDatesAsync(int groupId, int disciplineId, CancellationToken cancellationToken,
+        public async Task<List<ClassDateResponse>> GenerateScheduleDatesAsync(int groupId, int disciplineId, CancellationToken cancellationToken,
             DateOnly? startDateOverride = null, DateOnly? endDateOverride = null)
         {
             var group = await _groupRepository.GetByIdAsync(groupId, cancellationToken: cancellationToken);
@@ -198,7 +197,7 @@ namespace BgituGrades.Services
             return entity == null ? null : _mapper.Map<ClassResponse>(entity);
         }
 
-        public async Task<IEnumerable<FullGradePresenceResponse>> GetPresenceByScheduleAsync(GetClassDateRequest request, CancellationToken cancellationToken)
+        public async Task<List<FullGradePresenceResponse>> GetPresenceByScheduleAsync(GetClassDateRequest request, CancellationToken cancellationToken)
         {
             var scheduleDates = await GenerateScheduleDatesAsync(request.GroupId, request.DisciplineId, cancellationToken);
 
@@ -206,7 +205,7 @@ namespace BgituGrades.Services
             return students;
         }
 
-        public async Task<IEnumerable<FullGradeMarkResponse>> GetMarksByWorksAsync(GetClassDateRequest request, CancellationToken cancellationToken)
+        public async Task<List<FullGradeMarkResponse>> GetMarksByWorksAsync(GetClassDateRequest request, CancellationToken cancellationToken)
         {
             var works = await _workRepository.GetByDisciplineAndGroupAsync(request.DisciplineId, request.GroupId, cancellationToken: cancellationToken);
 
@@ -214,16 +213,10 @@ namespace BgituGrades.Services
             return students;
         }
 
-        public async Task<IEnumerable<ClassDTO>> GetAllClassesDtoAsync(CancellationToken cancellationToken)
+        public async Task<List<ClassDTO>> GetAllClassesDtoAsync(CancellationToken cancellationToken)
         {
             var entities = await _classRepository.GetAllClassesAsync(cancellationToken: cancellationToken);
-            return _mapper.Map<IEnumerable<ClassDTO>>(entities);
-        }
-
-        public async Task<ClassDTO?> GetClassDtoByIdAsync(int id, CancellationToken cancellationToken)
-        {
-            var entity = await _classRepository.GetByIdAsync(id, cancellationToken: cancellationToken);
-            return entity == null ? null : _mapper.Map<ClassDTO>(entity);
+            return _mapper.Map<List<ClassDTO>>(entities);
         }
 
         private async Task<T?> GetFromCacheAsync<T>(string key)

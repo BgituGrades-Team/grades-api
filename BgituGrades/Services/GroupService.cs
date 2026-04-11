@@ -11,20 +11,20 @@ namespace BgituGrades.Services
 {
     public interface IGroupService
     {
-        Task<IEnumerable<GroupResponse>> GetGroupsByDisciplineAsync(int disciplineId, CancellationToken cancellationToken);
-        Task<IEnumerable<GroupResponse>> GetAllAsync(CancellationToken cancellationToken);
+        Task<List<GroupResponse>> GetGroupsByDisciplineAsync(int disciplineId, CancellationToken cancellationToken);
+        Task<List<GroupResponse>> GetAllAsync(CancellationToken cancellationToken);
         Task<GroupResponse> CreateGroupAsync(CreateGroupRequest request, CancellationToken cancellationToken);
-        Task<IEnumerable<GroupResponse>> CreateGroupAsync(CreateGroupBulkRequest request, CancellationToken cancellationToken);
+        Task<List<GroupResponse>> CreateGroupAsync(CreateGroupBulkRequest request, CancellationToken cancellationToken);
         Task<GroupResponse?> GetGroupByIdAsync(int id, CancellationToken cancellationToken);
         Task<bool> UpdateGroupAsync(UpdateGroupRequest request, CancellationToken cancellationToken);
         Task<bool> DeleteGroupAsync(int id, CancellationToken cancellationToken);
-        Task<IEnumerable<GroupDTO>> GetAllGroupsDtoAsync(CancellationToken cancellationToken);
-        Task<IEnumerable<GroupDTO>> GetGroupsDtoByDisciplineAsync(int disciplineId, CancellationToken cancellationToken);
-        Task<IEnumerable<ArchivedGroupResponse>> GetArchivedGroupsByPeriodAsync(int semester, int year, CancellationToken cancellationToken);
-        Task<IEnumerable<CourseReponse>> GetCoursesAsync(CancellationToken cancellationToken);
-        Task<IEnumerable<CourseReponse>> GetArchivedCoursesByPeriodAsync(GetByPeriodRequest request, CancellationToken cancellationToken);
-        Task<IEnumerable<GroupResponse>> GetGroupsByCoursesAsync(int[] courses, CancellationToken cancellationToken);
-        Task<IEnumerable<ArchivedGroupResponse>> GetArchivedGroupsByCoursesAndPeriodAsync(GetArchivedByCoursesRequest request, CancellationToken cancellationToken);
+        Task<List<GroupDTO>> GetAllGroupsDtoAsync(CancellationToken cancellationToken);
+        Task<List<GroupDTO>> GetGroupsDtoByDisciplineAsync(int disciplineId, CancellationToken cancellationToken);
+        Task<List<ArchivedGroupResponse>> GetArchivedGroupsByPeriodAsync(int semester, int year, CancellationToken cancellationToken);
+        Task<List<CourseReponse>> GetCoursesAsync(CancellationToken cancellationToken);
+        Task<List<CourseReponse>> GetArchivedCoursesByPeriodAsync(GetByPeriodRequest request, CancellationToken cancellationToken);
+        Task<List<GroupResponse>> GetGroupsByCoursesAsync(IEnumerable<int> courses, CancellationToken cancellationToken);
+        Task<List<ArchivedGroupResponse>> GetArchivedGroupsByCoursesAndPeriodAsync(GetArchivedByCoursesRequest request, CancellationToken cancellationToken);
         Task<GroupDTO?> GetGroupDtoByIdAsync(int id, CancellationToken cancellationToken);
     }
 
@@ -47,16 +47,16 @@ namespace BgituGrades.Services
             return _mapper.Map<GroupResponse>(createdEntity);
         }
 
-        public async Task<IEnumerable<GroupResponse>> CreateGroupAsync(CreateGroupBulkRequest request, CancellationToken cancellationToken)
+        public async Task<List<GroupResponse>> CreateGroupAsync(CreateGroupBulkRequest request, CancellationToken cancellationToken)
         {
-            var entities = _mapper.Map<IEnumerable<Group>>(request.Groups);
+            var entities = _mapper.Map<List<Group>>(request.Groups);
             foreach (var entity in entities)
             {
                 entity.CourseNumber = GroupCourseParser.Parse(entity.Name);
             }
             var createdEntities = await _groupRepository.CreateGroupAsync(entities, cancellationToken: cancellationToken);
             await _cache.RemoveAsync(AllGroupsKey);
-            return _mapper.Map<IEnumerable<GroupResponse>>(createdEntities);
+            return _mapper.Map<List<GroupResponse>>(createdEntities);
         }
 
         public async Task<bool> DeleteGroupAsync(int id, CancellationToken cancellationToken)
@@ -69,14 +69,14 @@ namespace BgituGrades.Services
             return result;
         }
 
-        public async Task<IEnumerable<GroupResponse>> GetAllAsync(CancellationToken cancellationToken)
+        public async Task<List<GroupResponse>> GetAllAsync(CancellationToken cancellationToken)
         {
-            var cached = await GetFromCacheAsync<IEnumerable<GroupResponse>>(AllGroupsKey);
+            var cached = await GetFromCacheAsync<List<GroupResponse>>(AllGroupsKey);
             if (cached != null)
                 return cached;
 
             var groups = await _groupRepository.GetAllAsync(cancellationToken: cancellationToken);
-            var response = _mapper.Map<IEnumerable<GroupResponse>>(groups).ToList();
+            var response = _mapper.Map<List<GroupResponse>>(groups).ToList();
             await SetCacheAsync(AllGroupsKey, response, TimeSpan.FromHours(2));
             return response;
         }
@@ -87,15 +87,15 @@ namespace BgituGrades.Services
             return entity == null ? null : _mapper.Map<GroupResponse>(entity);
         }
 
-        public async Task<IEnumerable<GroupResponse>> GetGroupsByDisciplineAsync(int disciplineId, CancellationToken cancellationToken)
+        public async Task<List<GroupResponse>> GetGroupsByDisciplineAsync(int disciplineId, CancellationToken cancellationToken)
         {
             var cacheKey = $"{GroupsByDisciplineKey}{disciplineId}";
-            var cached = await GetFromCacheAsync<IEnumerable<GroupResponse>>(cacheKey);
+            var cached = await GetFromCacheAsync<List<GroupResponse>>(cacheKey);
             if (cached != null)
                 return cached;
 
             var entities = await _groupRepository.GetGroupsByDisciplineAsync(disciplineId, cancellationToken: cancellationToken);
-            var result = _mapper.Map<IEnumerable<GroupResponse>>(entities).ToList();
+            var result = _mapper.Map<List<GroupResponse>>(entities).ToList();
             await SetCacheAsync(cacheKey, result, TimeSpan.FromHours(2));
             return result;
         }
@@ -112,16 +112,16 @@ namespace BgituGrades.Services
             return result;
         }
 
-        public async Task<IEnumerable<GroupDTO>> GetAllGroupsDtoAsync(CancellationToken cancellationToken)
+        public async Task<List<GroupDTO>> GetAllGroupsDtoAsync(CancellationToken cancellationToken)
         {
             var groups = await _groupRepository.GetAllAsync(cancellationToken: cancellationToken);
-            return _mapper.Map<IEnumerable<GroupDTO>>(groups);
+            return _mapper.Map<List<GroupDTO>>(groups);
         }
 
-        public async Task<IEnumerable<GroupDTO>> GetGroupsDtoByDisciplineAsync(int disciplineId, CancellationToken cancellationToken)
+        public async Task<List<GroupDTO>> GetGroupsDtoByDisciplineAsync(int disciplineId, CancellationToken cancellationToken)
         {
             var entities = await _groupRepository.GetGroupsByDisciplineAsync(disciplineId, cancellationToken: cancellationToken);
-            return _mapper.Map<IEnumerable<GroupDTO>>(entities);
+            return _mapper.Map<List<GroupDTO>>(entities);
         }
 
         public async Task<GroupDTO?> GetGroupDtoByIdAsync(int id, CancellationToken cancellationToken)
@@ -130,24 +130,24 @@ namespace BgituGrades.Services
             return entity == null ? null : _mapper.Map<GroupDTO>(entity);
         }
 
-        public async Task<IEnumerable<ArchivedGroupResponse>> GetArchivedGroupsByPeriodAsync(int semester, int year, CancellationToken cancellationToken)
+        public async Task<List<ArchivedGroupResponse>> GetArchivedGroupsByPeriodAsync(int semester, int year, CancellationToken cancellationToken)
         {
             var archived = await _groupRepository.GetArchivedByPeriod(semester, year, cancellationToken);
-            var results = _mapper.Map<IEnumerable<ArchivedGroupResponse>>(archived);
+            var results = _mapper.Map<List<ArchivedGroupResponse>>(archived);
             return results;
         }
 
-        public async Task<IEnumerable<CourseReponse>> GetCoursesAsync(CancellationToken cancellationToken)
+        public async Task<List<CourseReponse>> GetCoursesAsync(CancellationToken cancellationToken)
         {
             return await _groupRepository.GetCoursesAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<CourseReponse>> GetArchivedCoursesByPeriodAsync(GetByPeriodRequest request, CancellationToken cancellationToken)
+        public async Task<List<CourseReponse>> GetArchivedCoursesByPeriodAsync(GetByPeriodRequest request, CancellationToken cancellationToken)
         {
             return await _groupRepository.GetArchivedCoursesByPeriodAsync(request.Year, request.Semester, cancellationToken);
         }
 
-        public async Task<IEnumerable<GroupResponse>> GetGroupsByCoursesAsync(int[] courses, CancellationToken cancellationToken)
+        public async Task<List<GroupResponse>> GetGroupsByCoursesAsync(IEnumerable<int> courses, CancellationToken cancellationToken)
         {
             var results = new List<GroupResponse>();
             var missingCourses = new List<int>();
@@ -184,10 +184,10 @@ namespace BgituGrades.Services
                 }
             }
 
-            return results.DistinctBy(g => g.Id);
+            return results.DistinctBy(g => g.Id).ToList();
         }
 
-        public async Task<IEnumerable<ArchivedGroupResponse>> GetArchivedGroupsByCoursesAndPeriodAsync(GetArchivedByCoursesRequest request, CancellationToken cancellationToken)
+        public async Task<List<ArchivedGroupResponse>> GetArchivedGroupsByCoursesAndPeriodAsync(GetArchivedByCoursesRequest request, CancellationToken cancellationToken)
         {
             return await _groupRepository.GetArchivedGroupsByCoursesAndPeriodAsync(request, cancellationToken);
         }

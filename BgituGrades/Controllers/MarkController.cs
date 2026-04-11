@@ -18,8 +18,8 @@ namespace BgituGrades.Controllers
 
         [HttpGet]
         [ApiVersion("2.0")]
-        [ProducesResponseType(typeof(IEnumerable<MarkResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<MarkResponse>>> GetMarks(CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<MarkResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<MarkResponse>>> GetMarks(CancellationToken cancellationToken)
         {
             var marks = await _markService.GetAllMarksAsync(cancellationToken: cancellationToken);
             return Ok(marks);

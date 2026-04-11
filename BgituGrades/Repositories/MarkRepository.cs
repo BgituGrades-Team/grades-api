@@ -6,15 +6,15 @@ namespace BgituGrades.Repositories
 {
     public interface IMarkRepository
     {
-        Task<IEnumerable<Mark>> GetAllMarksAsync(CancellationToken cancellationToken);
+        Task<List<Mark>> GetAllMarksAsync(CancellationToken cancellationToken);
         Task<Mark> CreateMarkAsync(Mark entity, CancellationToken cancellationToken);
-        Task<IEnumerable<Mark>> GetMarksByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
+        Task<List<Mark>> GetMarksByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
         Task<bool> UpdateMarkAsync(Mark entity, CancellationToken cancellationToken);
         Task<bool> DeleteMarkByStudentAndWorkAsync(int studentId, int workId, CancellationToken cancellationToken);
         Task<Mark?> GetMarkByStudentAndWorkAsync(int studentId, int workId, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
         Task<double> GetAverageMarkByStudentAndDisciplineAsync(int studentId, int disciplineId, CancellationToken cancellationToken);
-        Task<IEnumerable<Mark>> GetMarksByDisciplinesAndGroupsAsync(List<int> disciplinesIds, List<int> groupsIds, CancellationToken cancellationToken);
+        Task<List<Mark>> GetMarksByDisciplinesAndGroupsAsync(IEnumerable<int> disciplinesIds, IEnumerable<int> groupsIds, CancellationToken cancellationToken);
         Task<Mark?> GetMarkByIdAsync(int id, CancellationToken cancellationToken);
     }
 
@@ -29,7 +29,7 @@ namespace BgituGrades.Repositories
             return entity;
         }
 
-        public async Task<IEnumerable<Mark>> GetAllMarksAsync(CancellationToken cancellationToken)
+        public async Task<List<Mark>> GetAllMarksAsync(CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Marks
@@ -38,12 +38,12 @@ namespace BgituGrades.Repositories
             return entities;
         }
 
-        public async Task<IEnumerable<Mark>> GetMarksByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken)
+        public async Task<List<Mark>> GetMarksByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Marks
                 .Where(m => m.Work!.DisciplineId == disciplineId &&
-                           m.Student!.GroupId == groupId)
+                            m.Student!.GroupId == groupId)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken: cancellationToken);
             return entities;
@@ -98,7 +98,7 @@ namespace BgituGrades.Repositories
             return validMarks.Count > 0 ? validMarks.Average() : 0;
         }
 
-        public async Task<IEnumerable<Mark>> GetMarksByDisciplinesAndGroupsAsync(List<int> disciplineIds, List<int> groupIds, CancellationToken cancellationToken)
+        public async Task<List<Mark>> GetMarksByDisciplinesAndGroupsAsync(IEnumerable<int> disciplineIds, IEnumerable<int> groupIds, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Marks
@@ -111,7 +111,9 @@ namespace BgituGrades.Repositories
         public async Task<Mark?> GetMarkByIdAsync(int id, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
-            return await context.Marks.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id, cancellationToken: cancellationToken);
+            return await context.Marks
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Id == id, cancellationToken: cancellationToken);
         }
     }
 

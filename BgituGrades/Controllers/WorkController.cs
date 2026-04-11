@@ -16,8 +16,8 @@ namespace BgituGrades.Controllers
 
         [HttpGet]
         [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(IEnumerable<WorkResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<WorkResponse>>> GetWorks(CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<WorkResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<WorkResponse>>> GetWorks(CancellationToken cancellationToken)
         {
             var works = await _workService.GetAllWorksAsync(cancellationToken: cancellationToken);
             return Ok(works);

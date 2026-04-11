@@ -9,8 +9,8 @@ namespace BgituGrades.Services
 {
     public interface IStudentService
     {
-        Task<IEnumerable<StudentResponse>> GetStudentsByGroupAsync(GetStudentsByGroupRequest request, CancellationToken cancellationToken);
-        Task<IEnumerable<StudentResponse>> GetArchivedStudentsByGroupAsync(GetStudentsByGroupRequest request, CancellationToken cancellationToken);
+        Task<List<StudentResponse>> GetStudentsByGroupAsync(GetStudentsByGroupRequest request, CancellationToken cancellationToken);
+        Task<List<StudentResponse>> GetArchivedStudentsByGroupAsync(GetStudentsByGroupRequest request, CancellationToken cancellationToken);
         Task<StudentResponse> CreateStudentAsync(CreateStudentRequest request, CancellationToken cancellationToken);
         Task<StudentResponse?> GetStudentByIdAsync(int id, CancellationToken cancellationToken);
         Task<bool> UpdateStudentAsync(UpdateStudentRequest request, CancellationToken cancellationToken);
@@ -30,10 +30,6 @@ namespace BgituGrades.Services
         private readonly IMapper _mapper = mapper;
 
         private const sbyte STATUS_STUDYING = 1;
-        private const sbyte STATUS_ACADEMIC_LEAVE = -1;
-        private const sbyte STATUS_EXPELLED = 3;
-        private const sbyte STATUS_END = 4;
-        private readonly sbyte[] STATUSES = [STATUS_ACADEMIC_LEAVE, STATUS_EXPELLED, STATUS_END];
         private const short BATCH_SIZE = 2000;
         private const byte COL_CODE = 0;
         private const byte COL_LASTNAME = 1;
@@ -57,8 +53,6 @@ namespace BgituGrades.Services
                 var classes = await _classService.GenerateScheduleDatesAsync(request.GroupId, d!.Id, cancellationToken);
                 disciplinesDict[d.Id] = classes.Select(c => c.Date);
             }
-
-            await _presenceRepository.AddNewStudentPresences(createdEntity.Id, disciplinesDict, cancellationToken: cancellationToken);
             return _mapper.Map<StudentResponse>(createdEntity);
         }
 
@@ -73,10 +67,10 @@ namespace BgituGrades.Services
             return entity == null ? null : _mapper.Map<StudentResponse>(entity);
         }
 
-        public async Task<IEnumerable<StudentResponse>> GetStudentsByGroupAsync(GetStudentsByGroupRequest request, CancellationToken cancellationToken)
+        public async Task<List<StudentResponse>> GetStudentsByGroupAsync(GetStudentsByGroupRequest request, CancellationToken cancellationToken)
         {
-            var entities = await _studentRepository.GetStudentsByGroupIdsAsync(request.GroupIds, cancellationToken: cancellationToken);
-            return _mapper.Map<IEnumerable<StudentResponse>>(entities);
+            var entities = await _studentRepository.GetStudentsByGroupIdsAsync(request.GroupIds.Values, cancellationToken: cancellationToken);
+            return _mapper.Map<List<StudentResponse>>(entities);
         }
 
         public async Task<bool> UpdateStudentAsync(UpdateStudentRequest request, CancellationToken cancellationToken)
@@ -128,7 +122,7 @@ namespace BgituGrades.Services
                 var officialId = sheet.Cells[row, COL_CODE + 1].GetValue<int>();
 
                 sbyte status = Convert.ToSByte(statusCell);
-                if (STATUSES.Contains(status))
+                if (status != STATUS_STUDYING)
                 {
                     leavedStudents.Add(officialId);
                     result.SkippedRows++;
@@ -197,7 +191,7 @@ namespace BgituGrades.Services
             return result;
         }
 
-        private async Task FlushBatchAsync(List<Student> batch, List<int> leavedIds, CancellationToken cancellationToken)
+        private async Task FlushBatchAsync(IEnumerable<Student> batch, IEnumerable<int> leavedIds, CancellationToken cancellationToken)
         {
             await _studentRepository.DeleteByIdsAsync(leavedIds, cancellationToken: cancellationToken);
             await _studentRepository.BulkInsertAsync(batch, cancellationToken: cancellationToken);
@@ -208,10 +202,10 @@ namespace BgituGrades.Services
             await _studentRepository.DeleteAllAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<StudentResponse>> GetArchivedStudentsByGroupAsync(GetStudentsByGroupRequest request, CancellationToken cancellationToken)
+        public async Task<List<StudentResponse>> GetArchivedStudentsByGroupAsync(GetStudentsByGroupRequest request, CancellationToken cancellationToken)
         {
-            var students = await _studentRepository.GetArchivedByGroupIdsAsync(request.GroupIds, cancellationToken);
-            var results = _mapper.Map<IEnumerable<StudentResponse>>(students);
+            var students = await _studentRepository.GetArchivedByGroupIdsAsync(request.GroupIds.Values, cancellationToken);
+            var results = _mapper.Map<List<StudentResponse>>(students);
             return results;
         }
     }

@@ -10,19 +10,19 @@ namespace BgituGrades.Repositories
 {
     public interface IStudentRepository
     {
-        Task<IEnumerable<Student>> GetAllStudentsAsync(CancellationToken cancellationToken);
-        Task<IEnumerable<Student>> GetStudentsByGroupAsync(int groupId, CancellationToken cancellationToken);
-        Task<IEnumerable<Student>> GetStudentsByGroupIdsAsync(int[] groupIds, CancellationToken cancellationToken);
-        Task<IEnumerable<FullGradeMarkResponse>> GetMarksGrade(IEnumerable<Work> works, int groupId, int disciplineId, CancellationToken cancellationToken);
-        Task<IEnumerable<FullGradePresenceResponse>> GetPresenseGrade(IEnumerable<ClassDateResponse> scheduleDates, int groupId, int disciplineId, CancellationToken cancellationToken);
+        Task<List<Student>> GetAllStudentsAsync(CancellationToken cancellationToken);
+        Task<List<Student>> GetStudentsByGroupAsync(int groupId, CancellationToken cancellationToken);
+        Task<List<Student>> GetStudentsByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken);
+        Task<List<FullGradeMarkResponse>> GetMarksGrade(IEnumerable<Work> works, int groupId, int disciplineId, CancellationToken cancellationToken);
+        Task<List<FullGradePresenceResponse>> GetPresenseGrade(IEnumerable<ClassDateResponse> scheduleDates, int groupId, int disciplineId, CancellationToken cancellationToken);
         Task<Student> CreateStudentAsync(Student entity, CancellationToken cancellationToken);
         Task<Student?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<bool> UpdateStudentAsync(Student entity, CancellationToken cancellationToken);
         Task<bool> DeleteStudentAsync(int id, CancellationToken cancellationToken);
-        Task<IEnumerable<Student>> GetArchivedByGroupIdsAsync(int[] groupIds, CancellationToken cancellationToken);
-        Task<IEnumerable<Student>> GetStudentsByIdsAsync(int[] studentIds, CancellationToken cancellationToken);
-        Task BulkInsertAsync(List<Student> students, CancellationToken cancellationToken);
-        Task DeleteByIdsAsync(List<int> studentsIds, CancellationToken cancellationToken);
+        Task<List<Student>> GetArchivedByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken);
+        Task<List<Student>> GetStudentsByIdsAsync(IEnumerable<int> studentIds, CancellationToken cancellationToken);
+        Task BulkInsertAsync(IEnumerable<Student> students, CancellationToken cancellationToken);
+        Task DeleteByIdsAsync(IEnumerable<int> studentsIds, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
     }
 
@@ -51,7 +51,7 @@ namespace BgituGrades.Repositories
             return entity;
         }
 
-        public async Task<IEnumerable<Student>> GetAllStudentsAsync(CancellationToken cancellationToken)
+        public async Task<List<Student>> GetAllStudentsAsync(CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Students
@@ -60,7 +60,7 @@ namespace BgituGrades.Repositories
             return entities;
         }
 
-        public async Task<IEnumerable<Student>> GetStudentsByGroupAsync(int groupId, CancellationToken cancellationToken)
+        public async Task<List<Student>> GetStudentsByGroupAsync(int groupId, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Students
@@ -70,7 +70,7 @@ namespace BgituGrades.Repositories
             return entities;
         }
 
-        public async Task<IEnumerable<FullGradePresenceResponse>> GetPresenseGrade(IEnumerable<ClassDateResponse> scheduleDates,
+        public async Task<List<FullGradePresenceResponse>> GetPresenseGrade(IEnumerable<ClassDateResponse> scheduleDates,
             int groupId, int disciplineId, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
@@ -83,13 +83,13 @@ namespace BgituGrades.Repositories
                 .ToListAsync(cancellationToken: cancellationToken);
 
             var presenceByStudent = studentsWithPresence.Select(s => new
-            {
-                s.Id,
-                s.Name,
-                PresencesByDate = s.Presences!
-                    .Where(p => p.DisciplineId == disciplineId)
-                    .ToLookup(p => (p.ClassId, p.Date), p => p.IsPresent)
-            }).ToList();
+                {
+                    s.Id,
+                    s.Name,
+                    PresencesByDate = s.Presences!
+                        .Where(p => p.DisciplineId == disciplineId)
+                        .ToLookup(p => (p.ClassId, p.Date), p => p.IsPresent)
+                }).ToList();
 
             var scheduleDatesList = scheduleDates.ToList();
             var result = presenceByStudent.Select(s => new FullGradePresenceResponse
@@ -103,12 +103,12 @@ namespace BgituGrades.Repositories
                     Date = date.Date,
                     IsPresent = s.PresencesByDate[(date.Id, date.Date)].FirstOrDefault(PresenceType.PRESENT)
                 }).ToList()
-            });
+            }).ToList();
 
             return result;
         }
 
-        public async Task<IEnumerable<FullGradeMarkResponse>> GetMarksGrade(IEnumerable<Work> works,
+        public async Task<List<FullGradeMarkResponse>> GetMarksGrade(IEnumerable<Work> works,
             int groupId, int disciplineId, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
@@ -141,7 +141,7 @@ namespace BgituGrades.Repositories
                     Name = work.Name!,
                     Value = s.MarksByWorkId[work.Id].FirstOrDefault() ?? ""
                 }).ToList()
-            });
+            }).ToList();
 
             return result;
         }
@@ -154,7 +154,7 @@ namespace BgituGrades.Repositories
             return true;
         }
 
-        public async Task<IEnumerable<Student>> GetStudentsByIdsAsync(int[] studentIds, CancellationToken cancellationToken)
+        public async Task<List<Student>> GetStudentsByIdsAsync(IEnumerable<int> studentIds, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Students
@@ -163,7 +163,7 @@ namespace BgituGrades.Repositories
                 .ToListAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<Student>> GetStudentsByGroupIdsAsync(int[] groupIds, CancellationToken cancellationToken)
+        public async Task<List<Student>> GetStudentsByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Students
@@ -173,7 +173,7 @@ namespace BgituGrades.Repositories
             return entities;
         }
 
-        public async Task BulkInsertAsync(List<Student> students, CancellationToken cancellationToken)
+        public async Task BulkInsertAsync(IEnumerable<Student> students, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var bulkConfig = new BulkConfig { UpdateByProperties = [nameof(Student.OfficialId), nameof(Student.GroupId)] };
@@ -188,7 +188,7 @@ namespace BgituGrades.Repositories
             await context.Students.ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<Student>> GetArchivedByGroupIdsAsync(int[] groupIds, CancellationToken cancellationToken)
+        public async Task<List<Student>> GetArchivedByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var archivedStudents = await context.ReportSnapshots
@@ -205,7 +205,7 @@ namespace BgituGrades.Repositories
             return archivedStudents;
         }
 
-        public async Task DeleteByIdsAsync(List<int> studentsIds, CancellationToken cancellationToken)
+        public async Task DeleteByIdsAsync(IEnumerable<int> studentsIds, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             await context.Students.Where(s => studentsIds.Contains(s.Id))

@@ -11,13 +11,13 @@ namespace BgituGrades.Services
 {
     public interface IPresenceService
     {
-        Task<IEnumerable<PresenceResponse>> GetAllPresencesAsync(CancellationToken cancellationToken);
+        Task<List<PresenceResponse>> GetAllPresencesAsync(CancellationToken cancellationToken);
         Task<PresenceResponse> CreatePresenceAsync(CreatePresenceRequest request, CancellationToken cancellationToken);
-        Task<IEnumerable<PresenceResponse>> GetPresencesByDisciplineAndGroupAsync(GetPresenceByDisciplineAndGroupRequest request, CancellationToken cancellationToken);
+        Task<List<PresenceResponse>> GetPresencesByDisciplineAndGroupAsync(GetPresenceByDisciplineAndGroupRequest request, CancellationToken cancellationToken);
         Task<bool> DeletePresenceByStudentAndDateAsync(DeletePresenceByStudentAndDateRequest request, CancellationToken cancellationToken);
         Task UpdatePresenceAsync(UpdatePresenceRequest request, CancellationToken cancellationToken);
         Task<FullGradePresenceResponse> UpdateOrCreatePresenceAsync(UpdatePresenceGradeRequest request, CancellationToken cancellationToken);
-        Task<IEnumerable<PresenceDTO>> GetAllPresencesDtoAsync(CancellationToken cancellationToken);
+        Task<List<PresenceDTO>> GetAllPresencesDtoAsync(CancellationToken cancellationToken);
         Task<PresenceDTO?> GetPresenceDtoByIdAsync(int id, CancellationToken cancellationToken);
     }
     public class PresenceService(IPresenceRepository presenceRepository, IMapper mapper, IDistributedCache cache) : IPresenceService
@@ -38,30 +38,30 @@ namespace BgituGrades.Services
             return _mapper.Map<PresenceResponse>(createdEntity);
         }
 
-        public async Task<IEnumerable<PresenceResponse>> GetAllPresencesAsync(CancellationToken cancellationToken)
+        public async Task<List<PresenceResponse>> GetAllPresencesAsync(CancellationToken cancellationToken)
         {
 
-            var cached = await GetFromCacheAsync<IEnumerable<PresenceResponse>>(AllPresencesKey);
+            var cached = await GetFromCacheAsync<List<PresenceResponse>>(AllPresencesKey);
             if (cached != null)
                 return cached;
 
             var entities = await _presenceRepository.GetAllPresencesAsync(cancellationToken: cancellationToken);
-            var result = _mapper.Map<IEnumerable<PresenceResponse>>(entities).ToList();
+            var result = _mapper.Map<List<PresenceResponse>>(entities).ToList();
             await SetCacheAsync(AllPresencesKey, result, TimeSpan.FromHours(1));
             return result;
         }
 
-        public async Task<IEnumerable<PresenceResponse>> GetPresencesByDisciplineAndGroupAsync(GetPresenceByDisciplineAndGroupRequest request, CancellationToken cancellationToken)
+        public async Task<List<PresenceResponse>> GetPresencesByDisciplineAndGroupAsync(GetPresenceByDisciplineAndGroupRequest request, CancellationToken cancellationToken)
         {
 
             var cacheKey = $"{CacheKeyPrefix}discipline:{request.DisciplineId}:group:{request.GroupId}";
 
-            var cached = await GetFromCacheAsync<IEnumerable<PresenceResponse>>(cacheKey);
+            var cached = await GetFromCacheAsync<List<PresenceResponse>>(cacheKey);
             if (cached != null)
                 return cached;
 
             var entities = await _presenceRepository.GetPresencesByDisciplineAndGroupAsync(request.DisciplineId, request.GroupId, cancellationToken: cancellationToken);
-            var result = _mapper.Map<IEnumerable<PresenceResponse>>(entities).ToList();
+            var result = _mapper.Map<List<PresenceResponse>>(entities).ToList();
             await SetCacheAsync(cacheKey, result, TimeSpan.FromHours(2));
             return result;
         }
@@ -112,10 +112,10 @@ namespace BgituGrades.Services
             return response;
         }
 
-        public async Task<IEnumerable<PresenceDTO>> GetAllPresencesDtoAsync(CancellationToken cancellationToken)
+        public async Task<List<PresenceDTO>> GetAllPresencesDtoAsync(CancellationToken cancellationToken)
         {
             var entities = await _presenceRepository.GetAllPresencesAsync(cancellationToken: cancellationToken);
-            return _mapper.Map<IEnumerable<PresenceDTO>>(entities);
+            return _mapper.Map<List<PresenceDTO>>(entities);
         }
 
         public async Task<PresenceDTO?> GetPresenceDtoByIdAsync(int id, CancellationToken cancellationToken)

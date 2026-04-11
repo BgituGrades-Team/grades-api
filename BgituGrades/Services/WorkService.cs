@@ -10,13 +10,11 @@ namespace BgituGrades.Services
 {
     public interface IWorkService
     {
-        Task<IEnumerable<WorkResponse>> GetAllWorksAsync(CancellationToken cancellationToken);
+        Task<List<WorkResponse>> GetAllWorksAsync(CancellationToken cancellationToken);
         Task<WorkResponse> CreateWorkAsync(CreateWorkRequest request, CancellationToken cancellationToken);
         Task<WorkResponse?> GetWorkByIdAsync(int id, CancellationToken cancellationToken);
         Task<bool> UpdateWorkAsync(UpdateWorkRequest request, CancellationToken cancellationToken);
         Task<bool> DeleteWorkAsync(int id, CancellationToken cancellationToken);
-        Task<IEnumerable<WorkDTO>> GetAllWorksDtoAsync(CancellationToken cancellationToken);
-        Task<WorkDTO?> GetWorkDtoByIdAsync(int id, CancellationToken cancellationToken);
     }
     public class WorkService(IWorkRepository workRepository, IMapper mapper, IDistributedCache cache) : IWorkService
     {
@@ -50,14 +48,14 @@ namespace BgituGrades.Services
             return entity == null ? null : _mapper.Map<WorkResponse>(entity);
         }
 
-        public async Task<IEnumerable<WorkResponse>> GetAllWorksAsync(CancellationToken cancellationToken)
+        public async Task<List<WorkResponse>> GetAllWorksAsync(CancellationToken cancellationToken)
         {
-            var cached = await GetFromCacheAsync<IEnumerable<WorkResponse>>(AllWorksKey);
+            var cached = await GetFromCacheAsync<List<WorkResponse>>(AllWorksKey);
             if (cached != null)
                 return cached;
 
             var entities = await _workRepository.GetAllWorksAsync(cancellationToken: cancellationToken);
-            var result = _mapper.Map<IEnumerable<WorkResponse>>(entities).ToList();
+            var result = _mapper.Map<List<WorkResponse>>(entities).ToList();
             await SetCacheAsync(AllWorksKey, result, TimeSpan.FromHours(4));
             return result;
         }
@@ -71,18 +69,6 @@ namespace BgituGrades.Services
                 await _cache.RemoveAsync(AllWorksKey);
             }
             return result;
-        }
-
-        public async Task<IEnumerable<WorkDTO>> GetAllWorksDtoAsync(CancellationToken cancellationToken)
-        {
-            var entities = await _workRepository.GetAllWorksAsync(cancellationToken: cancellationToken);
-            return _mapper.Map<IEnumerable<WorkDTO>>(entities);
-        }
-
-        public async Task<WorkDTO?> GetWorkDtoByIdAsync(int id, CancellationToken cancellationToken)
-        {
-            var entity = await _workRepository.GetByIdAsync(id, cancellationToken: cancellationToken);
-            return entity == null ? null : _mapper.Map<WorkDTO>(entity);
         }
 
         private async Task<T?> GetFromCacheAsync<T>(string key)

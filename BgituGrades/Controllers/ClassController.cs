@@ -59,8 +59,8 @@ namespace BgituGrades.Controllers
         [HttpPost("bulk")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
-        [ProducesResponseType(typeof(IEnumerable<ClassResponse>), StatusCodes.Status201Created)]
-        public async Task<ActionResult<IEnumerable<ClassResponse>>> CreateClassBulk([FromBody] CreateClassBulkRequest request, CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<ClassResponse>), StatusCodes.Status201Created)]
+        public async Task<ActionResult<List<ClassResponse>>> CreateClassBulk([FromBody] CreateClassBulkRequest request, CancellationToken cancellationToken)
         {
             var _classes = await _classService.CreateClassAsync(request, cancellationToken: cancellationToken);
             return Created(string.Empty, _classes);

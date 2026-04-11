@@ -16,8 +16,8 @@ namespace BgituGrades.Controllers
         [HttpGet]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(IEnumerable<GroupResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<GroupResponse>>> GetGroups(
+        [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<GroupResponse>>> GetGroups(
             [FromQuery] GetGroupsByDisciplineRequest request, CancellationToken cancellationToken)
         {
             var groups = await _groupService.GetGroupsByDisciplineAsync(request.DisciplineId, cancellationToken: cancellationToken);
@@ -27,8 +27,8 @@ namespace BgituGrades.Controllers
         [HttpGet("courses")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(IEnumerable<CourseReponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<CourseReponse>>> GetCoursesByPeriod(CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<CourseReponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<CourseReponse>>> GetCoursesByPeriod(CancellationToken cancellationToken)
         {
             var courses = await _groupService.GetCoursesAsync(cancellationToken: cancellationToken);
             return Ok(courses);
@@ -37,8 +37,8 @@ namespace BgituGrades.Controllers
         [HttpGet("archived/courses")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(IEnumerable<CourseReponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<CourseReponse>>> GetArchivedCoursesByPeriod(
+        [ProducesResponseType(typeof(List<CourseReponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<CourseReponse>>> GetArchivedCoursesByPeriod(
             [FromQuery] GetByPeriodRequest request, CancellationToken cancellationToken)
         {
             var groups = await _groupService.GetArchivedCoursesByPeriodAsync(request, cancellationToken: cancellationToken);
@@ -48,8 +48,8 @@ namespace BgituGrades.Controllers
         [HttpGet("all")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(IEnumerable<GroupResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<GroupResponse>>> GetAllGroups(CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<GroupResponse>>> GetAllGroups(CancellationToken cancellationToken)
         {
             var groups = await _groupService.GetAllAsync(cancellationToken: cancellationToken);
             return Ok(groups);
@@ -58,8 +58,8 @@ namespace BgituGrades.Controllers
         [HttpGet("archived")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(IEnumerable<ArchivedGroupResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<ArchivedGroupResponse>>> GetArchivedGroups([FromQuery] GetByPeriodRequest request, CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<ArchivedGroupResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<ArchivedGroupResponse>>> GetArchivedGroups([FromQuery] GetByPeriodRequest request, CancellationToken cancellationToken)
         {
             var groups = await _groupService.GetArchivedGroupsByPeriodAsync(semester: request.Semester, year: request.Year, cancellationToken: cancellationToken);
             return Ok(groups);
@@ -68,8 +68,8 @@ namespace BgituGrades.Controllers
         [HttpGet("archived/by_courses")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(IEnumerable<ArchivedGroupResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<ArchivedGroupResponse>>> GetArchivedGroups([FromQuery] GetArchivedByCoursesRequest request, CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<ArchivedGroupResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<ArchivedGroupResponse>>> GetArchivedGroups([FromQuery] GetArchivedByCoursesRequest request, CancellationToken cancellationToken)
         {
             var groups = await _groupService.GetArchivedGroupsByCoursesAndPeriodAsync(request, cancellationToken: cancellationToken);
             return Ok(groups);
@@ -78,10 +78,10 @@ namespace BgituGrades.Controllers
         [HttpGet("by_courses")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(IEnumerable<GroupResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<GroupResponse>>> GetGroupsByCourses([FromQuery] GetByCoursesRequest request, CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<GroupResponse>>> GetGroupsByCourses([FromQuery] GetByCoursesRequest request, CancellationToken cancellationToken)
         {
-            var groups = await _groupService.GetGroupsByCoursesAsync(request.Courses!, cancellationToken: cancellationToken);
+            var groups = await _groupService.GetGroupsByCoursesAsync(request.Courses!.Values, cancellationToken: cancellationToken);
             return Ok(groups);
         }
 
@@ -98,8 +98,8 @@ namespace BgituGrades.Controllers
         [HttpPost("bulk")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
-        [ProducesResponseType(typeof(IEnumerable<GroupResponse>), StatusCodes.Status201Created)]
-        public async Task<ActionResult<IEnumerable<GroupResponse>>> CreateGroupBulk([FromBody] CreateGroupBulkRequest request, CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status201Created)]
+        public async Task<ActionResult<List<GroupResponse>>> CreateGroupBulk([FromBody] CreateGroupBulkRequest request, CancellationToken cancellationToken)
         {
             var groups = await _groupService.CreateGroupAsync(request, cancellationToken: cancellationToken);
             return Created(string.Empty, groups);

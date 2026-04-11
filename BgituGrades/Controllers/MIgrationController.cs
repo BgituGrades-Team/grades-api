@@ -51,7 +51,7 @@ namespace BgituGrades.Controllers
 
         [HttpGet("periods/all")]
         [Authorize(Policy = "Edit")]
-        [ProducesResponseType(typeof(IEnumerable<PeriodResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<PeriodResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPeriodsAsync(CancellationToken cancellationToken)
         {
             var periods = await _migrationService.GetAllPeriods(cancellationToken: cancellationToken);

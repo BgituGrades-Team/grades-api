@@ -11,13 +11,13 @@ namespace BgituGrades.Services
 {
     public interface IMarkService
     {
-        Task<IEnumerable<MarkResponse>> GetAllMarksAsync(CancellationToken cancellationToken);
+        Task<List<MarkResponse>> GetAllMarksAsync(CancellationToken cancellationToken);
         Task<MarkResponse> CreateMarkAsync(CreateMarkRequest request, CancellationToken cancellationToken);
-        Task<IEnumerable<MarkResponse>> GetMarksByDisciplineAndGroupAsync(GetMarksByDisciplineAndGroupRequest request, CancellationToken cancellationToken);
+        Task<List<MarkResponse>> GetMarksByDisciplineAndGroupAsync(GetMarksByDisciplineAndGroupRequest request, CancellationToken cancellationToken);
         Task<bool> UpdateMarkAsync(UpdateMarkRequest request, CancellationToken cancellationToken);
         Task<bool> DeleteMarkByStudentAndWorkAsync(DeleteMarkByStudentAndWorkRequest request, CancellationToken cancellationToken);
         Task<FullGradeMarkResponse> UpdateOrCreateMarkAsync(UpdateMarkGradeRequest request, CancellationToken cancellationToken);
-        Task<IEnumerable<MarkDTO>> GetAllMarksDtoAsync(CancellationToken cancellationToken);
+        Task<List<MarkDTO>> GetAllMarksDtoAsync(CancellationToken cancellationToken);
         Task<MarkDTO?> GetMarkDtoByIdAsync(int id, CancellationToken cancellationToken);
     }
     public class MarkService(IMarkRepository markRepository, IMapper mapper, IDistributedCache cache) : IMarkService
@@ -37,30 +37,30 @@ namespace BgituGrades.Services
             return _mapper.Map<MarkResponse>(createdEntity);
         }
 
-        public async Task<IEnumerable<MarkResponse>> GetAllMarksAsync(CancellationToken cancellationToken)
+        public async Task<List<MarkResponse>> GetAllMarksAsync(CancellationToken cancellationToken)
         {
 
-            var cached = await GetFromCacheAsync<IEnumerable<MarkResponse>>(AllMarksKey);
+            var cached = await GetFromCacheAsync<List<MarkResponse>>(AllMarksKey);
             if (cached != null)
                 return cached;
 
             var entities = await _markRepository.GetAllMarksAsync(cancellationToken: cancellationToken);
-            var result = _mapper.Map<IEnumerable<MarkResponse>>(entities).ToList();
+            var result = _mapper.Map<List<MarkResponse>>(entities).ToList();
             await SetCacheAsync(AllMarksKey, result, TimeSpan.FromHours(1));
             return result;
         }
 
-        public async Task<IEnumerable<MarkResponse>> GetMarksByDisciplineAndGroupAsync(GetMarksByDisciplineAndGroupRequest request, CancellationToken cancellationToken)
+        public async Task<List<MarkResponse>> GetMarksByDisciplineAndGroupAsync(GetMarksByDisciplineAndGroupRequest request, CancellationToken cancellationToken)
         {
 
             var cacheKey = $"{CacheKeyPrefix}discipline:{request.DisciplineId}:group:{request.GroupId}";
 
-            var cached = await GetFromCacheAsync<IEnumerable<MarkResponse>>(cacheKey);
+            var cached = await GetFromCacheAsync<List<MarkResponse>>(cacheKey);
             if (cached != null)
                 return cached;
 
             var entities = await _markRepository.GetMarksByDisciplineAndGroupAsync(request.DisciplineId, request.GroupId, cancellationToken: cancellationToken);
-            var result = _mapper.Map<IEnumerable<MarkResponse>>(entities).ToList();
+            var result = _mapper.Map<List<MarkResponse>>(entities).ToList();
             await SetCacheAsync(cacheKey, result, TimeSpan.FromHours(2));
             return result;
         }
@@ -117,10 +117,10 @@ namespace BgituGrades.Services
             return response;
         }
 
-        public async Task<IEnumerable<MarkDTO>> GetAllMarksDtoAsync(CancellationToken cancellationToken)
+        public async Task<List<MarkDTO>> GetAllMarksDtoAsync(CancellationToken cancellationToken)
         {
             var entities = await _markRepository.GetAllMarksAsync(cancellationToken: cancellationToken);
-            return _mapper.Map<IEnumerable<MarkDTO>>(entities);
+            return _mapper.Map<List<MarkDTO>>(entities);
         }
 
         public async Task<MarkDTO?> GetMarkDtoByIdAsync(int id, CancellationToken cancellationToken)

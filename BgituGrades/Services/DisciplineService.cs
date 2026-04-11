@@ -10,16 +10,16 @@ namespace BgituGrades.Services
 {
     public interface IDisciplineService
     {
-        Task<IEnumerable<DisciplineResponse>> GetAllDisciplinesAsync(CancellationToken cancellationToken);
+        Task<List<DisciplineResponse>> GetAllDisciplinesAsync(CancellationToken cancellationToken);
         Task<DisciplineResponse> CreateDisciplineAsync(CreateDisciplineRequest request, CancellationToken cancellationToken);
-        Task<IEnumerable<DisciplineResponse>> CreateDisciplineAsync(CreateDisciplineBulkRequest request, CancellationToken cancellationToken);
+        Task<List<DisciplineResponse>> CreateDisciplineAsync(CreateDisciplineBulkRequest request, CancellationToken cancellationToken);
         Task<DisciplineResponse?> GetDisciplineByIdAsync(int id, CancellationToken cancellationToken);
-        Task<IEnumerable<DisciplineResponse>?> GetDisciplineByGroupIdAsync(int[] groupId, CancellationToken cancellationToken);
+        Task<List<DisciplineResponse>?> GetDisciplineByGroupIdAsync(IEnumerable<int> groupId, CancellationToken cancellationToken);
         Task<bool> UpdateDisciplineAsync(UpdateDisciplineRequest request, CancellationToken cancellationToken);
         Task<bool> DeleteDisciplineAsync(int id, CancellationToken cancellationToken);
-        Task<IEnumerable<DisciplineDTO>> GetAllDisciplinesDtoAsync(CancellationToken cancellationToken);
-        Task<IEnumerable<DisciplineDTO>?> GetDisciplinesDtoByGroupIdAsync(int groupId, CancellationToken cancellationToken);
-        Task<IEnumerable<DisciplineResponse>?> GetArchivedDisciplinesByGroupIdsAsync(int[] groupIds, CancellationToken cancellationToken);
+        Task<List<DisciplineDTO>> GetAllDisciplinesDtoAsync(CancellationToken cancellationToken);
+        Task<List<DisciplineDTO>?> GetDisciplinesDtoByGroupIdAsync(int groupId, CancellationToken cancellationToken);
+        Task<List<DisciplineResponse>?> GetArchivedDisciplinesByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken);
         Task<DisciplineDTO?> GetDisciplineDtoByIdAsync(int id, CancellationToken cancellationToken);
     }
     public class DisciplineService(IDisciplineRepository disciplineRepository, IMapper mapper, IDistributedCache cache) : IDisciplineService
@@ -38,12 +38,12 @@ namespace BgituGrades.Services
             return _mapper.Map<DisciplineResponse>(createdEntity);
         }
 
-        public async Task<IEnumerable<DisciplineResponse>> CreateDisciplineAsync(CreateDisciplineBulkRequest request, CancellationToken cancellationToken)
+        public async Task<List<DisciplineResponse>> CreateDisciplineAsync(CreateDisciplineBulkRequest request, CancellationToken cancellationToken)
         {
-            var entities = _mapper.Map<IEnumerable<Discipline>>(request.Disciplines);
+            var entities = _mapper.Map<List<Discipline>>(request.Disciplines);
             var createdEntities = await _disciplineRepository.CreateDisciplineAsync(entities, cancellationToken: cancellationToken);
             await _cache.RemoveAsync(AllDisciplinesKey);
-            return _mapper.Map<IEnumerable<DisciplineResponse>>(createdEntities);
+            return _mapper.Map<List<DisciplineResponse>>(createdEntities);
         }
 
         public async Task<bool> DeleteDisciplineAsync(int id, CancellationToken cancellationToken)
@@ -56,19 +56,19 @@ namespace BgituGrades.Services
             return result;
         }
 
-        public async Task<IEnumerable<DisciplineResponse>> GetAllDisciplinesAsync(CancellationToken cancellationToken)
+        public async Task<List<DisciplineResponse>> GetAllDisciplinesAsync(CancellationToken cancellationToken)
         {
-            var cached = await GetFromCacheAsync<IEnumerable<DisciplineResponse>>(AllDisciplinesKey);
+            var cached = await GetFromCacheAsync<List<DisciplineResponse>>(AllDisciplinesKey);
             if (cached != null)
                 return cached;
 
             var entities = await _disciplineRepository.GetAllAsync(cancellationToken: cancellationToken);
-            var result = _mapper.Map<IEnumerable<DisciplineResponse>>(entities).ToList();
+            var result = _mapper.Map<List<DisciplineResponse>>(entities).ToList();
             await SetCacheAsync(AllDisciplinesKey, result, TimeSpan.FromHours(2));
             return result;
         }
 
-        public async Task<IEnumerable<DisciplineResponse>?> GetDisciplineByGroupIdAsync(int[] groupIds, CancellationToken cancellationToken)
+        public async Task<List<DisciplineResponse>?> GetDisciplineByGroupIdAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken)
         {
             var results = new List<DisciplineResponse>();
             var missingIds = new List<int>();
@@ -79,13 +79,9 @@ namespace BgituGrades.Services
                 var cached = await GetFromCacheAsync<List<DisciplineResponse>>(singleCacheKey);
 
                 if (cached != null)
-                {
                     results.AddRange(cached);
-                }
                 else
-                {
                     missingIds.Add(id);
-                }
             }
 
             if (missingIds.Count != 0)
@@ -94,8 +90,6 @@ namespace BgituGrades.Services
 
                 if (entities != null && entities.Any())
                 {
-
-
                     foreach (var groupId in missingIds)
                     {
                         var disciplinesForGroup = entities
@@ -110,13 +104,13 @@ namespace BgituGrades.Services
                 }
             }
 
-            return results.DistinctBy(d => d.Id);
+            return results.DistinctBy(d => d.Id).ToList();
         }
 
-        public async Task<IEnumerable<DisciplineResponse>?> GetArchivedDisciplinesByGroupIdsAsync(int[] groupIds, CancellationToken cancellationToken)
+        public async Task<List<DisciplineResponse>?> GetArchivedDisciplinesByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken)
         {
             var disciplines = await _disciplineRepository.GetArchivedByGroupIdsAsync(groupIds, cancellationToken);
-            var results = _mapper.Map<IEnumerable<DisciplineResponse>>(disciplines);
+            var results = _mapper.Map<List<DisciplineResponse>>(disciplines);
             return results;
         }
 
@@ -137,13 +131,13 @@ namespace BgituGrades.Services
             return result;
         }
 
-        public async Task<IEnumerable<DisciplineDTO>> GetAllDisciplinesDtoAsync(CancellationToken cancellationToken)
+        public async Task<List<DisciplineDTO>> GetAllDisciplinesDtoAsync(CancellationToken cancellationToken)
         {
             var entities = await _disciplineRepository.GetAllAsync(cancellationToken: cancellationToken);
-            return _mapper.Map<IEnumerable<DisciplineDTO>>(entities);
+            return _mapper.Map<List<DisciplineDTO>>(entities);
         }
 
-        public async Task<IEnumerable<DisciplineDTO>?> GetDisciplinesDtoByGroupIdAsync(int groupId, CancellationToken cancellationToken)
+        public async Task<List<DisciplineDTO>?> GetDisciplinesDtoByGroupIdAsync(int groupId, CancellationToken cancellationToken)
         {
             var entities = await _disciplineRepository.GetByGroupIdAsync(groupId, cancellationToken: cancellationToken);
             return entities == null ? null : _mapper.Map<List<DisciplineDTO>>(entities);

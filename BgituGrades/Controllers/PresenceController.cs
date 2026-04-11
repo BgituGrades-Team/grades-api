@@ -21,8 +21,8 @@ namespace BgituGrades.Controllers
 
         [HttpGet]
 
-        [ProducesResponseType(typeof(IEnumerable<PresenceResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<PresenceResponse>>> GetPresences(CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<PresenceResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<PresenceResponse>>> GetPresences(CancellationToken cancellationToken)
         {
             var Presences = await _presenceService.GetAllPresencesAsync(cancellationToken: cancellationToken);
             return Ok(Presences);
