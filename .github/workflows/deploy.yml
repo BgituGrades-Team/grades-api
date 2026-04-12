@@ -32,8 +32,8 @@ jobs:
       - name: Build & push API image
         uses: docker/build-push-action@v5
         with:
-          context: ./BgituGrades
-          file: ./BgituGrades/Dockerfile
+          context: .
+          file: Dockerfile
           push: true
           tags: ghcr.io/${{ env.OWNER }}/bgitu-grades-api:latest
           cache-from: type=gha
