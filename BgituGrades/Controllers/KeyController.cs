@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using AutoMapper;
 using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Models.Key;
 using BgituGrades.Application.Models.Student;
@@ -12,18 +13,20 @@ namespace BgituGrades.Controllers
 {
     [Route("api/key")]
     [ApiController]
-    public class KeyController(IKeyService keyService) : ControllerBase
+    public class KeyController(IKeyService keyService, IMapper mapper) : ControllerBase
     {
         private readonly IKeyService _keyService = keyService;
+        private readonly IMapper _mapper = mapper;
 
         [HttpGet("all")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
         [ProducesResponseType(typeof(List<KeyResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<KeyResponse>>> GetKeys(CancellationToken cancellationToken)
+        public async Task<ActionResult<List<KeyResponse>>> GetAllKeys(CancellationToken cancellationToken)
         {
-            var Keys = await _keyService.GetKeysAsync(cancellationToken: cancellationToken);
-            return Ok(Keys);
+            var keyDto = await _keyService.GetAllKeysAsync(cancellationToken: cancellationToken);
+            var response = _mapper.Map<List<KeyResponse>>(keyDto);
+            return Ok(response);
         }
 
         [HttpPost]
@@ -32,25 +35,27 @@ namespace BgituGrades.Controllers
         [ProducesResponseType(typeof(KeyResponse), StatusCodes.Status201Created)]
         public async Task<ActionResult<KeyResponse>> CreateKey(CreateKeyRequest request, CancellationToken cancellationToken)
         {
-            var key = await _keyService.GenerateKeyAsync(request.Role, request.GroupId, cancellationToken: cancellationToken);
-            return CreatedAtAction(nameof(GetKey), new { key = key.Key }, key);
+            var keyDto = await _keyService.GenerateKeyAsync(request.Role, request.GroupId, cancellationToken: cancellationToken);
+            var response = _mapper.Map<KeyResponse>(keyDto);
+            return CreatedAtAction(nameof(GetKey), new { key = response.Key }, response);
         }
 
         [HttpGet]
         [ApiVersion("2.0")]
-        [Authorize(Policy = "ReadOnly")]
+        [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(KeyResponse), StatusCodes.Status200OK)]
         public async Task<ActionResult<KeyResponse>> GetKey([FromHeader(Name = "key")] string key, CancellationToken cancellationToken)
         {
-            var storedKey = await _keyService.GetKeyAsync(key, cancellationToken: cancellationToken);
-            return Ok(storedKey);
+            var keyDto = await _keyService.GetKeyAsync(key, cancellationToken: cancellationToken);
+            var response = _mapper.Map<KeyResponse>(keyDto);
+            return Ok(response);
         }
 
         [HttpGet("shared")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Edit")]
         [ProducesResponseType(typeof(SharedKeyResponse), StatusCodes.Status200OK)]
-        public async Task<ActionResult<KeyResponse>> CreateSharedKeyV2([FromQuery] CreateSharedKeyRequest request, CancellationToken cancellationToken)
+        public async Task<ActionResult<SharedKeyResponse>> CreateSharedKeyV2([FromQuery] CreateSharedKeyRequest request, CancellationToken cancellationToken)
         {
             var key = await _keyService.GenerateKeyAsync(Role.STUDENT, groupId: request.GroupId, cancellationToken: cancellationToken);
             var response = new SharedKeyResponse
@@ -68,10 +73,7 @@ namespace BgituGrades.Controllers
         public async Task<IActionResult> DeleteKey([FromQuery] DeleteKeyRequest request, CancellationToken cancellationToken)
         {
             var success = await _keyService.DeleteKeyAsync(request.DeleteKey, cancellationToken: cancellationToken);
-            if (!success)
-                return NotFound(request.DeleteKey);
-
-            return NoContent();
+            return success ? NoContent() : NotFound(request.DeleteKey);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BgituGrades.Application.DTOs;
 using BgituGrades.Application.Models.Key;
 using BgituGrades.Domain.Entities;
 
@@ -8,7 +9,8 @@ namespace BgituGrades.Application.Mappings
     {
         public KeyProfile()
         {
-            CreateMap<ApiKey, KeyResponse>();
+            CreateMap<KeyDTO, KeyResponse>();
+            CreateMap<ApiKey, KeyDTO>();
         }
     }
 }

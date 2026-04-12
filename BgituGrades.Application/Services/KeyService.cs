@@ -1,19 +1,28 @@
 ﻿using AutoMapper;
+using BgituGrades.Application.Caching;
+using BgituGrades.Application.DTOs;
 using BgituGrades.Application.Interfaces;
-using BgituGrades.Application.Models.Key;
 using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Enums;
 using BgituGrades.Domain.Interfaces;
+using Microsoft.Extensions.Caching.Hybrid;
 using System.Security.Cryptography;
 
 namespace BgituGrades.Application.Services
 {
-    public class KeyService(IKeyRepository keyRepository, ITokenHasher hasher, IMapper mapper) : IKeyService
+    public class KeyService(IKeyRepository keyRepository, ITokenHasher hasher, IMapper mapper, ICacheService cacheService) : IKeyService
     {
         private readonly IKeyRepository _keyRepository = keyRepository;
         private readonly IMapper _mapper = mapper;
         private readonly ITokenHasher _hasher = hasher;
-        public async Task<KeyResponse> GenerateKeyAsync(Role role, int? groupId, CancellationToken cancellationToken)
+        private readonly ICacheService _cacheService = cacheService;
+
+        private static readonly HybridCacheEntryOptions DefaultOptions = new()
+        {
+            Expiration = TimeSpan.FromMinutes(10),
+            LocalCacheExpiration = TimeSpan.FromMinutes(5)
+        };
+        public async Task<KeyDTO> GenerateKeyAsync(Role role, int? groupId, CancellationToken cancellationToken)
         {
             var newKey = RandomNumberGenerator.GetHexString(64, true);
 
@@ -29,28 +38,41 @@ namespace BgituGrades.Application.Services
             };
 
             var createdKey = await _keyRepository.CreateKeyAsync(apiKey, cancellationToken: cancellationToken);
-            var response = _mapper.Map<KeyResponse>(createdKey);
-            return response;
+            var keyDto = _mapper.Map<KeyDTO>(createdKey);
+            await _cacheService.RemoveAsync(CacheKeys.KeyAll(), ct: cancellationToken);
+            return keyDto;
         }
 
         public async Task<bool> DeleteKeyAsync(string key, CancellationToken cancellationToken)
         {
             var lookupHash = _hasher.ComputeLookupHash(key);
-            return await _keyRepository.DeleteKeyAsync(lookupHash, cancellationToken: cancellationToken);
+            var result = await _keyRepository.DeleteKeyAsync(lookupHash, cancellationToken: cancellationToken);
+            if (result) 
+                await _cacheService.RemoveAsync(CacheKeys.KeyAll(), ct: cancellationToken);
+            return result;
         }
 
-        public async Task<List<KeyResponse>> GetKeysAsync(CancellationToken cancellationToken)
+        public async Task<List<KeyDTO>> GetAllKeysAsync(CancellationToken cancellationToken)
         {
-            var storedKeys = await _keyRepository.GetKeysAsync(cancellationToken: cancellationToken);
-            var response = _mapper.Map<List<KeyResponse>>(storedKeys);
-            return response;
+            return await _cacheService.GetOrCreateAsync(
+                key: CacheKeys.KeyAll(),
+                factory: async token =>
+                {
+                    var entities = await _keyRepository.GetKeysAsync(cancellationToken: cancellationToken);
+                    return _mapper.Map<List<KeyDTO>>(entities);
+                }, options: DefaultOptions, ct: cancellationToken);
         }
 
-        public async Task<KeyResponse> GetKeyAsync(string key, CancellationToken cancellationToken)
+        public async Task<KeyDTO> GetKeyAsync(string key, CancellationToken cancellationToken)
         {
-            var storedKey = await _keyRepository.GetAsync(key, cancellationToken: cancellationToken);
-            var response = _mapper.Map<KeyResponse>(storedKey);
-            return response;
+            var lookupHash = _hasher.ComputeLookupHash(key);
+            return await _cacheService.GetOrCreateAsync(
+                key: CacheKeys.KeyByLookUpHash(lookupHash),
+                factory: async token =>
+                {
+                    var entity = await _keyRepository.GetAsync(key, cancellationToken: cancellationToken);
+                    return _mapper.Map<KeyDTO>(entity);
+                }, options: DefaultOptions, ct: cancellationToken);
         }
     }
 }

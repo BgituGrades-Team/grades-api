@@ -10,5 +10,7 @@ namespace BgituGrades.Application.Caching
     {
         public static string Work(int id) => $"work:{id}";
         public static string WorkAll() => $"work:all";
+        public static string KeyByLookUpHash(string lookUpHash) => $"key:{lookUpHash}";
+        public static string KeyAll() => $"key:all";
     }
 }

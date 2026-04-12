@@ -66,7 +66,7 @@ namespace BgituGrades.Controllers
         public async Task<IActionResult> DeleteWork([FromQuery] DeleteWorkRequest request, CancellationToken cancellationToken)
         {
             var success = await _workService.DeleteWorkAsync(request.Id, cancellationToken: cancellationToken);
-            return success ? NotFound(request.Id) : NoContent();
+            return success ? NoContent() : NotFound(request.Id);
         }
     }
 }

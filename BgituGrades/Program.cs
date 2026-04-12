@@ -142,7 +142,7 @@ namespace BgituGrades
                     await dbContext.Database.MigrateAsync();
 
                     var keyService = services.GetRequiredService<IKeyService>();
-                    var existingKeys = await keyService.GetKeysAsync(cancellationToken: tokenSource.Token);
+                    var existingKeys = await keyService.GetAllKeysAsync(cancellationToken: tokenSource.Token);
 
                     if (!existingKeys.Any())
                     {
@@ -150,7 +150,6 @@ namespace BgituGrades
                         Console.WriteLine($"##################################");
                         Console.WriteLine($"### INITIAL KEY: {key.Key} ###");
                         Console.WriteLine($"##################################");
-
                     }
                 }
                 catch (Exception ex)
