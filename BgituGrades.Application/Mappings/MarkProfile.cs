@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
 using BgituGrades.Application.DTOs;
+using BgituGrades.Application.Models.Class;
 using BgituGrades.Application.Models.Mark;
+using BgituGrades.Application.Models.Presence;
 using BgituGrades.Domain.Entities;
+using BgituGrades.Domain.Models;
 
 namespace BgituGrades.Application.Mappings
 {
@@ -16,6 +19,8 @@ namespace BgituGrades.Application.Mappings
             CreateMap<Mark, MarkResponse>();
             CreateMap<Mark, MarkDTO>();
             CreateMap<MarkDTO, Mark>();
+            CreateMap<StudentMarkResult, FullGradeMarkResponse>();
+            CreateMap<MarkEntry, GradeMarkResponse>();
         }
     }
 }
