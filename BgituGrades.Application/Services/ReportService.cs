@@ -4,7 +4,6 @@ using BgituGrades.Application.Models.Report;
 using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Enums;
 using BgituGrades.Domain.Interfaces;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using OfficeOpenXml;
@@ -14,19 +13,16 @@ namespace BgituGrades.Application.Services
 {
     
 
-    public class ReportService(
-        IHubContext<ReportHub> hubContext,
-        IDistributedCache cache,
-        IServiceScopeFactory scopeFactory) : IReportService
+    public class ReportService(IReportProgressNotifier notifier, IDistributedCache cache, IServiceScopeFactory scopeFactory) : IReportService
     {
-        protected readonly IHubContext<ReportHub> _hubContext = hubContext;
-        protected readonly IDistributedCache _cache = cache;
-        protected readonly IServiceScopeFactory _scopeFactory = scopeFactory;
+        private readonly IReportProgressNotifier _notifier = notifier;
+        private readonly IDistributedCache _cache = cache;
+        private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
 
         public async Task<Guid> GenerateReportAsync(ReportRequest request, string connectionId, CancellationToken cancellationToken)
         {
             var reportId = Guid.NewGuid();
-            await _hubContext.Groups.AddToGroupAsync(connectionId, reportId.ToString());
+            await _notifier.AddToGroupAsync(connectionId, reportId);
 
             _ = Task.Run(async () => await GenerateWithProgress(reportId, request, cancellationToken: cancellationToken), cancellationToken: cancellationToken);
 
@@ -49,8 +45,8 @@ namespace BgituGrades.Application.Services
 
             try
             {
-                await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("ReportProgress", reportId.ToString(), 10, "Загрузка данных...");
+                await _notifier.SendProgressAsync(reportId, 10, "Загрузка архивных данных...");
+
                 IEnumerable<Group> groups;
                 if (request.GroupIds != null)
                 {
@@ -86,8 +82,7 @@ namespace BgituGrades.Application.Services
                     throw new Exception("Нет данных для формирования отчета");
                 }
 
-                await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("ReportProgress", reportId.ToString(), 40, "Генерация Excel файла...");
+                await _notifier.SendProgressAsync(reportId, 40, "Генерация Excel файла...");
 
                 TablePreview result;
                 if (request.ReportType == ReportType.MARK)
@@ -99,18 +94,15 @@ namespace BgituGrades.Application.Services
                     result = await GeneratePresenceExcelAsync(presenceRepo, groups, disciplines, students, classService, cancellationToken);
                 }
 
-                await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("ReportProgress", reportId.ToString(), 80, "Сохранение...");
+                await _notifier.SendProgressAsync(reportId, 80, "Сохранение...");
 
                 await _cache.SetAsync($"report_{reportId}", result.ExcelBytes!, cacheOptions);
 
-                await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("ReportReady", reportId.ToString(), $"https://{request.Host}/api/report/{reportId}/download", result.Preview);
+                await _notifier.SendReadyAsync(reportId, $"https://{request.Host}/api/report/{reportId}/download", result.Preview!);
             }
             catch (Exception ex)
             {
-                await _hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("Error", ex.Message, ex.StackTrace);
+                await _notifier.SendErrorAsync(reportId, ex.Message, ex.StackTrace);
             }
         }
 

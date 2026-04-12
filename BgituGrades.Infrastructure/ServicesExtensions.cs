@@ -1,17 +1,18 @@
-﻿using BgituGrades.Application.Interfaces;
+﻿using Asp.Versioning.ApiExplorer;
+using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Services;
 using BgituGrades.Application.Validators;
 using BgituGrades.Domain.Interfaces;
 using FluentValidation;
 using BgituGrades.Infrastructure.Persistence.Repositories;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using BgituGrades.Infrastructure.Auth;
 using BgituGrades.Infrastructure.Security;
+using AspNetCore.Authentication.ApiKey;
 
 namespace BgituGrades.Infrastructure
 {

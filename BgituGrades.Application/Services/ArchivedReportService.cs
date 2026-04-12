@@ -14,22 +14,22 @@ namespace BgituGrades.Application.Services
 {
     
 
-    public class ArchivedReportService(
-        IHubContext<ReportHub> hubContext,
-        IDistributedCache cache,
-        IServiceScopeFactory scopeFactory) : IArchivedReportService
+    public class ArchivedReportService(IReportProgressNotifier notifier, IDistributedCache cache, IServiceScopeFactory scopeFactory) : IArchivedReportService
     {
+        private readonly IReportProgressNotifier _notifier = notifier;
+        private readonly IDistributedCache _cache = cache;
+        private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
         public async Task<Guid> GenerateReportAsync(ArchivedReportRequest request, string connectionId, CancellationToken cancellationToken)
         {
             var reportId = Guid.NewGuid();
-            await hubContext.Groups.AddToGroupAsync(connectionId, reportId.ToString());
+            await _notifier.AddToGroupAsync(connectionId, reportId);
             _ = Task.Run(() => GenerateWithProgress(reportId, request, cancellationToken), cancellationToken);
             return reportId;
         }
 
         private async Task GenerateWithProgress(Guid reportId, ArchivedReportRequest request, CancellationToken cancellationToken)
         {
-            using var scope = scopeFactory.CreateScope();
+            using var scope = _scopeFactory.CreateScope();
             var snapshotRepo = scope.ServiceProvider.GetRequiredService<IReportSnapshotRepository>();
 
             var cacheOptions = new DistributedCacheEntryOptions()
@@ -37,7 +37,7 @@ namespace BgituGrades.Application.Services
 
             try
             {
-                await SendProgress(reportId, 10, "Загрузка архивных данных...");
+                await _notifier.SendProgressAsync(reportId, 10, "Загрузка архивных данных...");
 
                 var allSnapshots = await snapshotRepo.GetReportSnapshotsByYearAndSemesterAsync(request.Year, request.Semester, cancellationToken);
 
@@ -50,24 +50,20 @@ namespace BgituGrades.Application.Services
                 if (snapshots.Count == 0)
                     throw new Exception($"Нет архивных данных за {request.Year} год, семестр {request.Semester}");
 
-                await SendProgress(reportId, 40, "Генерация Excel файла...");
+                await _notifier.SendProgressAsync(reportId, 40, "Генерация Excel файла...");
 
                 var result = request.ReportType == ReportType.MARK
                     ? GenerateMarksExcel(snapshots)
                     : GeneratePresenceExcel(snapshots);
 
-                await SendProgress(reportId, 80, "Сохранение...");
-                await cache.SetAsync($"report_{reportId}", result.ExcelBytes!, cacheOptions);
+                await _notifier.SendProgressAsync(reportId, 80, "Сохранение...");
+                await _cache.SetAsync($"report_{reportId}", result.ExcelBytes!, cacheOptions);
 
-                await hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("ReportReady", reportId.ToString(),
-                        $"https://{request.Host}/api/report/{reportId}/download",
-                        result.Preview);
+                await _notifier.SendReadyAsync(reportId, $"https://{request.Host}/api/report/{reportId}/download", result.Preview);
             }
             catch (Exception ex)
             {
-                await hubContext.Clients.Group(reportId.ToString())
-                    .SendAsync("Error", ex.Message, ex.StackTrace);
+                await _notifier.SendErrorAsync(reportId, ex.Message, ex.StackTrace);
             }
         }
 
@@ -272,9 +268,5 @@ namespace BgituGrades.Application.Services
             range.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
             worksheet.View.FreezePanes(2, 2);
         }
-
-        private Task SendProgress(Guid reportId, int percent, string message) =>
-            hubContext.Clients.Group(reportId.ToString())
-                .SendAsync("ReportProgress", reportId.ToString(), percent, message);
     }
 }

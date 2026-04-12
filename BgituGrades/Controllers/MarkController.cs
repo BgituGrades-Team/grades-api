@@ -2,8 +2,8 @@
 using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Models.Mark;
 using BgituGrades.Application.Models.Student;
-using BgituGrades.Data;
 using BgituGrades.Domain.Entities;
+using BgituGrades.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

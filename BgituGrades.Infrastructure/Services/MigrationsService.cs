@@ -3,6 +3,9 @@ using BgituGrades.Application.Models.Report;
 using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Enums;
 using BgituGrades.Domain.Interfaces;
+using BgituGrades.Infrastructure.Persistence;
+using EFCore.BulkExtensions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
 

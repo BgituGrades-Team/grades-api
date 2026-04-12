@@ -1,5 +1,4 @@
 ﻿using BgituGrades.Application.Models.Group;
-using BgituGrades.Data;
 using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Interfaces;
 using EFCore.BulkExtensions;

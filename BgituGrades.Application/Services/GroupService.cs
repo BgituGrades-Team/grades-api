@@ -121,14 +121,14 @@ namespace BgituGrades.Application.Services
             return results;
         }
 
-        public async Task<List<CourseReponse>> GetCoursesAsync(CancellationToken cancellationToken)
+        public async Task<List<int>> GetCoursesAsync(CancellationToken cancellationToken)
         {
             return await _groupRepository.GetCoursesAsync(cancellationToken);
         }
 
-        public async Task<List<CourseReponse>> GetArchivedCoursesByPeriodAsync(GetByPeriodRequest request, CancellationToken cancellationToken)
+        public async Task<List<int>> GetArchivedCoursesByPeriodAsync(int year, int semester, CancellationToken cancellationToken)
         {
-            return await _groupRepository.GetArchivedCoursesByPeriodAsync(request.Year, request.Semester, cancellationToken);
+            return await _groupRepository.GetArchivedCoursesByPeriodAsync(year, semester, cancellationToken);
         }
 
         public async Task<List<GroupResponse>> GetGroupsByCoursesAsync(IEnumerable<int> courses, CancellationToken cancellationToken)
@@ -173,7 +173,8 @@ namespace BgituGrades.Application.Services
 
         public async Task<List<ArchivedGroupResponse>> GetArchivedGroupsByCoursesAndPeriodAsync(GetArchivedByCoursesRequest request, CancellationToken cancellationToken)
         {
-            return await _groupRepository.GetArchivedGroupsByCoursesAndPeriodAsync(request, cancellationToken);
+            var groups = await _groupRepository.GetArchivedGroupsByCoursesAndPeriodAsync(request.Courses!.Values, request.Year, request.Semester, cancellationToken);
+            return _mapper.Map<List<ArchivedGroupResponse>>(groups);
         }
         private async Task<T?> GetFromCacheAsync<T>(string key)
         {

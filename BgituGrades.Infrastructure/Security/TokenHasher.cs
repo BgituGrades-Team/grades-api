@@ -1,14 +1,9 @@
-﻿using System.Security.Cryptography;
+﻿using BgituGrades.Application.Interfaces;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace BgituGrades.Infrastructure.Security
 {
-    public interface ITokenHasher
-    {
-        string Hash(string token);
-        bool Verify(string token, string storedHash);
-        string ComputeLookupHash(string token);
-    }
     public class TokenHasher : ITokenHasher
     {
         private const int SaltSize = 16;

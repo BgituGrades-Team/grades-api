@@ -1,10 +1,7 @@
-﻿using BgituGrades.Application.Models.Class;
-using BgituGrades.Application.Models.Mark;
-using BgituGrades.Application.Models.Presence;
-using BgituGrades.Data;
-using BgituGrades.Domain.Entities;
+﻿using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Enums;
 using BgituGrades.Domain.Interfaces;
+using BgituGrades.Domain.Models;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -56,7 +53,7 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             return entities;
         }
 
-        public async Task<List<FullGradePresenceResponse>> GetPresenseGrade(IEnumerable<ClassDateResponse> scheduleDates,
+        public async Task<List<StudentPresenceResult>> GetPresenseGrade(IEnumerable<ScheduleDate> scheduleDates,
             int groupId, int disciplineId, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
@@ -78,11 +75,11 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                 }).ToList();
 
             var scheduleDatesList = scheduleDates.ToList();
-            var result = presenceByStudent.Select(s => new FullGradePresenceResponse
+            var result = presenceByStudent.Select(s => new StudentPresenceResult
             {
                 StudentId = s.Id,
                 Name = s.Name,
-                Presences = scheduleDatesList.Select(date => new GradePresenceResponse
+                Presences = scheduleDatesList.Select(date => new PresenceEntry
                 {
                     ClassId = date.Id,
                     ClassType = date.ClassType,
@@ -94,7 +91,7 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             return result;
         }
 
-        public async Task<List<FullGradeMarkResponse>> GetMarksGrade(IEnumerable<Work> works,
+        public async Task<List<StudentMarkResult>> GetMarksGrade(IEnumerable<Work> works,
             int groupId, int disciplineId, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
@@ -117,11 +114,11 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             }).ToList();
 
             var worksList = works.ToList();
-            var result = marksByStudent.Select(s => new FullGradeMarkResponse
+            var result = marksByStudent.Select(s => new StudentMarkResult
             {
                 StudentId = s.Id,
                 Name = s.Name,
-                Marks = worksList.Select(work => new GradeMarkResponse
+                Marks = worksList.Select(work => new MarkEntry
                 {
                     WorkId = work.Id,
                     Name = work.Name!,

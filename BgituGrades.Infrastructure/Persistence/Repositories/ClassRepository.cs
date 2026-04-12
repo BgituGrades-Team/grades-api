@@ -1,5 +1,4 @@
-﻿using BgituGrades.Data;
-using BgituGrades.Domain.Entities;
+﻿using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Interfaces;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;

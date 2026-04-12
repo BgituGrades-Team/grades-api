@@ -19,39 +19,38 @@ namespace BgituGrades.Application.Services
         private const string CacheKeyPrefix = "mark:";
         private const string AllMarksKey = "mark:all";
 
-        public async Task<MarkResponse> CreateMarkAsync(CreateMarkRequest request, CancellationToken cancellationToken)
+        public async Task<MarkDTO> CreateMarkAsync(CreateMarkRequest request, CancellationToken cancellationToken)
         {
             var entity = _mapper.Map<Mark>(request);
             var createdEntity = await _markRepository.CreateMarkAsync(entity, cancellationToken: cancellationToken);
 
             await InvalidateCacheAsync();
-            return _mapper.Map<MarkResponse>(createdEntity);
+            return _mapper.Map<MarkDTO>(createdEntity);
         }
 
-        public async Task<List<MarkResponse>> GetAllMarksAsync(CancellationToken cancellationToken)
+        public async Task<List<MarkDTO>> GetAllMarksAsync(CancellationToken cancellationToken)
         {
 
-            var cached = await GetFromCacheAsync<List<MarkResponse>>(AllMarksKey);
+            var cached = await GetFromCacheAsync<List<MarkDTO>>(AllMarksKey);
             if (cached != null)
                 return cached;
 
             var entities = await _markRepository.GetAllMarksAsync(cancellationToken: cancellationToken);
-            var result = _mapper.Map<List<MarkResponse>>(entities).ToList();
+            var result = _mapper.Map<List<MarkDTO>>(entities).ToList();
             await SetCacheAsync(AllMarksKey, result, TimeSpan.FromHours(1));
             return result;
         }
 
-        public async Task<List<MarkResponse>> GetMarksByDisciplineAndGroupAsync(GetMarksByDisciplineAndGroupRequest request, CancellationToken cancellationToken)
+        public async Task<List<MarkDTO>> GetMarksByDisciplineAndGroupAsync(GetMarksByDisciplineAndGroupRequest request, CancellationToken cancellationToken)
         {
-
             var cacheKey = $"{CacheKeyPrefix}discipline:{request.DisciplineId}:group:{request.GroupId}";
 
-            var cached = await GetFromCacheAsync<List<MarkResponse>>(cacheKey);
+            var cached = await GetFromCacheAsync<List<MarkDTO>>(cacheKey);
             if (cached != null)
                 return cached;
 
             var entities = await _markRepository.GetMarksByDisciplineAndGroupAsync(request.DisciplineId, request.GroupId, cancellationToken: cancellationToken);
-            var result = _mapper.Map<List<MarkResponse>>(entities).ToList();
+            var result = _mapper.Map<List<MarkDTO>>(entities).ToList();
             await SetCacheAsync(cacheKey, result, TimeSpan.FromHours(2));
             return result;
         }

@@ -1,6 +1,6 @@
 ﻿using AspNetCore.Authentication.ApiKey;
+using BgituGrades.Application.Interfaces;
 using BgituGrades.Domain.Interfaces;
-using BgituGrades.Infrastructure.Security;
 
 namespace BgituGrades.Infrastructure.Auth
 {
@@ -21,7 +21,7 @@ namespace BgituGrades.Infrastructure.Auth
 
             if (storedKey.ExpiryDate is not null && storedKey.ExpiryDate < DateTime.UtcNow) return null;
 
-            return storedKey;
+            return new ApiKeyAuthModel(storedKey); ;
         }
     }
 }

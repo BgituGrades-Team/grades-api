@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using BgituGrades.Application.Features;
 using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Models.Key;
 using BgituGrades.Domain.Entities;
@@ -9,7 +8,6 @@ using System.Security.Cryptography;
 
 namespace BgituGrades.Application.Services
 {
-    
     public class KeyService(IKeyRepository keyRepository, ITokenHasher hasher, IMapper mapper) : IKeyService
     {
         private readonly IKeyRepository _keyRepository = keyRepository;

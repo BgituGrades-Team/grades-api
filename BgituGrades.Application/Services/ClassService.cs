@@ -4,6 +4,7 @@ using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Models.Class;
 using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Interfaces;
+using BgituGrades.Domain.Models;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 
@@ -187,9 +188,10 @@ namespace BgituGrades.Application.Services
         public async Task<List<FullGradePresenceResponse>> GetPresenceByScheduleAsync(GetClassDateRequest request, CancellationToken cancellationToken)
         {
             var scheduleDates = await GenerateScheduleDatesAsync(request.GroupId, request.DisciplineId, cancellationToken);
-
-            var students = await _studentRepository.GetPresenseGrade(scheduleDates, request.GroupId, request.DisciplineId, cancellationToken: cancellationToken);
-            return students;
+            var scheduleDatesDomain = _mapper.Map<List<ScheduleDate>>(scheduleDates);
+            var students = await _studentRepository.GetPresenseGrade(scheduleDatesDomain, request.GroupId, request.DisciplineId, cancellationToken: cancellationToken);
+            var grade = _mapper.Map<List<FullGradePresenceResponse>>(students);
+            return grade;
         }
 
         public async Task<List<FullGradeMarkResponse>> GetMarksByWorksAsync(GetClassDateRequest request, CancellationToken cancellationToken)
@@ -197,7 +199,8 @@ namespace BgituGrades.Application.Services
             var works = await _workRepository.GetByDisciplineAndGroupAsync(request.DisciplineId, request.GroupId, cancellationToken: cancellationToken);
 
             var students = await _studentRepository.GetMarksGrade(works, request.GroupId, request.DisciplineId, cancellationToken: cancellationToken);
-            return students;
+            var grade = _mapper.Map<List<FullGradeMarkResponse>>(students);
+            return grade;
         }
 
         public async Task<List<ClassDTO>> GetAllClassesDtoAsync(CancellationToken cancellationToken)

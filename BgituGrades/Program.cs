@@ -1,15 +1,16 @@
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using AspNetCore.Authentication.ApiKey;
+using BgituGrades.API.Hubs;
 using BgituGrades.Application.Features.Validation;
 using BgituGrades.Application.Interfaces;
-using BgituGrades.Application.Services;
-using BgituGrades.Data;
+using BgituGrades.Application.Mappings;
 using BgituGrades.Domain.Enums;
-using BgituGrades.Features;
 using BgituGrades.Hubs;
 using BgituGrades.Infrastructure;
 using BgituGrades.Infrastructure.Auth;
+using BgituGrades.Infrastructure.Persistence;
+using BgituGrades.Infrastructure.Security;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,7 @@ namespace BgituGrades
                     ServiceLifetime.Scoped);
             var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
 
+            builder.Services.AddScoped<IReportProgressNotifier, ReportProgressNotifier>();
 
             builder.Services.AddCors(options =>
             {
@@ -71,7 +73,9 @@ namespace BgituGrades
                 options.InstanceName = "BgituGrades_";
             });
 
-            builder.Services.AddAutoMapper(cfg => { }, typeof(Program).Assembly);
+            builder.Services.AddAutoMapper(cfg => { }, 
+                typeof(Program).Assembly,
+                typeof(ClassProfile).Assembly);
 
             builder.Services.AddAuthentication(ApiKeyDefaults.AuthenticationScheme)
                 .AddApiKeyInHeaderOrQueryParams<ApiKeyProvider>(options =>

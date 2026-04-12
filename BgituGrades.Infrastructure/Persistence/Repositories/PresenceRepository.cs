@@ -1,5 +1,4 @@
 ﻿using BgituGrades.Application.Models.Presence;
-using BgituGrades.Data;
 using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Interfaces;
 using EFCore.BulkExtensions;
@@ -61,15 +60,15 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             await context.Presences.ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<Presence?> GetAsync(UpdatePresenceGradeRequest request, CancellationToken cancellationToken)
+        public async Task<Presence?> GetAsync(Presence entity, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var presence = await context.Presences
                 .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.DisciplineId == request.DisciplineId &&
-                                         p.StudentId == request.StudentId &&
-                                         p.ClassId == request.ClassId &&
-                                         p.Date == request.Date, cancellationToken: cancellationToken);
+                .FirstOrDefaultAsync(p => p.DisciplineId == entity.DisciplineId &&
+                                         p.StudentId == entity.StudentId &&
+                                         p.ClassId == entity.ClassId &&
+                                         p.Date == entity.Date, cancellationToken: cancellationToken);
             return presence;
         }
 

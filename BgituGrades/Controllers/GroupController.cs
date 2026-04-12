@@ -42,7 +42,7 @@ namespace BgituGrades.API.Controllers
         public async Task<ActionResult<List<CourseReponse>>> GetArchivedCoursesByPeriod(
             [FromQuery] GetByPeriodRequest request, CancellationToken cancellationToken)
         {
-            var groups = await _groupService.GetArchivedCoursesByPeriodAsync(request, cancellationToken: cancellationToken);
+            var groups = await _groupService.GetArchivedCoursesByPeriodAsync(request.Year, request.Semester, cancellationToken: cancellationToken);
             return Ok(groups);
         }
 
