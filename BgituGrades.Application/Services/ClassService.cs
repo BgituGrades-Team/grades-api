@@ -84,6 +84,8 @@ namespace BgituGrades.Application.Services
             var transferMap = transfers
                 .ToDictionary(t => t.OriginalDate, t => t.NewDate);
 
+            var seen = new HashSet<(int ClassId, DateOnly ActualDate)>();
+
 
             if (week1Start > endDate.AddDays(7))
                 return dates;
@@ -101,6 +103,8 @@ namespace BgituGrades.Application.Services
                     var actualDate = transferMap.TryGetValue(lessonDate, out var newDate)
                         ? newDate
                         : lessonDate;
+                    if (!seen.Add((_class.Id, actualDate)))
+                        continue;
 
                     if (lessonDate >= startDate && lessonDate <= endDate)
                     {
