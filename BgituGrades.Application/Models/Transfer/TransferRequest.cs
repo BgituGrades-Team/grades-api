@@ -20,6 +20,8 @@ namespace BgituGrades.Application.Models.Transfer
     {
         [Required]
         public int ClassId { get; set; }
+        [Required]
+        public DateOnly OriginalDate { get; set; }
     }
 
     public class UpdateTransferRequest

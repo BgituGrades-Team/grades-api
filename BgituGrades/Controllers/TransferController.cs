@@ -28,9 +28,9 @@ namespace BgituGrades.Controllers
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(TransferResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<TransferResponse>> GetTransfers([FromQuery] GetTransferRequest request, CancellationToken cancellationToken)
+        public async Task<ActionResult<TransferResponse>> GetTransfer([FromQuery] GetTransferRequest request, CancellationToken cancellationToken)
         {
-            var transfer = await _transferService.GetTransferByClassIdAsync(request.ClassId, cancellationToken: cancellationToken);
+            var transfer = await _transferService.GetTransferByClassIdAndDateAsync(request.ClassId, request.OriginalDate, cancellationToken: cancellationToken);
 
             return transfer == null ? NotFound() : Ok(transfer);
         }

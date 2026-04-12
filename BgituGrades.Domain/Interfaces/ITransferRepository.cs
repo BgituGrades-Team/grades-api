@@ -7,7 +7,7 @@ namespace BgituGrades.Domain.Interfaces
         Task<List<Transfer>> GetAllTransfersAsync(CancellationToken cancellationToken);
         Task<Transfer> CreateTransferAsync(Transfer entity, CancellationToken cancellationToken);
         Task<Transfer?> GetByIdAsync(int id, CancellationToken cancellationToken);
-        Task<Transfer?> GetByClassIdAsync(int classId, CancellationToken cancellationToken);
+        Task<Transfer?> GetByClassIdAndDateAsync(int classId, DateOnly originalDate, CancellationToken cancellationToken);
         Task<bool> UpdateTransferAsync(Transfer entity, CancellationToken cancellationToken);
         Task<bool> DeleteTransferAsync(int id, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
