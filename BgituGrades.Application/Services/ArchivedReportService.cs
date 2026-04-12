@@ -4,7 +4,6 @@ using BgituGrades.Application.Models.Report;
 using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Enums;
 using BgituGrades.Domain.Interfaces;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using OfficeOpenXml;

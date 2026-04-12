@@ -1,5 +1,5 @@
 ﻿using BgituGrades.Application.Interfaces;
-using BgituGrades.Hubs;
+using BgituGrades.API.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
 namespace BgituGrades.API.Hubs

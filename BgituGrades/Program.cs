@@ -6,7 +6,6 @@ using BgituGrades.Application.Features.Validation;
 using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Mappings;
 using BgituGrades.Domain.Enums;
-using BgituGrades.Hubs;
 using BgituGrades.Infrastructure;
 using BgituGrades.Infrastructure.Auth;
 using BgituGrades.Infrastructure.Persistence;
