@@ -1,45 +1,45 @@
 ﻿using Asp.Versioning;
+using AutoMapper;
+using BgituGrades.Application.DTOs;
 using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Models.Group;
 using BgituGrades.Application.Models.Student;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ApiVersion = Asp.Versioning.ApiVersion;
 
 namespace BgituGrades.API.Controllers
 {
     [Route("api/group")]
     [ApiController]
-    public class GroupController(IGroupService groupService) : ControllerBase
+    [ApiVersion("2.0")]
+    public class GroupController(IGroupService groupService, IMapper mapper) : ControllerBase
     {
         private readonly IGroupService _groupService = groupService;
+        private readonly IMapper _mapper = mapper;
 
         [HttpGet]
-        [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<GroupResponse>>> GetGroups(
-            [FromQuery] GetGroupsByDisciplineRequest request, CancellationToken cancellationToken)
+        public async Task<ActionResult<List<GroupResponse>>> GetGroupsByDiscipline([FromQuery] GetGroupsByDisciplineRequest request, CancellationToken cancellationToken)
         {
-            var groups = await _groupService.GetGroupsByDisciplineAsync(request.DisciplineId, cancellationToken: cancellationToken);
-            return Ok(groups);
+            var groupDto = await _groupService.GetGroupsByDisciplineAsync(request.DisciplineId, cancellationToken: cancellationToken);
+            var response = _mapper.Map<List<GroupResponse>>(groupDto);
+            return Ok(response);
         }
 
         [HttpGet("courses")]
-        [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(List<CourseReponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<CourseReponse>>> GetCoursesByPeriod(CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<int>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<int>>> GetCoursesByPeriod(CancellationToken cancellationToken)
         {
             var courses = await _groupService.GetCoursesAsync(cancellationToken: cancellationToken);
             return Ok(courses);
         }
 
         [HttpGet("archived/courses")]
-        [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(List<CourseReponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<CourseReponse>>> GetArchivedCoursesByPeriod(
+        [ProducesResponseType(typeof(List<int>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<int>>> GetArchivedCoursesByPeriod(
             [FromQuery] GetByPeriodRequest request, CancellationToken cancellationToken)
         {
             var groups = await _groupService.GetArchivedCoursesByPeriodAsync(request.Year, request.Semester, cancellationToken: cancellationToken);
@@ -47,104 +47,65 @@ namespace BgituGrades.API.Controllers
         }
 
         [HttpGet("all")]
-        [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<GroupResponse>>> GetAllGroups(CancellationToken cancellationToken)
         {
-            var groups = await _groupService.GetAllAsync(cancellationToken: cancellationToken);
-            return Ok(groups);
+            var groupDto = await _groupService.GetAllAsync(cancellationToken: cancellationToken);
+            var response = _mapper.Map<List<GroupResponse>>(groupDto);
+            return Ok(response);
         }
 
         [HttpGet("archived")]
-        [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(List<ArchivedGroupResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<ArchivedGroupResponse>>> GetArchivedGroups([FromQuery] GetByPeriodRequest request, CancellationToken cancellationToken)
         {
-            var groups = await _groupService.GetArchivedGroupsByPeriodAsync(semester: request.Semester, year: request.Year, cancellationToken: cancellationToken);
-            return Ok(groups);
-        }
-
-        [HttpGet("archived/by_courses")]
-        [ApiVersion("2.0")]
-        [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(List<ArchivedGroupResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<ArchivedGroupResponse>>> GetArchivedGroups([FromQuery] GetArchivedByCoursesRequest request, CancellationToken cancellationToken)
-        {
-            var groups = await _groupService.GetArchivedGroupsByCoursesAndPeriodAsync(request, cancellationToken: cancellationToken);
-            return Ok(groups);
+            var groupDto = await _groupService.GetArchivedGroupsByPeriodAsync(semester: request.Semester, year: request.Year, cancellationToken: cancellationToken);
+            var response = _mapper.Map<List<ArchivedGroupResponse>>(groupDto);
+            return Ok(response);
         }
 
         [HttpGet("by_courses")]
-        [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<GroupResponse>>> GetGroupsByCourses([FromQuery] GetByCoursesRequest request, CancellationToken cancellationToken)
         {
-            var groups = await _groupService.GetGroupsByCoursesAsync(request.Courses!.Values, cancellationToken: cancellationToken);
-            return Ok(groups);
+            var groupDto = await _groupService.GetGroupsByCoursesAsync(request.Courses!.Values, cancellationToken: cancellationToken);
+            var response = _mapper.Map<List<GroupResponse>>(groupDto);
+            return Ok(response);
         }
 
         [HttpPost]
-        [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
         [ProducesResponseType(typeof(GroupResponse), StatusCodes.Status201Created)]
         public async Task<ActionResult<GroupResponse>> CreateGroup([FromBody] CreateGroupRequest request, CancellationToken cancellationToken)
         {
-            var group = await _groupService.CreateGroupAsync(request, cancellationToken: cancellationToken);
-            return CreatedAtAction(nameof(GetGroup), new { id = group.Id }, group);
+            var groupDto = _mapper.Map<GroupDTO>(request);
+            groupDto = await _groupService.CreateGroupAsync(groupDto, cancellationToken: cancellationToken);
+            var response = _mapper.Map<GroupResponse>(groupDto);
+            return CreatedAtAction(nameof(GetGroupsByDiscipline), new { id = response.Id }, response);
         }
 
         [HttpPost("bulk")]
-        [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
         [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status201Created)]
         public async Task<ActionResult<List<GroupResponse>>> CreateGroupBulk([FromBody] CreateGroupBulkRequest request, CancellationToken cancellationToken)
         {
-            var groups = await _groupService.CreateGroupAsync(request, cancellationToken: cancellationToken);
-            return Created(string.Empty, groups);
-        }
-
-        [HttpGet("{id}")]
-        [ApiVersion("1.0")]
-        [Obsolete("deprecated")]
-        [ProducesResponseType(typeof(GroupResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<GroupResponse>> GetGroup([FromRoute] int id, CancellationToken cancellationToken)
-        {
-            var group = await _groupService.GetGroupByIdAsync(id, cancellationToken: cancellationToken);
-            if (group == null)
-                return NotFound(id);
-            return Ok(group);
-        }
-
-        [HttpPut]
-        [ApiVersion("1.0")]
-        [Obsolete("deprecated")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(UpdateGroupRequest), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateGroup([FromBody] UpdateGroupRequest request, CancellationToken cancellationToken)
-        {
-            var success = await _groupService.UpdateGroupAsync(request, cancellationToken: cancellationToken);
-            if (!success)
-                return NotFound(request.Id);
-
-            return NoContent();
+            var groupDto = _mapper.Map<List<GroupDTO>>(request.Groups);
+            groupDto = await _groupService.CreateGroupAsync(groupDto, cancellationToken: cancellationToken);
+            var response = _mapper.Map<List<GroupResponse>>(groupDto);
+            return Created(string.Empty, response);
         }
 
         [HttpDelete]
-        [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteGroup([FromQuery] DeleteGroupRequest request, CancellationToken cancellationToken)
         {
             var success = await _groupService.DeleteGroupAsync(request.Id, cancellationToken: cancellationToken);
-            if (!success)
-                return NotFound(request.Id);
-
-            return NoContent();
+            return success ? NoContent() : NotFound(request.Id);
         }
     }
 }

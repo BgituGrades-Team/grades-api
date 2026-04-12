@@ -161,12 +161,12 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                 .ToListAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<bool> UpdateGroupAsync(Group entity, CancellationToken cancellationToken)
+        public async Task<Group> UpdateGroupAsync(Group entity, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             context.Groups.Update(entity);
             await context.SaveChangesAsync(cancellationToken: cancellationToken);
-            return true;
+            return entity;
         }
     }
 }

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Saunter.Attributes;
 
-namespace BgituGrades.Hubs
+namespace BgituGrades.API.Hubs
 {
     [AsyncApi]
     public class GradeHub(IClassService classService, IPresenceService presenceService, IMarkService markService) : Hub

@@ -1,124 +1,103 @@
 ﻿using AutoMapper;
+using BgituGrades.Application.Caching;
 using BgituGrades.Application.DTOs;
 using BgituGrades.Application.Interfaces;
-using BgituGrades.Application.Models.Group;
 using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Interfaces;
 using BgituGrades.Infrastructure.Features;
-using Microsoft.Extensions.Caching.Distributed;
-using System.Text.Json;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace BgituGrades.Application.Services
 {
     
 
-    public class GroupService(IGroupRepository groupRepository, IMapper mapper, IDistributedCache cache) : IGroupService
+    public class GroupService(IGroupRepository groupRepository, IMapper mapper, ICacheService cacheService) : IGroupService
     {
         private readonly IGroupRepository _groupRepository = groupRepository;
         private readonly IMapper _mapper = mapper;
-        private readonly IDistributedCache _cache = cache;
-        private const string AllGroupsKey = "group:all";
-        private const string GroupsByDisciplineKey = "group:discipline:";
-        private const string GroupByCourseKey = "group_by_course";
+        private readonly ICacheService _cacheService = cacheService;
 
-        public async Task<GroupResponse> CreateGroupAsync(CreateGroupRequest request, CancellationToken cancellationToken)
+        private static readonly HybridCacheEntryOptions DefaultOptions = new()
         {
-            var entity = _mapper.Map<Group>(request);
+            Expiration = TimeSpan.FromMinutes(30),
+            LocalCacheExpiration = TimeSpan.FromMinutes(10)
+        };
+
+        public async Task<GroupDTO> CreateGroupAsync(GroupDTO group, CancellationToken cancellationToken)
+        {
+            var entity = _mapper.Map<Group>(group);
             entity.CourseNumber = GroupCourseParser.Parse(entity.Name);
             var createdEntity = await _groupRepository.CreateGroupAsync(entity, cancellationToken: cancellationToken);
 
-            await _cache.RemoveAsync(AllGroupsKey);
-            return _mapper.Map<GroupResponse>(createdEntity);
+            await _cacheService.RemoveAsync(CacheKeys.GroupAll(), ct: cancellationToken);
+            return _mapper.Map<GroupDTO>(createdEntity);
         }
 
-        public async Task<List<GroupResponse>> CreateGroupAsync(CreateGroupBulkRequest request, CancellationToken cancellationToken)
+        public async Task<List<GroupDTO>> CreateGroupAsync(IEnumerable<GroupDTO> groups, CancellationToken cancellationToken)
         {
-            var entities = _mapper.Map<List<Group>>(request.Groups);
+            var entities = _mapper.Map<List<Group>>(groups);
             foreach (var entity in entities)
-            {
                 entity.CourseNumber = GroupCourseParser.Parse(entity.Name);
-            }
+
             var createdEntities = await _groupRepository.CreateGroupAsync(entities, cancellationToken: cancellationToken);
-            await _cache.RemoveAsync(AllGroupsKey);
-            return _mapper.Map<List<GroupResponse>>(createdEntities);
+            await _cacheService.RemoveAsync(CacheKeys.GroupAll(), ct: cancellationToken);
+            return _mapper.Map<List<GroupDTO>>(createdEntities);
         }
 
         public async Task<bool> DeleteGroupAsync(int id, CancellationToken cancellationToken)
         {
             var result = await _groupRepository.DeleteGroupAsync(id, cancellationToken: cancellationToken);
             if (result)
-            {
-                await _cache.RemoveAsync(AllGroupsKey);
-            }
+                await _cacheService.RemoveAsync(CacheKeys.GroupAll(), ct: cancellationToken);
             return result;
         }
 
-        public async Task<List<GroupResponse>> GetAllAsync(CancellationToken cancellationToken)
+        public async Task<List<GroupDTO>> GetAllAsync(CancellationToken cancellationToken)
         {
-            var cached = await GetFromCacheAsync<List<GroupResponse>>(AllGroupsKey);
-            if (cached != null)
-                return cached;
-
-            var groups = await _groupRepository.GetAllAsync(cancellationToken: cancellationToken);
-            var response = _mapper.Map<List<GroupResponse>>(groups).ToList();
-            await SetCacheAsync(AllGroupsKey, response, TimeSpan.FromHours(2));
-            return response;
+            return await _cacheService.GetOrCreateAsync(
+                key: CacheKeys.GroupAll(),
+                factory: async token =>
+                {
+                    var entities = await _groupRepository.GetAllAsync(cancellationToken: token);
+                    return _mapper.Map<List<GroupDTO>>(entities);
+                }, options: DefaultOptions, ct: cancellationToken);
         }
 
-        public async Task<GroupResponse?> GetGroupByIdAsync(int id, CancellationToken cancellationToken)
+        public async Task<GroupDTO?> GetGroupByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var entity = await _groupRepository.GetByIdAsync(id, cancellationToken: cancellationToken);
-            return entity == null ? null : _mapper.Map<GroupResponse>(entity);
+            return await _cacheService.GetOrCreateAsync(
+                key: CacheKeys.Group(id),
+                factory: async token =>
+                {
+                    var entity = await _groupRepository.GetByIdAsync(id, cancellationToken: token);
+                    return entity == null ? null : _mapper.Map<GroupDTO>(entity);
+                }, options: DefaultOptions, ct: cancellationToken);
         }
 
-        public async Task<List<GroupResponse>> GetGroupsByDisciplineAsync(int disciplineId, CancellationToken cancellationToken)
+        public async Task<List<GroupDTO>> GetGroupsByDisciplineAsync(int disciplineId, CancellationToken cancellationToken)
         {
-            var cacheKey = $"{GroupsByDisciplineKey}{disciplineId}";
-            var cached = await GetFromCacheAsync<List<GroupResponse>>(cacheKey);
-            if (cached != null)
-                return cached;
-
             var entities = await _groupRepository.GetGroupsByDisciplineAsync(disciplineId, cancellationToken: cancellationToken);
-            var result = _mapper.Map<List<GroupResponse>>(entities).ToList();
-            await SetCacheAsync(cacheKey, result, TimeSpan.FromHours(2));
+            var result = _mapper.Map<List<GroupDTO>>(entities).ToList();
             return result;
         }
 
-        public async Task<bool> UpdateGroupAsync(UpdateGroupRequest request, CancellationToken cancellationToken)
+        public async Task<GroupDTO> UpdateGroupAsync(GroupDTO group, CancellationToken cancellationToken)
         {
-            var entity = _mapper.Map<Group>(request);
+            var entity = _mapper.Map<Group>(group);
             entity.CourseNumber = GroupCourseParser.Parse(entity.Name);
-            var result = await _groupRepository.UpdateGroupAsync(entity, cancellationToken: cancellationToken);
-            if (result)
-            {
-                await _cache.RemoveAsync(AllGroupsKey);
-            }
-            return result;
+            entity = await _groupRepository.UpdateGroupAsync(entity, cancellationToken: cancellationToken);
+            return _mapper.Map<GroupDTO>(entity);
         }
 
-        public async Task<List<GroupDTO>> GetAllGroupsDtoAsync(CancellationToken cancellationToken)
+        public async Task<List<GroupDTO>> GetArchivedGroupsByPeriodAsync(int semester, int year, CancellationToken cancellationToken)
         {
-            var groups = await _groupRepository.GetAllAsync(cancellationToken: cancellationToken);
-            return _mapper.Map<List<GroupDTO>>(groups);
-        }
-
-        public async Task<List<GroupDTO>> GetGroupsDtoByDisciplineAsync(int disciplineId, CancellationToken cancellationToken)
-        {
-            var entities = await _groupRepository.GetGroupsByDisciplineAsync(disciplineId, cancellationToken: cancellationToken);
-            return _mapper.Map<List<GroupDTO>>(entities);
-        }
-
-        public async Task<GroupDTO?> GetGroupDtoByIdAsync(int id, CancellationToken cancellationToken)
-        {
-            var entity = await _groupRepository.GetByIdAsync(id, cancellationToken: cancellationToken);
-            return entity == null ? null : _mapper.Map<GroupDTO>(entity);
-        }
-
-        public async Task<List<ArchivedGroupResponse>> GetArchivedGroupsByPeriodAsync(int semester, int year, CancellationToken cancellationToken)
-        {
-            var archived = await _groupRepository.GetArchivedByPeriod(semester, year, cancellationToken);
-            var results = _mapper.Map<List<ArchivedGroupResponse>>(archived);
-            return results;
+            return await _cacheService.GetOrCreateAsync(
+                key: CacheKeys.GroupByPeriod(year, semester),
+                factory: async token =>
+                {
+                    var entities = await _groupRepository.GetArchivedByPeriod(semester, year, cancellationToken: token);
+                    return _mapper.Map<List<GroupDTO>>(entities);
+                }, options: DefaultOptions, ct: cancellationToken);
         }
 
         public async Task<List<int>> GetCoursesAsync(CancellationToken cancellationToken)
@@ -131,78 +110,25 @@ namespace BgituGrades.Application.Services
             return await _groupRepository.GetArchivedCoursesByPeriodAsync(year, semester, cancellationToken);
         }
 
-        public async Task<List<GroupResponse>> GetGroupsByCoursesAsync(IEnumerable<int> courses, CancellationToken cancellationToken)
+        public async Task<List<GroupDTO>> GetGroupsByCoursesAsync(IEnumerable<int> courses, CancellationToken cancellationToken)
         {
-            var results = new List<GroupResponse>();
-            var missingCourses = new List<int>();
+            var results = new List<GroupDTO>();
 
-            foreach (var course in courses)
+            var entities = await _groupRepository.GetGroupsByCoursesAsync([.. courses], cancellationToken);
+            if (entities != null && entities.Any())
             {
-                var singleCacheKey = $"{GroupByCourseKey}:{course}";
-                var cached = await GetFromCacheAsync<List<GroupResponse>>(singleCacheKey);
-                if (cached != null)
+                foreach (var course in courses)
                 {
-                    results.AddRange(cached);
-                }
-                else
-                {
-                    missingCourses.Add(course);
-                }
-            }
+                    var groupsForCourse = entities
+                        .Where(g => g.CourseNumber == course)
+                        .ToList();
 
-            if (missingCourses.Count != 0)
-            {
-                var entities = await _groupRepository.GetGroupsByCoursesAsync([.. missingCourses], cancellationToken);
-                if (entities != null && entities.Any())
-                {
-                    foreach (var course in missingCourses)
-                    {
-                        var groupsForCourse = entities
-                            .Where(g => g.CourseNumber == course)
-                            .ToList();
-
-                        var mapped = _mapper.Map<List<GroupResponse>>(groupsForCourse);
-                        await SetCacheAsync($"{GroupByCourseKey}:{course}", mapped, TimeSpan.FromHours(2));
-                        results.AddRange(mapped);
-                    }
+                    var mapped = _mapper.Map<List<GroupDTO>>(groupsForCourse);
+                    results.AddRange(mapped);
                 }
             }
 
             return results.DistinctBy(g => g.Id).ToList();
-        }
-
-        public async Task<List<ArchivedGroupResponse>> GetArchivedGroupsByCoursesAndPeriodAsync(GetArchivedByCoursesRequest request, CancellationToken cancellationToken)
-        {
-            var groups = await _groupRepository.GetArchivedGroupsByCoursesAndPeriodAsync(request.Courses!.Values, request.Year, request.Semester, cancellationToken);
-            return _mapper.Map<List<ArchivedGroupResponse>>(groups);
-        }
-        private async Task<T?> GetFromCacheAsync<T>(string key)
-        {
-            try
-            {
-                var value = await _cache.GetStringAsync(key);
-                if (value == null)
-                    return default;
-                return JsonSerializer.Deserialize<T>(value);
-            }
-            catch
-            {
-                return default;
-            }
-        }
-
-        private async Task SetCacheAsync<T>(string key, T value, TimeSpan expiration)
-        {
-            try
-            {
-                var serialized = JsonSerializer.Serialize(value);
-                var options = new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = expiration };
-                await _cache.SetStringAsync(key, serialized, options);
-            }
-            catch
-            {
-
-            }
         }
     }
 }

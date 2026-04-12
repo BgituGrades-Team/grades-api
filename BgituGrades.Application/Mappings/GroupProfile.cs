@@ -9,13 +9,12 @@ namespace BgituGrades.Application.Mappings
     {
         public GroupProfile()
         {
-            CreateMap<CreateGroupRequest, Group>();
-            CreateMap<UpdateGroupRequest, Group>();
-            CreateMap<Group, GroupResponse>();
-            CreateMap<Group, GroupDTO>();
-            CreateMap<Group, CourseReponse>();
-            CreateMap<Group, ArchivedGroupResponse>();
+            CreateMap<CreateGroupRequest, GroupDTO>();
+            CreateMap<UpdateGroupRequest, GroupDTO>();
             CreateMap<GroupDTO, Group>();
+            CreateMap<Group, GroupDTO>();
+            CreateMap<GroupDTO, GroupResponse>();
+            CreateMap<GroupDTO, ArchivedGroupResponse>();
         }
     }
 }

@@ -4,7 +4,6 @@ using BgituGrades.Application.Models.Class;
 using BgituGrades.Application.Models.Student;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ApiVersion = Asp.Versioning.ApiVersion;
 
 namespace BgituGrades.API.Controllers
 {
@@ -14,39 +13,6 @@ namespace BgituGrades.API.Controllers
     {
         private readonly IClassService _classService = ClassService;
 
-        [HttpGet]
-        [ApiVersion("1.0")]
-        [Obsolete("deprecated")]
-        [EndpointDescription("Больше не используется, т.к. произведён полный переход на SignalR")]
-        [ProducesResponseType(typeof(IEnumerable<ClassDateResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<ClassDateResponse>>> GetClasssDates([FromBody] GetClassDateRequest request, CancellationToken cancellationToken)
-        {
-            var classDates = await _classService.GetClassDatesAsync(request, cancellationToken: cancellationToken);
-            return Ok(classDates);
-        }
-
-        [HttpGet("markGrade")]
-        [ApiVersion("1.0")]
-        [Obsolete("deprecated")]
-        [EndpointDescription("Больше не используется, т.к. произведён полный переход на SignalR")]
-        [ProducesResponseType(typeof(IEnumerable<FullGradeMarkResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<FullGradeMarkResponse>>> GetMarkGrade([FromQuery] GetClassDateRequest request, CancellationToken cancellationToken)
-        {
-            var works = await _classService.GetMarksByWorksAsync(request, cancellationToken: cancellationToken);
-            return Ok(works);
-        }
-
-        [HttpGet("presenceGrade")]
-        [ApiVersion("1.0")]
-        [Obsolete("deprecated")]
-        [EndpointDescription("Больше не используется, т.к. произведён полный переход на SignalR")]
-        [ProducesResponseType(typeof(IEnumerable<FullGradePresenceResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<FullGradePresenceResponse>>> GetPresenceGrade([FromQuery] GetClassDateRequest request, CancellationToken cancellationToken)
-        {
-            var classDates = await _classService.GetPresenceByScheduleAsync(request, cancellationToken: cancellationToken);
-            return Ok(classDates);
-        }
-
         [HttpPost]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
@@ -54,7 +20,7 @@ namespace BgituGrades.API.Controllers
         public async Task<ActionResult<ClassResponse>> CreateClass([FromBody] CreateClassRequest request, CancellationToken cancellationToken)
         {
             var _class = await _classService.CreateClassAsync(request, cancellationToken: cancellationToken);
-            return CreatedAtAction(nameof(GetClass), new { id = _class.Id }, _class);
+            return Created(string.Empty, _class);
         }
 
         [HttpPost("bulk")]
@@ -65,19 +31,6 @@ namespace BgituGrades.API.Controllers
         {
             var _classes = await _classService.CreateClassAsync(request, cancellationToken: cancellationToken);
             return Created(string.Empty, _classes);
-        }
-
-        [HttpGet("{id}")]
-        [ApiVersion("1.0")]
-        [Obsolete("deprecated")]
-        [ProducesResponseType(typeof(ClassResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ClassResponse>> GetClass([FromRoute] int id, CancellationToken cancellationToken)
-        {
-            var _class = await _classService.GetClassByIdAsync(id, cancellationToken: cancellationToken);
-            if (_class == null)
-                return NotFound(id);
-            return Ok(_class);
         }
 
         [HttpDelete]

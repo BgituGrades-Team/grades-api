@@ -12,7 +12,7 @@ namespace BgituGrades.Domain.Interfaces
         Task<List<Group>> GetArchivedByPeriod(int semester, int year, CancellationToken cancellationToken);
         Task<List<int>> GetCoursesAsync(CancellationToken cancellationToken);
         Task<List<Group>> GetGroupsByCoursesAsync(IEnumerable<int> courses, CancellationToken cancellationToken);
-        Task<bool> UpdateGroupAsync(Group entity, CancellationToken cancellationToken);
+        Task<Group> UpdateGroupAsync(Group entity, CancellationToken cancellationToken);
         Task<bool> DeleteGroupAsync(int id, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
         Task<List<Group>> GetGroupsByIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken);
