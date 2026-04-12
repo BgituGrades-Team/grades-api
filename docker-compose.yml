@@ -1,7 +1,7 @@
 services:
   api:
-    build: 
-      context: ./BgituGrades
+    build:
+      context: .
       dockerfile: Dockerfile
     container_name: bgitu-grades
     restart: unless-stopped

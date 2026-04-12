@@ -8,8 +8,11 @@ namespace BgituGradesLoader.Database
         private const string PRACTICE_VALUE = "PRACTICE";
         private const string EXTRA_SYMBOLS = " .,-";
 
+        [GeneratedRegex(@"\s+", RegexOptions.Compiled)]
+        private static partial Regex NormalizeSpacesRegex();
+
         [GeneratedRegex(@"[\s.,-]+", RegexOptions.Compiled)]
-        private static partial Regex NormalizeRegex(); // Компилируем один раз, чтобы не создавать его каждый раз при вызове метода
+        private static partial Regex NormalizeFilterRegex();
 
         public static string GetPairType(bool isLecture)
         {
@@ -22,16 +25,19 @@ namespace BgituGradesLoader.Database
         {
             if (string.IsNullOrEmpty(disciplineName))
                 return string.Empty;
+            disciplineName = NormalizeSpacesRegex().Replace(disciplineName.Trim(), " ");
 
-            return NormalizeRegex().Replace(disciplineName, "").ToLower();
+            disciplineName = disciplineName.Trim(' ', ',');
+
+            disciplineName = Regex.Replace(disciplineName, @"\s*-\s*", "-");
+            return disciplineName;
         }
 
         public static string NormalizeDisciplineForFiltering(this string? disciplineName)
         {
             if (string.IsNullOrEmpty(disciplineName))
                 return string.Empty;
-
-            return NormalizeRegex().Replace(disciplineName, "").ToLower();
+            return NormalizeFilterRegex().Replace(disciplineName, "").ToLower();
         }
 
         public static int CountExtraSymbols(this string? disciplineName)
