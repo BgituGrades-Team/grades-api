@@ -57,7 +57,8 @@ namespace BgituGrades
             builder.Services
                 .AddRepositories()
                 .AddApplicationServices()
-                .AddApplicationValidation();
+                .AddApplicationValidation()
+                .AddInfrastructure(builder.Configuration.GetConnectionString("Redis"));
 
             builder.Services.AddSignalR()
             .AddJsonProtocol(options =>
@@ -66,12 +67,6 @@ namespace BgituGrades
                     new JsonStringEnumConverter());
             })
             .AddStackExchangeRedis(redisConnectionString!);
-
-            builder.Services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = redisConnectionString;
-                options.InstanceName = "BgituGrades_";
-            });
 
             builder.Services.AddAutoMapper(cfg => { }, 
                 typeof(Program).Assembly,

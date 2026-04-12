@@ -1,23 +1,45 @@
 ﻿using Asp.Versioning.ApiExplorer;
+using AspNetCore.Authentication.ApiKey;
 using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Services;
 using BgituGrades.Application.Validators;
 using BgituGrades.Domain.Interfaces;
-using FluentValidation;
+using BgituGrades.Infrastructure.Auth;
+using BgituGrades.Infrastructure.Caching;
 using BgituGrades.Infrastructure.Persistence.Repositories;
+using BgituGrades.Infrastructure.Security;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using BgituGrades.Infrastructure.Auth;
-using BgituGrades.Infrastructure.Security;
-using AspNetCore.Authentication.ApiKey;
 
 namespace BgituGrades.Infrastructure
 {
+
     public static class ServicesExtensions
     {
+        public static IServiceCollection AddInfrastructure(this IServiceCollection services, string? redisConnectionString)
+        {
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConnectionString;
+                options.InstanceName = "BgituGrades_";
+            });
+
+            services.AddHybridCache(options =>
+            {
+                options.DefaultEntryOptions = new HybridCacheEntryOptions
+                {
+                    Expiration = TimeSpan.FromMinutes(5),
+                    LocalCacheExpiration = TimeSpan.FromMinutes(2)
+                };
+            });
+
+            return services;
+        }
         public static IServiceCollection AddRepositories(this IServiceCollection services)
         {
             services.AddScoped<IDisciplineRepository, DisciplineRepository>();
@@ -54,6 +76,8 @@ namespace BgituGrades.Infrastructure
             services.AddScoped<IAuthorizationHandler, GroupAccessHandler>();
             services.AddScoped<IScheduleLoaderService, ScheduleLoaderService>();
             services.ConfigureOptions<ConfigureSwaggerOptions>();
+
+            services.AddScoped<ICacheService, CacheService>();
 
             services.AddSingleton<ITokenHasher, TokenHasher>();
             return services;

@@ -9,11 +9,11 @@ namespace BgituGrades.Application.Mappings
     {
         public WorkProfile()
         {
-            CreateMap<CreateWorkRequest, Work>();
-            CreateMap<UpdateWorkRequest, Work>();
-            CreateMap<Work, WorkResponse>();
-            CreateMap<Work, WorkDTO>();
+            CreateMap<CreateWorkRequest, WorkDTO>();
+            CreateMap<UpdateWorkRequest, WorkDTO>();
             CreateMap<WorkDTO, Work>();
+            CreateMap<Work, WorkDTO>();
+            CreateMap<WorkDTO, WorkResponse>();
         }
     }
 }

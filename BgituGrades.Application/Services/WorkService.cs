@@ -1,97 +1,78 @@
 ﻿using AutoMapper;
+using BgituGrades.Application.Caching;
+using BgituGrades.Application.DTOs;
 using BgituGrades.Application.Interfaces;
-using BgituGrades.Application.Models.Work;
 using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Interfaces;
-using Microsoft.Extensions.Caching.Distributed;
-using System.Text.Json;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace BgituGrades.Application.Services
 {
     
-    public class WorkService(IWorkRepository workRepository, IMapper mapper, IDistributedCache cache) : IWorkService
+    public class WorkService(IWorkRepository workRepository, IMapper mapper, ICacheService cacheService) : IWorkService
     {
         private readonly IWorkRepository _workRepository = workRepository;
         private readonly IMapper _mapper = mapper;
-        private readonly IDistributedCache _cache = cache;
-        private const string AllWorksKey = "work:all:works";
+        private readonly ICacheService _cacheService = cacheService;
 
-        public async Task<WorkResponse> CreateWorkAsync(CreateWorkRequest request, CancellationToken cancellationToken)
+        private static readonly HybridCacheEntryOptions DefaultOptions = new()
         {
-            var entity = _mapper.Map<Work>(request);
+            Expiration = TimeSpan.FromMinutes(10),
+            LocalCacheExpiration = TimeSpan.FromMinutes(2)
+        };
+
+        public async Task<WorkDTO> CreateWorkAsync(WorkDTO work, CancellationToken cancellationToken)
+        {
+            var entity = _mapper.Map<Work>(work);
             var createdEntity = await _workRepository.CreateWorkAsync(entity, cancellationToken: cancellationToken);
 
-            await _cache.RemoveAsync(AllWorksKey);
-            return _mapper.Map<WorkResponse>(createdEntity);
+            await _cacheService.RemoveAsync(CacheKeys.WorkAll(), ct: cancellationToken);
+            return _mapper.Map<WorkDTO>(createdEntity);
         }
 
         public async Task<bool> DeleteWorkAsync(int id, CancellationToken cancellationToken)
         {
             var result = await _workRepository.DeleteWorkAsync(id, cancellationToken: cancellationToken);
             if (result)
-            {
-                await _cache.RemoveAsync(AllWorksKey);
-            }
+                await _cacheService.RemoveAsync(CacheKeys.WorkAll(), ct: cancellationToken);
             return result;
         }
 
-        public async Task<WorkResponse?> GetWorkByIdAsync(int id, CancellationToken cancellationToken)
+        public async Task<WorkDTO?> GetWorkByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var entity = await _workRepository.GetByIdAsync(id, cancellationToken: cancellationToken);
-            return entity == null ? null : _mapper.Map<WorkResponse>(entity);
+            return await _cacheService
+                .GetOrCreateAsync(
+                    key: CacheKeys.Work(id),
+                    factory: async token =>
+                    {
+                        var entity = await _workRepository.GetByIdAsync(id, cancellationToken: token);
+                        return _mapper.Map<WorkDTO>(entity);
+                    },
+                    options: DefaultOptions, ct: cancellationToken);
         }
 
-        public async Task<List<WorkResponse>> GetAllWorksAsync(CancellationToken cancellationToken)
+        public async Task<List<WorkDTO>> GetAllWorksAsync(CancellationToken cancellationToken)
         {
-            var cached = await GetFromCacheAsync<List<WorkResponse>>(AllWorksKey);
-            if (cached != null)
-                return cached;
+            return await _cacheService
+                .GetOrCreateAsync(
+                    key: CacheKeys.WorkAll(),
+                    factory: async token =>
+                    {
+                        var entities = await _workRepository.GetAllWorksAsync(cancellationToken: token);
+                        return _mapper.Map<List<WorkDTO>>(entities);
+                    },
+                    options: DefaultOptions, ct: cancellationToken);
+        }
 
-            var entities = await _workRepository.GetAllWorksAsync(cancellationToken: cancellationToken);
-            var result = _mapper.Map<List<WorkResponse>>(entities).ToList();
-            await SetCacheAsync(AllWorksKey, result, TimeSpan.FromHours(4));
+        public async Task<WorkDTO> UpdateWorkAsync(WorkDTO work, CancellationToken cancellationToken)
+        {
+            var entity = _mapper.Map<Work>(work);
+            var updatedEntity = await _workRepository.UpdateWorkAsync(entity, cancellationToken: cancellationToken);
+            if (updatedEntity != null)
+                await _cacheService.RemoveAsync(CacheKeys.WorkAll(), ct: cancellationToken);
+
+            var result = _mapper.Map<WorkDTO>(updatedEntity);
             return result;
-        }
-
-        public async Task<bool> UpdateWorkAsync(UpdateWorkRequest request, CancellationToken cancellationToken)
-        {
-            var entity = _mapper.Map<Work>(request);
-            var result = await _workRepository.UpdateWorkAsync(entity, cancellationToken: cancellationToken);
-            if (result)
-            {
-                await _cache.RemoveAsync(AllWorksKey);
-            }
-            return result;
-        }
-
-        private async Task<T?> GetFromCacheAsync<T>(string key)
-        {
-            try
-            {
-                var value = await _cache.GetStringAsync(key);
-                if (value == null)
-                    return default;
-                return JsonSerializer.Deserialize<T>(value);
-            }
-            catch
-            {
-                return default;
-            }
-        }
-
-        private async Task SetCacheAsync<T>(string key, T value, TimeSpan expiration)
-        {
-            try
-            {
-                var serialized = JsonSerializer.Serialize(value);
-                var options = new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = expiration };
-                await _cache.SetStringAsync(key, serialized, options);
-            }
-            catch
-            {
-
-            }
         }
     }
-
 }

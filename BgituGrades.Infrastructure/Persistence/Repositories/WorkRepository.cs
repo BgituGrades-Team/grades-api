@@ -47,10 +47,11 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             return entities;
         }
 
-        public async Task<bool> UpdateWorkAsync(Work entity, CancellationToken cancellationToken)
+        public async Task<Work> UpdateWorkAsync(Work entity, CancellationToken cancellationToken)
         {
-            _dbContext.Update(entity);
-            return await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken) > 0;
+            var updatedEntity = _dbContext.Update(entity);
+            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
+            return updatedEntity.Entity;
         }
 
         public async Task DeleteAllAsync(CancellationToken cancellationToken)

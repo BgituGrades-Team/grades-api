@@ -8,7 +8,7 @@ namespace BgituGrades.Domain.Interfaces
         Task<Work> CreateWorkAsync(Work entity, CancellationToken cancellationToken);
         Task<Work?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<List<Work>> GetByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
-        Task<bool> UpdateWorkAsync(Work entity, CancellationToken cancellationToken);
+        Task<Work> UpdateWorkAsync(Work entity, CancellationToken cancellationToken);
         Task<bool> DeleteWorkAsync(int id, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
     }
