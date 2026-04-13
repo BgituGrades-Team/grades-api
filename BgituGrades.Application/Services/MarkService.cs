@@ -83,6 +83,7 @@ namespace BgituGrades.Application.Services
             if (mark != null)
             {
                 mark.Value = request.Value;
+                mark.IsOverdue = request.IsOverdue;
                 await _markRepository.UpdateMarkAsync(mark, cancellationToken: cancellationToken);
             }
             else
@@ -103,6 +104,7 @@ namespace BgituGrades.Application.Services
                     WorkId = request.WorkId,
                     Name = mark.Work!.Name!,
                     Value = request.Value,
+                    IsOverdue = mark.IsOverdue
                 }]
             };
             return response;

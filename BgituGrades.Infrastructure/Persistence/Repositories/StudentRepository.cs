@@ -110,7 +110,7 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                 s.Name,
                 MarksByWorkId = s.Marks!
                     .Where(m => m.Work!.DisciplineId == disciplineId)
-                    .ToLookup(m => m.WorkId, m => m.Value)
+                    .ToLookup(m => m.WorkId, m => new { m.Value, m.IsOverdue })
             }).ToList();
 
             var worksList = works.ToList();
@@ -122,7 +122,8 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                 {
                     WorkId = work.Id,
                     Name = work.Name!,
-                    Value = s.MarksByWorkId[work.Id].FirstOrDefault() ?? ""
+                    Value = s.MarksByWorkId[work.Id].FirstOrDefault()?.Value ?? "",
+                    IsOverdue = s.MarksByWorkId[work.Id].FirstOrDefault()?.IsOverdue ?? false
                 }).ToList()
             }).ToList();
 
