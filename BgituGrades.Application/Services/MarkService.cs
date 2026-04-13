@@ -87,8 +87,9 @@ namespace BgituGrades.Application.Services
             }
             else
             {
-                mark = _mapper.Map<Mark>(request);
-                await _markRepository.CreateMarkAsync(mark, cancellationToken: cancellationToken);
+                var newMark = _mapper.Map<Mark>(request);
+                await _markRepository.CreateMarkAsync(newMark, cancellationToken: cancellationToken);
+                mark = await _markRepository.GetMarkByStudentAndWorkAsync(request.StudentId, request.WorkId, cancellationToken: cancellationToken);
             }
 
 

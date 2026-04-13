@@ -66,7 +66,9 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Marks
+                .Include(m => m.Work)
                 .AsNoTracking()
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(m => m.StudentId == studentId && m.WorkId == workId, cancellationToken: cancellationToken);
         }
 
