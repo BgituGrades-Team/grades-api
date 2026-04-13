@@ -26,6 +26,7 @@ namespace BgituGrades.Controllers
 
         [HttpPost("migrate")]
         [Authorize(Policy = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> MigrateAsync(CancellationToken cancellationToken)
         {

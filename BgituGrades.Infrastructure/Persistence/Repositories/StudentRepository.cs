@@ -189,10 +189,10 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             return archivedStudents;
         }
 
-        public async Task DeleteByIdsAsync(IEnumerable<int> studentsIds, CancellationToken cancellationToken)
+        public async Task DeleteByIdsAsync(IEnumerable<int> studentsOfficialIds, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
-            await context.Students.Where(s => studentsIds.Contains(s.Id))
+            await context.Students.Where(s => studentsOfficialIds.Contains(s.OfficialId))
                 .ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
     }

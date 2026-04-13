@@ -182,9 +182,9 @@ namespace BgituGrades.Application.Services
             return result;
         }
 
-        private async Task FlushBatchAsync(IEnumerable<Student> batch, IEnumerable<int> leavedIds, CancellationToken cancellationToken)
+        private async Task FlushBatchAsync(IEnumerable<Student> batch, IEnumerable<int> leavedOfficialIds, CancellationToken cancellationToken)
         {
-            await _studentRepository.DeleteByIdsAsync(leavedIds, cancellationToken: cancellationToken);
+            await _studentRepository.DeleteByIdsAsync(leavedOfficialIds, cancellationToken: cancellationToken);
             await _studentRepository.BulkInsertAsync(batch, cancellationToken: cancellationToken);
         }
 
