@@ -32,11 +32,11 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             return entity;
         }
 
-        public async Task<Transfer?> GetByClassIdAndDateAsync(int classId, DateOnly originalDate, CancellationToken cancellationToken)
+        public async Task<Transfer?> GetByClassIdAndDateAsync(int classId, DateOnly date, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entity = await context.Transfers
-                .FirstOrDefaultAsync(t => t.ClassId == classId && t.OriginalDate == originalDate, cancellationToken: cancellationToken);
+                .FirstOrDefaultAsync(t => t.ClassId == classId && t.NewDate == date, cancellationToken: cancellationToken);
             return entity;
         }
 

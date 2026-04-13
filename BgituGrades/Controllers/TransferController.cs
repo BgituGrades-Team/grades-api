@@ -30,7 +30,7 @@ namespace BgituGrades.Controllers
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<TransferResponse>> GetTransfer([FromQuery] GetTransferRequest request, CancellationToken cancellationToken)
         {
-            var transfer = await _transferService.GetTransferByClassIdAndDateAsync(request.ClassId, request.OriginalDate, cancellationToken: cancellationToken);
+            var transfer = await _transferService.GetTransferByClassIdAndDateAsync(request.ClassId, request.Date, cancellationToken: cancellationToken);
 
             return transfer == null ? NotFound() : Ok(transfer);
         }
