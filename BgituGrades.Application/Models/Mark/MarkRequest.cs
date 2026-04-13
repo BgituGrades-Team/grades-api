@@ -43,8 +43,6 @@ namespace BgituGrades.Application.Models.Mark
     public class UpdateMarkGradeRequest
     {
         [Required]
-        public DateOnly Date { get; set; }
-        [Required]
         public string? Value { get; set; }
         [Required]
         public bool IsOverdue { get; set; }

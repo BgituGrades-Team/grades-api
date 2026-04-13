@@ -13,9 +13,6 @@ namespace BgituGrades.Application.Validators
 
             RuleFor(x => x.DisciplineId)
                 .GreaterThan(0).WithMessage("DisciplineId должен быть больше 0");
-
-            RuleFor(x => x.IssuedDate)
-                .NotEmpty().WithMessage("Дата выдачи не может быть пустой");
         }
     }
 

@@ -2,12 +2,21 @@
 
 namespace BgituGrades.Application.Models.Work
 {
-    public class CreateWorkRequest
+    public class GetWorkRequest
     {
         [Required]
         public string? Name { get; set; }
         [Required]
-        public DateOnly IssuedDate { get; set; }
+        public string? Description { get; set; }
+        [Required]
+        public int DisciplineId { get; set; }
+        [Required]
+        public int GroupId { get; set; }
+    }
+    public class CreateWorkRequest
+    {
+        [Required]
+        public string? Name { get; set; }
         [Required]
         public string? Description { get; set; }
         [Required]

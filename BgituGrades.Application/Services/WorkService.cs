@@ -23,6 +23,7 @@ namespace BgituGrades.Application.Services
 
         public async Task<WorkDTO> CreateWorkAsync(WorkDTO work, CancellationToken cancellationToken)
         {
+            work.IssuedDate = DateOnly.FromDateTime(DateTime.Now);
             var entity = _mapper.Map<Work>(work);
             var createdEntity = await _workRepository.CreateWorkAsync(entity, cancellationToken: cancellationToken);
 
