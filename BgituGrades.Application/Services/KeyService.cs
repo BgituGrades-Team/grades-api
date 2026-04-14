@@ -49,6 +49,7 @@ namespace BgituGrades.Application.Services
             var result = await _keyRepository.DeleteKeyAsync(lookupHash, cancellationToken: cancellationToken);
             if (result) 
                 await _cacheService.RemoveAsync(CacheKeys.KeyAll(), ct: cancellationToken);
+                await _cacheService.RemoveAsync(CacheKeys.KeyByLookUpHash(lookupHash), ct: cancellationToken);
             return result;
         }
 
