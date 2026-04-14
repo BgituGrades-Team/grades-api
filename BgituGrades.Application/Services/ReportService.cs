@@ -33,11 +33,11 @@ namespace BgituGrades.Application.Services
         {
             using var scope = _scopeFactory.CreateScope();
 
-            var groupRepo = scope.ServiceProvider.GetRequiredService<IGroupRepository>();
-            var disciplineRepo = scope.ServiceProvider.GetRequiredService<IDisciplineRepository>();
-            var studentRepo = scope.ServiceProvider.GetRequiredService<IStudentRepository>();
-            var markRepo = scope.ServiceProvider.GetRequiredService<IMarkRepository>();
-            var presenceRepo = scope.ServiceProvider.GetRequiredService<IPresenceRepository>();
+            var groupRepository = scope.ServiceProvider.GetRequiredService<IGroupRepository>();
+            var disciplineRepository = scope.ServiceProvider.GetRequiredService<IDisciplineRepository>();
+            var studentRepository = scope.ServiceProvider.GetRequiredService<IStudentRepository>();
+            var markRepository = scope.ServiceProvider.GetRequiredService<IMarkRepository>();
+            var presenceRepository = scope.ServiceProvider.GetRequiredService<IPresenceRepository>();
             var classService = scope.ServiceProvider.GetRequiredService<IClassService>();
 
             var cacheOptions = new DistributedCacheEntryOptions()
@@ -45,36 +45,36 @@ namespace BgituGrades.Application.Services
 
             try
             {
-                await _notifier.SendProgressAsync(reportId, 10, "Загрузка архивных данных...");
+                await _notifier.SendProgressAsync(reportId, 10, "Загрузка данных...");
 
                 IEnumerable<Group> groups;
                 if (request.GroupIds != null)
                 {
-                    groups = await groupRepo.GetGroupsByIdsAsync(request.GroupIds, cancellationToken: cancellationToken);
+                    groups = await groupRepository.GetGroupsByIdsAsync(request.GroupIds, cancellationToken: cancellationToken);
                 }
                 else
                 {
-                    groups = await groupRepo.GetAllAsync(cancellationToken: cancellationToken);
+                    groups = await groupRepository.GetAllAsync(cancellationToken: cancellationToken);
                 }
 
                 IEnumerable<Discipline> disciplines;
                 if (request.DisciplineIds != null)
                 {
-                    disciplines = await disciplineRepo.GetDisciplinesByIdsAsync(request.DisciplineIds, cancellationToken: cancellationToken);
+                    disciplines = await disciplineRepository.GetDisciplinesByIdsAsync(request.DisciplineIds, cancellationToken: cancellationToken);
                 }
                 else
                 {
-                    disciplines = await disciplineRepo.GetByGroupIdsAsync([.. groups.Select(g => g.Id)], cancellationToken: cancellationToken);
+                    disciplines = await disciplineRepository.GetByGroupIdsAsync([.. groups.Select(g => g.Id)], cancellationToken: cancellationToken);
                 }
 
                 IEnumerable<Student> students;
                 if (request.StudentIds != null)
                 {
-                    students = await studentRepo.GetStudentsByIdsAsync(request.StudentIds, cancellationToken: cancellationToken);
+                    students = await studentRepository.GetStudentsByIdsAsync(request.StudentIds, cancellationToken: cancellationToken);
                 }
                 else
                 {
-                    students = await studentRepo.GetStudentsByGroupIdsAsync([.. groups.Select(g => g.Id)], cancellationToken: cancellationToken);
+                    students = await studentRepository.GetStudentsByGroupIdsAsync([.. groups.Select(g => g.Id)], cancellationToken: cancellationToken);
                 }
 
                 if (!groups.Any() || !disciplines.Any())
@@ -87,11 +87,11 @@ namespace BgituGrades.Application.Services
                 TablePreview result;
                 if (request.ReportType == ReportType.MARK)
                 {
-                    result = await GenerateMarksExcelAsync(markRepo, groups, disciplines, students, cancellationToken);
+                    result = await GenerateMarksExcelAsync(markRepository, groups, disciplines, students, cancellationToken);
                 }
                 else
                 {
-                    result = await GeneratePresenceExcelAsync(presenceRepo, groups, disciplines, students, classService, cancellationToken);
+                    result = await GeneratePresenceExcelAsync(presenceRepository, groups, disciplines, students, classService, cancellationToken);
                 }
 
                 await _notifier.SendProgressAsync(reportId, 80, "Сохранение...");
@@ -116,6 +116,7 @@ namespace BgituGrades.Application.Services
             var zebraColor = System.Drawing.Color.FromArgb(245, 245, 245);
 
             var sortedGroups = groups.OrderBy(g => g.Name).ToList();
+            var studentsLookup = students.ToLookup(s => s.GroupId);
             var allowedDisciplineIds = disciplines.Select(d => d.Id).ToHashSet();
 
             var disciplinesByGroup = groups.ToDictionary(
@@ -160,7 +161,7 @@ namespace BgituGrades.Application.Services
                 }
                 currentRow++;
 
-                var groupStudents = students.Where(s => s.GroupId == group.Id).OrderBy(s => s.Name).ToList();
+                var groupStudents = studentsLookup[group.Id].OrderBy(s => s.Name).ToList();
                 for (int sIdx = 0; sIdx < groupStudents.Count; sIdx++)
                 {
                     var student = groupStudents[sIdx];

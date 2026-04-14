@@ -35,15 +35,6 @@ namespace BgituGrades.Application.Services
         {
             var entity = _mapper.Map<Student>(request);
             var createdEntity = await _studentRepository.CreateStudentAsync(entity, cancellationToken: cancellationToken);
-
-            var disciplines = await _disciplineRepository.GetByGroupIdAsync(request.GroupId, cancellationToken: cancellationToken);
-
-            var disciplinesDict = new Dictionary<int, IEnumerable<DateOnly>>();
-            foreach (var d in disciplines)
-            {
-                var classes = await _classService.GenerateScheduleDatesAsync(request.GroupId, d!.Id, cancellationToken);
-                disciplinesDict[d.Id] = classes.Select(c => c.Date);
-            }
             return _mapper.Map<StudentResponse>(createdEntity);
         }
 

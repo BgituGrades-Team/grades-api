@@ -65,8 +65,6 @@ namespace BgituGrades.Application.Services
             var classes = await _classRepository.GetClassesByDisciplineAndGroupAsync(disciplineId, groupId, cancellationToken: cancellationToken);
             var transfers = await _transferService.GetTransfersByGroupAndDisciplineAsync(groupId, disciplineId, cancellationToken: cancellationToken);
 
-
-
             var startDate = startDateOverride ?? group.StudyStartDate;
             var endDate = endDateOverride ?? group.StudyEndDate;
             var firstWeekStart = group.StartWeekNumber;
@@ -82,7 +80,7 @@ namespace BgituGrades.Application.Services
             var week1Start = firstMonday.AddDays(-7 * (firstWeekStart - 1));
 
             var transferMap = transfers
-                .ToDictionary(t => t.OriginalDate, t => t.NewDate);
+                .ToDictionary(t => (t.OriginalDate, t.ClassId), t => t.NewDate);
 
             var seen = new HashSet<(int ClassId, DateOnly ActualDate)>();
 
@@ -100,7 +98,7 @@ namespace BgituGrades.Application.Services
                         .AddDays(_class.WeekDay - 1)
                         .AddDays(7 * (_class.Weeknumber - 1));
 
-                    var actualDate = transferMap.TryGetValue(lessonDate, out var newDate)
+                    var actualDate = transferMap.TryGetValue((lessonDate, _class.Id), out var newDate)
                         ? newDate
                         : lessonDate;
                     if (!seen.Add((_class.Id, actualDate)))
@@ -205,12 +203,6 @@ namespace BgituGrades.Application.Services
             var students = await _studentRepository.GetMarksGrade(works, request.GroupId, request.DisciplineId, cancellationToken: cancellationToken);
             var grade = _mapper.Map<List<FullGradeMarkResponse>>(students);
             return grade;
-        }
-
-        public async Task<List<ClassDTO>> GetAllClassesDtoAsync(CancellationToken cancellationToken)
-        {
-            var entities = await _classRepository.GetAllClassesAsync(cancellationToken: cancellationToken);
-            return _mapper.Map<List<ClassDTO>>(entities);
         }
 
         private async Task<T?> GetFromCacheAsync<T>(string key)
