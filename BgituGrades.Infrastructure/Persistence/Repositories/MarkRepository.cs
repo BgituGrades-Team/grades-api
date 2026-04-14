@@ -66,10 +66,10 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Marks
-                .Include(m => m.Work)
+                .Where(m => m.StudentId == studentId && m.WorkId == workId)
+                    .Include(m => m.Work)
                 .AsNoTracking()
-                .AsSplitQuery()
-                .FirstOrDefaultAsync(m => m.StudentId == studentId && m.WorkId == workId, cancellationToken: cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken: cancellationToken);
         }
 
         public async Task<double> GetAverageMarkByStudentAndDisciplineAsync(int studentId, int disciplineId, CancellationToken cancellationToken)
@@ -93,6 +93,7 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entities = await context.Marks
                 .Where(m => disciplineIds.Contains(m.Work!.DisciplineId) && groupIds.Contains(m.Student!.GroupId))
+                    .Include(m => m.Work)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken: cancellationToken);
             return entities;
@@ -106,5 +107,4 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(m => m.Id == id, cancellationToken: cancellationToken);
         }
     }
-
 }
