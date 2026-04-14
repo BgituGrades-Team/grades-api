@@ -184,7 +184,9 @@ namespace BgituGrades.Application.Services
 
         private async Task FlushBatchAsync(IEnumerable<Student> batch, IEnumerable<int> leavedOfficialIds, CancellationToken cancellationToken)
         {
+            
             await _studentRepository.DeleteByIdsAsync(leavedOfficialIds, cancellationToken: cancellationToken);
+
             await _studentRepository.BulkInsertAsync(batch, cancellationToken: cancellationToken);
         }
 

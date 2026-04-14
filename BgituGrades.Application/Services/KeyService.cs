@@ -34,7 +34,7 @@ namespace BgituGrades.Application.Services
                 OwnerName = "bgitugrades",
                 Role = role.ToString(),
                 GroupId = groupId,
-                ExpiryDate = role == Role.STUDENT ? DateTime.Now.AddMonths(3) : null
+                ExpiryDate = role == Role.STUDENT ? DateTime.UtcNow.AddMonths(3) : null
             };
 
             var createdKey = await _keyRepository.CreateKeyAsync(apiKey, cancellationToken: cancellationToken);
