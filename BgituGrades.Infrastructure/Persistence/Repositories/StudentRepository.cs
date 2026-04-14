@@ -57,34 +57,36 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             int groupId, int disciplineId, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
-            var studentsWithPresence = await context.Students
+            var students = await context.Students
                 .Where(s => s.GroupId == groupId)
-                    .Include(s => s.Presences)
                 .OrderBy(s => s.Name)
                 .AsNoTracking()
-                .AsSplitQuery()
-                .ToListAsync(cancellationToken: cancellationToken);
+                .ToListAsync(cancellationToken);
 
-            var presenceByStudent = studentsWithPresence.Select(s => new
-                {
-                    s.Id,
-                    s.Name,
-                    PresencesByDate = s.Presences!
-                        .Where(p => p.DisciplineId == disciplineId)
-                        .ToLookup(p => (p.ClassId, p.Date), p => p.IsPresent)
-                }).ToList();
+            var studentIds = students.Select(s => s.Id).ToList();
 
-            var scheduleDatesList = scheduleDates.ToList();
-            var result = presenceByStudent.Select(s => new StudentPresenceResult
+            var allPresences = await context.Presences
+                .Where(p => p.DisciplineId == disciplineId && studentIds.Contains(p.StudentId))
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+
+            var presenceLookup = allPresences.ToLookup(p => (p.StudentId, p.ClassId, p.Date));
+
+            var result = students.Select(s => new StudentPresenceResult
             {
                 StudentId = s.Id,
                 Name = s.Name,
-                Presences = scheduleDatesList.Select(date => new PresenceEntry
+                Presences = scheduleDates.Select(date =>
                 {
-                    ClassId = date.Id,
-                    ClassType = date.ClassType,
-                    Date = date.Date,
-                    IsPresent = s.PresencesByDate[(date.Id, date.Date)].FirstOrDefault(PresenceType.PRESENT)
+                    var isPresent = presenceLookup[(s.Id, date.Id, date.Date)].Select(p => p.IsPresent).FirstOrDefault(PresenceType.PRESENT);
+
+                    return new PresenceEntry
+                    {
+                        ClassId = date.Id,
+                        ClassType = date.ClassType,
+                        Date = date.Date,
+                        IsPresent = isPresent
+                    };
                 }).ToList()
             }).ToList();
 
