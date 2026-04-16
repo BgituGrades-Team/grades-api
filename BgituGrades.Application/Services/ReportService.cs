@@ -1,4 +1,6 @@
-﻿using BgituGrades.Application.DTOs;
+﻿using BgituGrades.Application.Caching;
+using BgituGrades.Application.DTOs;
+using BgituGrades.Application.Features;
 using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Models.Report;
 using BgituGrades.Domain.Entities;
@@ -8,6 +10,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using OfficeOpenXml;
 using System.Globalization;
+using System.Text.Json;
 
 namespace BgituGrades.Application.Services
 {
@@ -24,12 +27,31 @@ namespace BgituGrades.Application.Services
             var reportId = Guid.NewGuid();
             await _notifier.AddToGroupAsync(connectionId, reportId);
 
-            _ = Task.Run(async () => await GenerateWithProgress(reportId, request, cancellationToken: cancellationToken), cancellationToken: cancellationToken);
+            var requestHash = RequestHasher.ComputeRequestCacheKey(request);
+            var metaKey = CacheKeys.ReportByRequestHash(requestHash);
 
+            var cachedMeta = await _cache.GetAsync(metaKey, cancellationToken);
+            if (cachedMeta is not null)
+            {
+                var meta = JsonSerializer.Deserialize<CachedReport>(cachedMeta)!;
+
+                var cachedBytes = await _cache.GetAsync($"report_bytes_{requestHash}", cancellationToken);
+                if (cachedBytes is not null)
+                {
+                    var cacheOptions = new DistributedCacheEntryOptions()
+                        .SetAbsoluteExpiration(TimeSpan.FromHours(24));
+
+                    await _cache.SetAsync($"report_{reportId}", cachedBytes, cacheOptions, cancellationToken);
+                    await _notifier.SendReadyAsync(reportId, $"https://{request.Host}/api/report/{reportId}/download", meta.Preview!);
+                    return reportId;
+                }
+            }
+
+            _ = Task.Run(() => GenerateWithProgress(reportId, request, requestHash, cancellationToken), cancellationToken);
             return reportId;
         }
 
-        protected virtual async Task GenerateWithProgress(Guid reportId, ReportRequest request, CancellationToken cancellationToken)
+        protected virtual async Task GenerateWithProgress(Guid reportId, ReportRequest request, string requestHash, CancellationToken cancellationToken)
         {
             using var scope = _scopeFactory.CreateScope();
 
@@ -47,7 +69,7 @@ namespace BgituGrades.Application.Services
             {
                 await _notifier.SendProgressAsync(reportId, 10, "Загрузка данных...");
 
-                IEnumerable<Group> groups;
+                List<Group> groups;
                 if (request.GroupIds != null)
                 {
                     groups = await groupRepository.GetGroupsByIdsAsync(request.GroupIds, cancellationToken: cancellationToken);
@@ -57,7 +79,7 @@ namespace BgituGrades.Application.Services
                     groups = await groupRepository.GetAllAsync(cancellationToken: cancellationToken);
                 }
 
-                IEnumerable<Discipline> disciplines;
+                List<Discipline> disciplines;
                 if (request.DisciplineIds != null)
                 {
                     disciplines = await disciplineRepository.GetDisciplinesByIdsAsync(request.DisciplineIds, cancellationToken: cancellationToken);
@@ -67,7 +89,7 @@ namespace BgituGrades.Application.Services
                     disciplines = await disciplineRepository.GetByGroupIdsAsync([.. groups.Select(g => g.Id)], cancellationToken: cancellationToken);
                 }
 
-                IEnumerable<Student> students;
+                List<Student> students;
                 if (request.StudentIds != null)
                 {
                     students = await studentRepository.GetStudentsByIdsAsync(request.StudentIds, cancellationToken: cancellationToken);
@@ -97,6 +119,12 @@ namespace BgituGrades.Application.Services
                 await _notifier.SendProgressAsync(reportId, 80, "Сохранение...");
 
                 await _cache.SetAsync($"report_{reportId}", result.ExcelBytes!, cacheOptions);
+
+                await _cache.SetAsync($"report_bytes_{requestHash}", result.ExcelBytes!, cacheOptions);
+
+                var meta = JsonSerializer.SerializeToUtf8Bytes(new CachedReport { Preview = result.Preview });
+                await _cache.SetAsync($"report_meta_{requestHash}", meta, cacheOptions);
+
 
                 await _notifier.SendReadyAsync(reportId, $"https://{request.Host}/api/report/{reportId}/download", result.Preview!);
             }
@@ -158,6 +186,7 @@ namespace BgituGrades.Application.Services
                 groupRowRange.Style.Font.Bold = true;
                 groupRowRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
                 groupRowRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(96, 165, 250));
+                groupRowRange.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                 worksheet.Column(1).AutoFit();
 
                 var groupDisciplines = disciplinesByGroup[group.Id];
@@ -166,6 +195,7 @@ namespace BgituGrades.Application.Services
                     var cell = worksheet.Cells[currentRow, i + 2];
                     cell.Value = groupDisciplines[i]!.Name;
                     cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                     cell.Style.WrapText = true;
                 }
                 worksheet.Row(currentRow).CustomHeight = false;
@@ -320,6 +350,7 @@ namespace BgituGrades.Application.Services
                 groupRowRange.Style.Font.Bold = true;
                 groupRowRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
                 groupRowRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(96, 165, 250));
+                groupRowRange.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                 worksheet.Column(1).AutoFit();
 
                 var groupDisciplines = disciplinesByGroup[group.Id];
@@ -328,6 +359,7 @@ namespace BgituGrades.Application.Services
                     var cell = worksheet.Cells[currentRow, i + 2];
                     cell.Value = groupDisciplines[i]!.Name;
                     cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                     cell.Style.WrapText = true;
                 }
                 worksheet.Row(currentRow).CustomHeight = false;

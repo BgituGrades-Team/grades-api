@@ -9,5 +9,6 @@
         public static string Group(int id) => $"group:{id}";
         public static string GroupByPeriod(int year, int semester) => $"group:period:{year}:{semester}";
         public static string GroupAll() => $"group:all";
+        public static string ReportByRequestHash(string hash) => $"report_meta_{hash}";
     }
 }

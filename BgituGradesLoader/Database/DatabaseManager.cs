@@ -90,8 +90,6 @@ namespace BgituGradesLoader.Database
             using HttpResponseMessage response = await client.SendAsync(request);
 
             string result = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Отправили {objects.Count} {objName}");
-            Console.WriteLine($"Получили ответ: {result[..Math.Min(500, result.Length)]}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -101,7 +99,6 @@ namespace BgituGradesLoader.Database
             }
 
             List<T>? resultObjects = JsonConvert.DeserializeObject<List<T>>(result);
-            Console.WriteLine($"Десериализовали: {resultObjects?.Count ?? 0} {objName}");
 
             return resultObjects ?? objects;
         }
@@ -110,7 +107,6 @@ namespace BgituGradesLoader.Database
         {
             HttpRequestMessage request = new(method, link);
             string? apiKey = Environment.GetEnvironmentVariable("GRADES_API_KEY");
-            Console.WriteLine(apiKey);
             apiKey = apiKey?.Trim(' ', '"');
             if (String.IsNullOrEmpty(apiKey))
                 apiKey = "";

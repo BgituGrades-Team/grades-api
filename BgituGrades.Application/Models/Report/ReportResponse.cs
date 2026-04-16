@@ -16,6 +16,11 @@ namespace BgituGrades.Application.Models.Report
         public ReportPreviewDto? Preview { get; set; }
     }
 
+    public class CachedReport
+    {
+        public ReportPreviewDto? Preview { get; set; }
+    }
+
     public class PeriodResponse
     {
         public int Semester { get; set; }
