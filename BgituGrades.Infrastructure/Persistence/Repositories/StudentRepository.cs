@@ -78,13 +78,14 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                 Name = s.Name,
                 Presences = scheduleDates.Select(date =>
                 {
-                    var isPresent = presenceLookup[(s.Id, date.Id, date.Date)].Select(p => p.IsPresent).FirstOrDefault(PresenceType.PRESENT);
+                    var isPresent = presenceLookup[(s.Id, date.Id, date.OriginalDate)].Select(p => p.IsPresent).FirstOrDefault(PresenceType.PRESENT);
 
                     return new PresenceEntry
                     {
                         ClassId = date.Id,
                         ClassType = date.ClassType,
                         Date = date.Date,
+                        OriginalDate = date.OriginalDate,
                         IsPresent = isPresent
                     };
                 }).ToList()

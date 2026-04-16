@@ -18,6 +18,7 @@ namespace BgituGrades.Application.Models.Class
     public class ClassDateResponse
     {
         public int Id { get; set; }
+        public DateOnly OriginalDate { get; set; }
         public DateOnly Date { get; set; }
         public ClassType ClassType { get; set; }
         public DateTime StartTime { get; set; }

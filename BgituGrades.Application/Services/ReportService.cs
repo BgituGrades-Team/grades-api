@@ -230,7 +230,7 @@ namespace BgituGrades.Application.Services
                 }
             }
 
-            worksheet.Cells[1, 1, currentRow - 1, maxCols + 1].AutoFitColumns();
+            //worksheet.Cells[1, 1, currentRow - 1, maxCols + 1].AutoFitColumns();
             var fullRange = worksheet.Cells[1, 1, currentRow - 1, maxCols + 1];
             fullRange.Style.Border.Top.Style = fullRange.Style.Border.Bottom.Style =
             fullRange.Style.Border.Left.Style = fullRange.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
@@ -280,8 +280,12 @@ namespace BgituGrades.Application.Services
             };
         }
 
-        protected static async Task<TablePreview> GeneratePresenceExcelAsync(IPresenceRepository _presenceRepository, IEnumerable<Group> groups,
-            IEnumerable<Discipline> disciplines, IEnumerable<Student> students, IClassService _classService, CancellationToken cancellationToken)
+        protected static async Task<TablePreview> GeneratePresenceExcelAsync(IPresenceRepository _presenceRepository, 
+            IEnumerable<Group> groups,
+            IEnumerable<Discipline> disciplines, 
+            IEnumerable<Student> students,
+            IClassService _classService,
+            CancellationToken cancellationToken)
         {
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Отчёт посещаемости");

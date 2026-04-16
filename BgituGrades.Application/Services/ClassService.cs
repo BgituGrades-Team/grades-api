@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using BgituGrades.Application.DTOs;
 using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Models.Class;
 using BgituGrades.Domain.Entities;
@@ -108,6 +107,7 @@ namespace BgituGrades.Application.Services
                     {
                         dates.Add(new ClassDateResponse
                         {
+                            OriginalDate = lessonDate,
                             Date = actualDate,
                             ClassType = _class.Type,
                             StartTime = _class.StartTime,
