@@ -51,8 +51,19 @@ namespace BgituGrades.API.Controllers
         [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<GroupResponse>>> GetAllGroups(CancellationToken cancellationToken)
         {
-            var groupDto = await _groupService.GetAllAsync(cancellationToken: cancellationToken);
-            var response = _mapper.Map<List<GroupResponse>>(groupDto);
+            var isStudent = User.IsInRole("STUDENT");
+            var groupIdClaim = User.FindFirst("group_id")?.Value;
+
+            if (isStudent && groupIdClaim != null)
+            {
+                var groupId = int.Parse(groupIdClaim);
+                var groupDto = await _groupService.GetGroupByIdAsync(groupId, cancellationToken);
+                var singleResponse = _mapper.Map<GroupResponse>(groupDto);
+                return Ok(new List<GroupResponse> { singleResponse });
+            }
+
+            var groupsDto = await _groupService.GetAllAsync(cancellationToken: cancellationToken);
+            var response = _mapper.Map<List<GroupResponse>>(groupsDto);
             return Ok(response);
         }
 
