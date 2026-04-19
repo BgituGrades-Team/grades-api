@@ -1,4 +1,5 @@
 using BgituGrades.Application.Models.Group;
+using BgituGrades.Domain.Interfaces;
 using FluentValidation;
 
 namespace BgituGrades.Application.Validators
@@ -24,11 +25,12 @@ namespace BgituGrades.Application.Validators
     }
     public class UpdateGroupRequestValidator : AbstractValidator<UpdateGroupRequest>
     {
-        public UpdateGroupRequestValidator()
+        public UpdateGroupRequestValidator(IGroupRepository groupRepository)
         {
             RuleFor(x => x.Id)
                 .GreaterThan(0)
-                    .WithMessage("ID группы должен быть больше 0");
+                .MustAsync(async (id, cancellationToken) => await groupRepository.ExistsAsync(id, cancellationToken))
+                .WithMessage((x) => $"Id = {x.Id} не существует");
 
             RuleFor(x => x.Name)
                 .NotEmpty()
@@ -48,11 +50,12 @@ namespace BgituGrades.Application.Validators
 
     public class GetGroupsByDisciplineRequestValidator : AbstractValidator<GetGroupsByDisciplineRequest>
     {
-        public GetGroupsByDisciplineRequestValidator()
+        public GetGroupsByDisciplineRequestValidator(IDisciplineRepository disciplineRepository)
         {
             RuleFor(x => x.DisciplineId)
                 .GreaterThan(0)
-                    .WithMessage("DisciplineId должен быть больше 0");
+                .MustAsync(async (disciplineId, cancellationToken) => await disciplineRepository.ExistsAsync(disciplineId, cancellationToken))
+                .WithMessage((x) => $"DisciplineId = {x.DisciplineId} не существует");
         }
     }
 }
