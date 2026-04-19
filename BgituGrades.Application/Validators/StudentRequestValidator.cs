@@ -1,11 +1,12 @@
 using BgituGrades.Application.Models.Student;
+using BgituGrades.Domain.Interfaces;
 using FluentValidation;
 
 namespace BgituGrades.Application.Validators
 {
     public class CreateStudentRequestValidator : AbstractValidator<CreateStudentRequest>
     {
-        public CreateStudentRequestValidator()
+        public CreateStudentRequestValidator(IGroupRepository groupRepository)
         {
             RuleFor(x => x.Name)
                 .NotEmpty()
@@ -15,7 +16,9 @@ namespace BgituGrades.Application.Validators
 
             RuleFor(x => x.GroupId)
                 .GreaterThan(0)
-                    .WithMessage("GroupId должен быть больше 0");
+                .MustAsync(async (groupId, cancellationToken) => await groupRepository.ExistsAsync(groupId, cancellationToken))
+                    .WithMessage((x) => $"GroupId = {x.GroupId} не существует");
+
             RuleFor(x => x.OfficialId)
                 .GreaterThan(0)
                     .WithMessage("OfficialId должен быть больше 0");
@@ -24,11 +27,12 @@ namespace BgituGrades.Application.Validators
 
     public class UpdateStudentRequestValidator : AbstractValidator<UpdateStudentRequest>
     {
-        public UpdateStudentRequestValidator()
+        public UpdateStudentRequestValidator(IGroupRepository groupRepository, IStudentRepository studentRepository)
         {
             RuleFor(x => x.Id)
                 .GreaterThan(0)
-                    .WithMessage("id студента должен быть больше 0");
+                .MustAsync(async (id, cancellationToken) => await studentRepository.ExistsAsync(id, cancellationToken))
+                    .WithMessage((x) => $"Id = {x.Id} не существует");
 
             RuleFor(x => x.Name)
                 .NotEmpty()
@@ -38,7 +42,8 @@ namespace BgituGrades.Application.Validators
 
             RuleFor(x => x.GroupId)
                 .GreaterThan(0)
-                    .WithMessage("GroupId должен быть больше 0");
+                .MustAsync(async (groupId, cancellationToken) => await groupRepository.ExistsAsync(groupId, cancellationToken))
+                    .WithMessage((x) => $"GroupId = {x.GroupId} не существует");
         }
     }
     public class GetStudentsByGroupRequestValidator : AbstractValidator<GetStudentsByGroupRequest>
