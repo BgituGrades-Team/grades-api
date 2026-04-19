@@ -52,6 +52,29 @@ namespace BgituGrades.Application.Validators
         }
     }
 
+    public class UpdateMarkGradeRequestValidator : AbstractValidator<UpdateMarkGradeRequest>
+    {
+        public UpdateMarkGradeRequestValidator(IStudentRepository studentRepository, IWorkRepository workRepository)
+        {
+            RuleFor(x => x.IsOverdue)
+                .NotEmpty().WithMessage("Признак просроченности не может быть пустым");
+
+            RuleFor(x => x.StudentId)
+                .GreaterThan(0)
+                .MustAsync(async (studentId, cancellationToken) => await studentRepository.ExistsAsync(studentId, cancellationToken))
+                .WithMessage((x) => $"StudentId = {x.StudentId} не существует");
+
+            RuleFor(x => x.WorkId)
+                .GreaterThan(0)
+                .MustAsync(async (workId, cancellationToken) => await workRepository.ExistsAsync(workId, cancellationToken))
+                .WithMessage((x) => $"WorkId = {x.WorkId} не существует");
+
+            RuleFor(x => x.Value)
+                .NotEmpty().WithMessage("Оценка не может быть пустой")
+                .MaximumLength(1).WithMessage("Оценка не может быть длиннее 1 символа");
+        }
+    }
+
     public class GetMarksByDisciplineAndGroupRequestValidator : AbstractValidator<GetMarksByDisciplineAndGroupRequest>
     {
         public GetMarksByDisciplineAndGroupRequestValidator(IDisciplineRepository disciplineRepository, IGroupRepository groupRepository)

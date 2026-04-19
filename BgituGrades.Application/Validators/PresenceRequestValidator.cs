@@ -1,4 +1,5 @@
 using BgituGrades.Application.Models.Presence;
+using BgituGrades.Domain.Enums;
 using BgituGrades.Domain.Interfaces;
 using FluentValidation;
 
@@ -32,6 +33,32 @@ namespace BgituGrades.Application.Validators
                 .MustAsync(async (id, cancellationToken) => await presenceRepository.ExistsAsync(id, cancellationToken))
                 .WithMessage((x) => $"Id = {x.Id} не существует");
 
+            RuleFor(x => x.StudentId)
+                .GreaterThan(0)
+                .MustAsync(async (studentId, cancellationToken) => await studentRepository.ExistsAsync(studentId, cancellationToken))
+                .WithMessage((x) => $"StudentId = {x.StudentId} не существует");
+
+            RuleFor(x => x.DisciplineId)
+                .GreaterThan(0)
+                .MustAsync(async (disciplineId, cancellationToken) => await disciplineRepository.ExistsAsync(disciplineId, cancellationToken))
+                .WithMessage((x) => $"DisciplineId = {x.DisciplineId} не существует");
+
+            RuleFor(x => x.Date)
+                .NotEmpty().WithMessage("Дата не может быть пустой");
+        }
+    }
+
+    public class UpdatePresenceGradeRequestValidator : AbstractValidator<UpdatePresenceGradeRequest>
+    {
+        public UpdatePresenceGradeRequestValidator(IStudentRepository studentRepository, IDisciplineRepository disciplineRepository, IClassRepository classRepository)
+        {
+            RuleFor(x => x.ClassId)
+                .GreaterThan(0)
+                .MustAsync(async (id, cancellationToken) => await classRepository.ExistsAsync(id, cancellationToken))
+                .WithMessage((x) => $"ClassId = {x.ClassId} не существует");
+            RuleFor(x => x.IsPresent)
+                .IsInEnum()
+                .WithMessage("Недопустимое значение присутствия");
             RuleFor(x => x.StudentId)
                 .GreaterThan(0)
                 .MustAsync(async (studentId, cancellationToken) => await studentRepository.ExistsAsync(studentId, cancellationToken))

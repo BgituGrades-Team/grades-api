@@ -2,14 +2,16 @@
 using BgituGrades.Application.Models.Class;
 using BgituGrades.Application.Models.Mark;
 using BgituGrades.Application.Models.Presence;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.OpenApi;
 using Saunter.Attributes;
 
 namespace BgituGrades.API.Hubs
 {
     [AsyncApi]
-    public class GradeHub(IClassService classService, IPresenceService presenceService, IMarkService markService) : Hub
+    public class GradeHub(IClassService classService, IPresenceService presenceService, IMarkService markService, IServiceProvider serviceProvider) : Hub
     {
         private readonly IClassService _classService = classService;
         private readonly IPresenceService _presenceService = presenceService;
@@ -29,6 +31,14 @@ namespace BgituGrades.API.Hubs
                     await Clients.Caller.SendAsync("PermissionDenied", "Доступ запрещён");
                     return;
                 }
+            }
+            var validator = serviceProvider.GetService<IValidator<GetClassDateRequest>>();
+            var validationResult =  validator != null ? await validator.ValidateAsync(request) : null;
+            if (validationResult == null || !validationResult.IsValid)
+            {
+                var errors = validationResult?.Errors.Select(e => e.ErrorMessage).ToList() ?? ["Validation failed"];
+                await Clients.Caller.SendAsync("ValidationError", errors);
+                return;
             }
             var cancellationToken = Context.ConnectionAborted;
             var marks = await _classService.GetMarksByWorksAsync(request, cancellationToken);
@@ -50,6 +60,14 @@ namespace BgituGrades.API.Hubs
                     return;
                 }
             }
+            var validator = serviceProvider.GetService<IValidator<GetClassDateRequest>>();
+            var validationResult =  validator != null ? await validator.ValidateAsync(request) : null;
+            if (validationResult == null || !validationResult.IsValid)
+            {
+                var errors = validationResult?.Errors.Select(e => e.ErrorMessage).ToList() ?? ["Validation failed"];
+                await Clients.Caller.SendAsync("ValidationError", errors);
+                return;
+            }
             var cancellationToken = Context.ConnectionAborted;
             var classDates = await _classService.GetPresenceByScheduleAsync(request, cancellationToken);
             await Clients.Caller.SendAsync("ReceivePresences", classDates);
@@ -61,6 +79,14 @@ namespace BgituGrades.API.Hubs
         [SubscribeOperation(typeof(FullGradeMarkResponse), Summary = "Событие: Оценка обновлена (рассылается всем)", OperationId = "UpdatedMark")]
         public async Task UpdateMarkGrade(UpdateMarkGradeRequest request)
         {
+            var validator = serviceProvider.GetService<IValidator<UpdateMarkGradeRequest>>();
+            var validationResult =  validator != null ? await validator.ValidateAsync(request) : null;
+            if (validationResult == null || !validationResult.IsValid)
+            {
+                var errors = validationResult?.Errors.Select(e => e.ErrorMessage).ToList() ?? ["Validation failed"];
+                await Clients.Caller.SendAsync("ValidationError", errors);
+                return;
+            }
             var cancellationToken = Context.ConnectionAborted;
             var response = await _markService.UpdateOrCreateMarkAsync(request, cancellationToken: cancellationToken);
             await Clients.All.SendAsync("UpdatedMark", response);
@@ -72,6 +98,14 @@ namespace BgituGrades.API.Hubs
         [SubscribeOperation(typeof(FullGradePresenceResponse), Summary = "Событие: Посещаемость обновлена (рассылается всем)", OperationId = "UpdatedPresence")]
         public async Task UpdatePresenceGrade(UpdatePresenceGradeRequest request)
         {
+            var validator = serviceProvider.GetService<IValidator<UpdatePresenceGradeRequest>>();
+            var validationResult =  validator != null ? await validator.ValidateAsync(request) : null;
+            if (validationResult == null || !validationResult.IsValid)
+            {
+                var errors = validationResult?.Errors.Select(e => e.ErrorMessage).ToList() ?? ["Validation failed"];
+                await Clients.Caller.SendAsync("ValidationError", errors);
+                return;
+            }
             var cancellationToken = Context.ConnectionAborted;
             var response = await _presenceService.UpdateOrCreatePresenceAsync(request, cancellationToken: cancellationToken);
             await Clients.All.SendAsync("UpdatedPresence", response);
@@ -80,7 +114,7 @@ namespace BgituGrades.API.Hubs
         public record PermissionDeniedResponse(string Message);
 
         [Channel("hubs/grade/PermissionDenied")]
-        [SubscribeOperation(typeof(PermissionDeniedResponse), Summary = "Событие: Доступ запрещён, т.к. group_id не соответствует запрашиваемому", OperationId = "PermissionDenied")]
+        [SubscribeOperation(typeof(PermissionDeniedResponse), Summary = "Событие: Доступ запрещён, т.к. groupId не соответствует запрашиваемому", OperationId = "PermissionDenied")]
         public void PermissionDenied(PermissionDeniedResponse response) { }
     }
 }
