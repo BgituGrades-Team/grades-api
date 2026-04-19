@@ -66,9 +66,9 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             var presence = await context.Presences
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.DisciplineId == entity.DisciplineId &&
-                                         p.StudentId == entity.StudentId &&
-                                         p.ClassId == entity.ClassId &&
-                                         p.Date == entity.Date, cancellationToken: cancellationToken);
+                                          p.StudentId == entity.StudentId &&
+                                          p.ClassId == entity.ClassId &&
+                                          p.Date == entity.Date, cancellationToken: cancellationToken);
             return presence;
         }
 
@@ -91,9 +91,10 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken: cancellationToken);
         }
 
-        public Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
+        public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            return await context.Presences.AnyAsync(p => p.Id == id, cancellationToken: cancellationToken);
         }
     }
 }

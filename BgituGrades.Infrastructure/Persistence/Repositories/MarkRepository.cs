@@ -37,8 +37,6 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             return entities;
         }
 
-
-
         public async Task<bool> UpdateMarkAsync(Mark entity, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
@@ -107,9 +105,10 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(m => m.Id == id, cancellationToken: cancellationToken);
         }
 
-        public Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
+        public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            return await context.Marks.AnyAsync(m => m.Id == id, cancellationToken: cancellationToken);
         }
     }
 }

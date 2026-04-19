@@ -9,6 +9,6 @@ namespace BgituGrades.Domain.Interfaces
         Task<ApiKey> CreateKeyAsync(ApiKey entity, CancellationToken cancellationToken);
         Task<ApiKey?> GetAsync(string key, CancellationToken cancellationToken);
         Task<bool> DeleteKeyAsync(string key, CancellationToken cancellationToken);
-        Task<ApiKey?> GetByLookupHashAsync(string lookupHash);
+        Task<ApiKey?> GetByLookupHashAsync(string lookupHash, CancellationToken cancellationToken = default);
     }
 }

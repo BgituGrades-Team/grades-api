@@ -6,33 +6,35 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BgituGrades.Infrastructure.Persistence.Repositories
 { 
-    public class ClassRepository(AppDbContext dbContext, IDbContextFactory<AppDbContext> contextFactory) : IClassRepository
+    public class ClassRepository(IDbContextFactory<AppDbContext> contextFactory) : IClassRepository
     {
-        private readonly AppDbContext _dbContext = dbContext;
-
         public async Task<Class> CreateClassAsync(Class entity, CancellationToken cancellationToken)
         {
-            await _dbContext.Classes.AddAsync(entity, cancellationToken: cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            await context.Classes.AddAsync(entity, cancellationToken: cancellationToken);
+            await context.SaveChangesAsync(cancellationToken: cancellationToken);
             return entity;
         }
 
         public async Task<List<Class>> CreateClassAsync(IEnumerable<Class> entities, CancellationToken cancellationToken)
         {
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var entityList = entities.ToList();
             var bulkConfig = new BulkConfig { SetOutputIdentity = true };
-            await _dbContext.BulkInsertAsync(entityList, bulkConfig, cancellationToken: cancellationToken);
+            await context.BulkInsertAsync(entityList, bulkConfig, cancellationToken: cancellationToken);
             return entityList;
         }
 
         public async Task DeleteAllAsync(CancellationToken cancellationToken)
         {
-            await _dbContext.Classes.ExecuteDeleteAsync(cancellationToken: cancellationToken);
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            await context.Classes.ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
 
         public async Task<bool> DeleteClassAsync(int id, CancellationToken cancellationToken)
         {
-            var result = await _dbContext.Classes
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            var result = await context.Classes
                 .Where(c => c.Id == id)
                 .ExecuteDeleteAsync(cancellationToken: cancellationToken);
             return result > 0;
@@ -40,7 +42,8 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
 
         public async Task<Class?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var entity = await _dbContext.Classes.FindAsync([id], cancellationToken: cancellationToken);
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            var entity = await context.Classes.FindAsync([id], cancellationToken: cancellationToken);
             return entity;
         }
 
@@ -58,13 +61,15 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
 
         public async Task<bool> UpdateClassAsync(Class entity, CancellationToken cancellationToken)
         {
-            _dbContext.Update(entity);
-            return await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken) > 0;
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            context.Update(entity);
+            return await context.SaveChangesAsync(cancellationToken: cancellationToken) > 0;
         }
 
         public async Task<List<Class>> GetAllClassesAsync(CancellationToken cancellationToken)
         {
-            return await _dbContext.Classes
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            return await context.Classes
                 .AsNoTracking()
                 .ToListAsync(cancellationToken: cancellationToken);
         }
@@ -84,9 +89,10 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                     g => g.ToList());
         }
 
-        public Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
+        public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            return await context.Classes.AnyAsync(c => c.Id == id, cancellationToken: cancellationToken);
         }
     }
 }

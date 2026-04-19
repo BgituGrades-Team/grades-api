@@ -139,9 +139,10 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             return archivedDisciplines;
         }
 
-        public Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
+        public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            return await context.Disciplines.AnyAsync(d => d.Id == id, cancellationToken: cancellationToken);
         }
     }
 }

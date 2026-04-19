@@ -199,9 +199,10 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                 .ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
 
-        public Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
+        public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            return await context.Students.AnyAsync(s => s.Id == id, cancellationToken: cancellationToken);
         }
     }
 }
