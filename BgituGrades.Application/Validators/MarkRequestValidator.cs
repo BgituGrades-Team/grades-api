@@ -1,17 +1,22 @@
 using BgituGrades.Application.Models.Mark;
+using BgituGrades.Domain.Interfaces;
 using FluentValidation;
 
 namespace BgituGrades.Application.Validators
 {
     public class CreateMarkRequestValidator : AbstractValidator<CreateMarkRequest>
     {
-        public CreateMarkRequestValidator()
+        public CreateMarkRequestValidator(IStudentRepository studentRepository, IWorkRepository workRepository)
         {
             RuleFor(x => x.StudentId)
-                .GreaterThan(0).WithMessage("StudentId должен быть больше 0");
+                .GreaterThan(0)
+                .MustAsync(async (studentId, cancellationToken) => await studentRepository.ExistsAsync(studentId, cancellationToken))
+                .WithMessage((x) => $"StudentId = {x.StudentId} не существует");
 
             RuleFor(x => x.WorkId)
-                .GreaterThan(0).WithMessage("WorkId должен быть больше 0");
+                .GreaterThan(0)
+                .MustAsync(async (workId, cancellationToken) => await workRepository.ExistsAsync(workId, cancellationToken))
+                .WithMessage((x) => $"WorkId = {x.WorkId} не существует");
 
             RuleFor(x => x.Value)
                 .NotEmpty().WithMessage("Оценка не может быть пустой")
@@ -24,16 +29,22 @@ namespace BgituGrades.Application.Validators
 
     public class UpdateMarkRequestValidator : AbstractValidator<UpdateMarkRequest>
     {
-        public UpdateMarkRequestValidator()
+        public UpdateMarkRequestValidator(IStudentRepository studentRepository, IWorkRepository workRepository, IMarkRepository markRepository)
         {
             RuleFor(x => x.Id)
-                .GreaterThan(0).WithMessage("id оценки должен быть больше 0");
+                .GreaterThan(0)
+                .MustAsync(async (id, cancellationToken) => await markRepository.ExistsAsync(id, cancellationToken))
+                .WithMessage((x) => $"Id = {x.Id} не существует");
 
             RuleFor(x => x.StudentId)
-                .GreaterThan(0).WithMessage("StudentId должен быть больше 0");
+                .GreaterThan(0)
+                .MustAsync(async (studentId, cancellationToken) => await studentRepository.ExistsAsync(studentId, cancellationToken))
+                .WithMessage((x) => $"StudentId = {x.StudentId} не существует");
 
             RuleFor(x => x.WorkId)
-                .GreaterThan(0).WithMessage("WorkId должен быть больше 0");
+                .GreaterThan(0)
+                .MustAsync(async (workId, cancellationToken) => await workRepository.ExistsAsync(workId, cancellationToken))
+                .WithMessage((x) => $"WorkId = {x.WorkId} не существует");
 
             RuleFor(x => x.Value)
                 .NotEmpty().WithMessage("Оценка не может быть пустой")
@@ -43,25 +54,33 @@ namespace BgituGrades.Application.Validators
 
     public class GetMarksByDisciplineAndGroupRequestValidator : AbstractValidator<GetMarksByDisciplineAndGroupRequest>
     {
-        public GetMarksByDisciplineAndGroupRequestValidator()
+        public GetMarksByDisciplineAndGroupRequestValidator(IDisciplineRepository disciplineRepository, IGroupRepository groupRepository)
         {
             RuleFor(x => x.DisciplineId)
-                .GreaterThan(0).WithMessage("DisciplineId должен быть больше 0");
+                .GreaterThan(0)
+                .MustAsync(async (disciplineId, cancellationToken) => await disciplineRepository.ExistsAsync(disciplineId, cancellationToken))
+                .WithMessage((x) => $"DisciplineId = {x.DisciplineId} не существует");
 
             RuleFor(x => x.GroupId)
-                .GreaterThan(0).WithMessage("GroupId должен быть больше 0");
+                .GreaterThan(0)
+                .MustAsync(async (groupId, cancellationToken) => await groupRepository.ExistsAsync(groupId, cancellationToken))
+                .WithMessage((x) => $"GroupId = {x.GroupId} не существует");
         }
     }
 
     public class DeleteMarkByStudentAndWorkRequestValidator : AbstractValidator<DeleteMarkByStudentAndWorkRequest>
     {
-        public DeleteMarkByStudentAndWorkRequestValidator()
+        public DeleteMarkByStudentAndWorkRequestValidator(IStudentRepository studentRepository, IWorkRepository workRepository)
         {
             RuleFor(x => x.StudentId)
-                .GreaterThan(0).WithMessage("StudentId должен быть больше 0");
+                .GreaterThan(0)
+                .MustAsync(async (studentId, cancellationToken) => await studentRepository.ExistsAsync(studentId, cancellationToken))
+                .WithMessage((x) => $"StudentId = {x.StudentId} не существует");
 
             RuleFor(x => x.WorkId)
-                .GreaterThan(0).WithMessage("WorkId должен быть больше 0");
+                .GreaterThan(0)
+                .MustAsync(async (workId, cancellationToken) => await workRepository.ExistsAsync(workId, cancellationToken))
+                .WithMessage((x) => $"WorkId = {x.WorkId} не существует");
         }
     }
 }
