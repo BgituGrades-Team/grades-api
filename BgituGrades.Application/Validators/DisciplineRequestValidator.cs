@@ -1,4 +1,5 @@
 using BgituGrades.Application.Models.Discipline;
+using BgituGrades.Domain.Interfaces;
 using FluentValidation;
 
 namespace BgituGrades.Application.Validators
@@ -24,10 +25,12 @@ namespace BgituGrades.Application.Validators
 
     public class UpdateDisciplineRequestValidator : AbstractValidator<UpdateDisciplineRequest>
     {
-        public UpdateDisciplineRequestValidator()
+        public UpdateDisciplineRequestValidator(IDisciplineRepository disciplineRepository)
         {
             RuleFor(x => x.Id)
-                .GreaterThan(0).WithMessage("id дисциплины должно быть больше 0");
+                .GreaterThan(0)
+                .MustAsync(async (id, cancellationToken) => await disciplineRepository.ExistsAsync(id, cancellationToken))
+                .WithMessage((x) => $"Id = {x.Id} не существует");
 
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Имя дисциплины не может быть пустым")
@@ -37,10 +40,12 @@ namespace BgituGrades.Application.Validators
 
     public class DeleteDisciplineRequestValidator : AbstractValidator<DeleteDisciplineRequest>
     {
-        public DeleteDisciplineRequestValidator()
+        public DeleteDisciplineRequestValidator(IDisciplineRepository disciplineRepository)
         {
             RuleFor(x => x.Id)
-                .GreaterThan(0).WithMessage("id дисциплины должно быть больше 0");
+                .GreaterThan(0)
+                .MustAsync(async (id, cancellationToken) => await disciplineRepository.ExistsAsync(id, cancellationToken))
+                .WithMessage((x) => $"Id = {x.Id} не существует");
         }
     }
 }
