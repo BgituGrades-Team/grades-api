@@ -10,12 +10,10 @@ namespace BgituGrades.Application.Validators
         public CreatePresenceRequestValidator(IStudentRepository studentRepository, IDisciplineRepository disciplineRepository)
         {
             RuleFor(x => x.StudentId)
-                .GreaterThan(0)
                 .MustAsync(async (studentId, cancellationToken) => await studentRepository.ExistsAsync(studentId, cancellationToken))
                 .WithMessage((x) => $"StudentId = {x.StudentId} не существует");
 
             RuleFor(x => x.DisciplineId)
-                .GreaterThan(0)
                 .MustAsync(async (disciplineId, cancellationToken) => await disciplineRepository.ExistsAsync(disciplineId, cancellationToken))
                 .WithMessage((x) => $"DisciplineId = {x.DisciplineId} не существует");
 
@@ -29,17 +27,14 @@ namespace BgituGrades.Application.Validators
         public UpdatePresenceRequestValidator(IPresenceRepository presenceRepository, IStudentRepository studentRepository, IDisciplineRepository disciplineRepository)
         {
             RuleFor(x => x.Id)
-                .GreaterThan(0)
                 .MustAsync(async (id, cancellationToken) => await presenceRepository.ExistsAsync(id, cancellationToken))
                 .WithMessage((x) => $"Id = {x.Id} не существует");
 
             RuleFor(x => x.StudentId)
-                .GreaterThan(0)
                 .MustAsync(async (studentId, cancellationToken) => await studentRepository.ExistsAsync(studentId, cancellationToken))
                 .WithMessage((x) => $"StudentId = {x.StudentId} не существует");
 
             RuleFor(x => x.DisciplineId)
-                .GreaterThan(0)
                 .MustAsync(async (disciplineId, cancellationToken) => await disciplineRepository.ExistsAsync(disciplineId, cancellationToken))
                 .WithMessage((x) => $"DisciplineId = {x.DisciplineId} не существует");
 
@@ -53,19 +48,16 @@ namespace BgituGrades.Application.Validators
         public UpdatePresenceGradeRequestValidator(IStudentRepository studentRepository, IDisciplineRepository disciplineRepository, IClassRepository classRepository)
         {
             RuleFor(x => x.ClassId)
-                .GreaterThan(0)
                 .MustAsync(async (id, cancellationToken) => await classRepository.ExistsAsync(id, cancellationToken))
                 .WithMessage((x) => $"ClassId = {x.ClassId} не существует");
             RuleFor(x => x.IsPresent)
                 .IsInEnum()
                 .WithMessage("Недопустимое значение присутствия");
             RuleFor(x => x.StudentId)
-                .GreaterThan(0)
                 .MustAsync(async (studentId, cancellationToken) => await studentRepository.ExistsAsync(studentId, cancellationToken))
                 .WithMessage((x) => $"StudentId = {x.StudentId} не существует");
 
             RuleFor(x => x.DisciplineId)
-                .GreaterThan(0)
                 .MustAsync(async (disciplineId, cancellationToken) => await disciplineRepository.ExistsAsync(disciplineId, cancellationToken))
                 .WithMessage((x) => $"DisciplineId = {x.DisciplineId} не существует");
 
@@ -79,12 +71,10 @@ namespace BgituGrades.Application.Validators
         public GetPresenceByDisciplineAndGroupRequestValidator(IDisciplineRepository disciplineRepository, IGroupRepository groupRepository)
         {
             RuleFor(x => x.DisciplineId)
-                .GreaterThan(0)
                 .MustAsync(async (disciplineId, cancellationToken) => await disciplineRepository.ExistsAsync(disciplineId, cancellationToken))
                 .WithMessage((x) => $"DisciplineId = {x.DisciplineId} не существует");
 
             RuleFor(x => x.GroupId)
-                .GreaterThan(0)
                 .MustAsync(async (groupId, cancellationToken) => await groupRepository.ExistsAsync(groupId, cancellationToken))
                 .WithMessage((x) => $"GroupId = {x.GroupId} не существует");
         }
@@ -95,7 +85,6 @@ namespace BgituGrades.Application.Validators
         public DeletePresenceByStudentAndDateRequestValidator(IStudentRepository studentRepository)
         {
             RuleFor(x => x.StudentId)
-                .GreaterThan(0)
                 .MustAsync(async (studentId, cancellationToken) => await studentRepository.ExistsAsync(studentId, cancellationToken))
                 .WithMessage((x) => $"StudentId = {x.StudentId} не существует");
 

@@ -17,12 +17,10 @@ namespace BgituGrades.Application.Validators
                 .WithMessage("Номер недели должен быть 1 или 2");
 
             RuleFor(x => x.DisciplineId)
-                .GreaterThan(0)
                 .MustAsync(async (disciplineId, cancellationToken) => await disciplineRepository.ExistsAsync(disciplineId, cancellationToken))
                 .WithMessage((x) => $"DisciplineId = {x.DisciplineId} не существует");
 
             RuleFor(x => x.GroupId)
-                .GreaterThan(0)
                 .MustAsync(async (groupId, cancellationToken) => await groupRepository.ExistsAsync(groupId, cancellationToken))
                 .WithMessage((x) => $"GroupId = {x.GroupId} не существует");
         }
@@ -33,12 +31,10 @@ namespace BgituGrades.Application.Validators
         public GetClassDateRequestValidator(IDisciplineRepository disciplineRepository, IGroupRepository groupRepository)
         {
             RuleFor(x => x.GroupId)
-                .GreaterThan(0)
                 .MustAsync(async (groupId, cancellationToken) => await groupRepository.ExistsAsync(groupId, cancellationToken))
                 .WithMessage((x) => $"GroupId = {x.GroupId} не существует");
 
             RuleFor(x => x.DisciplineId)
-                .GreaterThan(0)
                 .MustAsync(async (disciplineId, cancellationToken) => await disciplineRepository.ExistsAsync(disciplineId, cancellationToken))
                 .WithMessage((x) => $"DisciplineId = {x.DisciplineId} не существует");
         }

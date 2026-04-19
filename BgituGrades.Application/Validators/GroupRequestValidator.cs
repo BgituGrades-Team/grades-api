@@ -28,7 +28,6 @@ namespace BgituGrades.Application.Validators
         public UpdateGroupRequestValidator(IGroupRepository groupRepository)
         {
             RuleFor(x => x.Id)
-                .GreaterThan(0)
                 .MustAsync(async (id, cancellationToken) => await groupRepository.ExistsAsync(id, cancellationToken))
                 .WithMessage((x) => $"Id = {x.Id} не существует");
 
@@ -53,7 +52,6 @@ namespace BgituGrades.Application.Validators
         public GetGroupsByDisciplineRequestValidator(IDisciplineRepository disciplineRepository)
         {
             RuleFor(x => x.DisciplineId)
-                .GreaterThan(0)
                 .MustAsync(async (disciplineId, cancellationToken) => await disciplineRepository.ExistsAsync(disciplineId, cancellationToken))
                 .WithMessage((x) => $"DisciplineId = {x.DisciplineId} не существует");
         }

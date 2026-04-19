@@ -15,7 +15,6 @@ namespace BgituGrades.Application.Validators
                     .WithMessage("Имя студента не может быть длиннее 255 символов");
 
             RuleFor(x => x.GroupId)
-                .GreaterThan(0)
                 .MustAsync(async (groupId, cancellationToken) => await groupRepository.ExistsAsync(groupId, cancellationToken))
                     .WithMessage((x) => $"GroupId = {x.GroupId} не существует");
 
@@ -30,7 +29,6 @@ namespace BgituGrades.Application.Validators
         public UpdateStudentRequestValidator(IGroupRepository groupRepository, IStudentRepository studentRepository)
         {
             RuleFor(x => x.Id)
-                .GreaterThan(0)
                 .MustAsync(async (id, cancellationToken) => await studentRepository.ExistsAsync(id, cancellationToken))
                     .WithMessage((x) => $"Id = {x.Id} не существует");
 
@@ -41,7 +39,6 @@ namespace BgituGrades.Application.Validators
                     .WithMessage("Имя студента не может быть длиннее 255 символов");
 
             RuleFor(x => x.GroupId)
-                .GreaterThan(0)
                 .MustAsync(async (groupId, cancellationToken) => await groupRepository.ExistsAsync(groupId, cancellationToken))
                     .WithMessage((x) => $"GroupId = {x.GroupId} не существует");
         }

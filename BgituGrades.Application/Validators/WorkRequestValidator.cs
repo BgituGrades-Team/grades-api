@@ -13,7 +13,6 @@ namespace BgituGrades.Application.Validators
                 .MaximumLength(255).WithMessage("Имя работы не может быть длиннее 255 символов");
 
             RuleFor(x => x.DisciplineId)
-                .GreaterThan(0)
                 .MustAsync(async (disciplineId, cancellationToken) => await disciplineRepository.ExistsAsync(disciplineId, cancellationToken))
                 .WithMessage((x) => $"DisciplineId = {x.DisciplineId} не существует");
         }
@@ -24,7 +23,6 @@ namespace BgituGrades.Application.Validators
         public UpdateWorkRequestValidator(IWorkRepository workRepository, IDisciplineRepository disciplineRepository)
         {
             RuleFor(x => x.Id)
-                .GreaterThan(0)
                 .MustAsync(async (id, cancellationToken) => await workRepository.ExistsAsync(id, cancellationToken))
                 .WithMessage((x) => $"Id = {x.Id} не существует");
 
@@ -33,7 +31,6 @@ namespace BgituGrades.Application.Validators
                 .MaximumLength(255).WithMessage("Имя работы не может быть длиннее 255 символов");
 
             RuleFor(x => x.DisciplineId)
-                .GreaterThan(0)
                 .MustAsync(async (disciplineId, cancellationToken) => await disciplineRepository.ExistsAsync(disciplineId, cancellationToken))
                 .WithMessage((x) => $"DisciplineId = {x.DisciplineId} не существует");
 

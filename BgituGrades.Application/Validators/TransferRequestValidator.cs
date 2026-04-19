@@ -9,12 +9,10 @@ namespace BgituGrades.Application.Validators
         public CreateTransferRequestValidator(IGroupRepository groupRepository, IDisciplineRepository disciplineRepository)
         {
             RuleFor(x => x.DisciplineId)
-                .GreaterThan(0)
                 .MustAsync(async (disciplineId, cancellationToken) => await disciplineRepository.ExistsAsync(disciplineId, cancellationToken))
                 .WithMessage((x) => $"DisciplineId = {x.DisciplineId} не существует");
 
             RuleFor(x => x.GroupId)
-                .GreaterThan(0)
                 .MustAsync(async (groupId, cancellationToken) => await groupRepository.ExistsAsync(groupId, cancellationToken))
                 .WithMessage((x) => $"GroupId = {x.GroupId} не существует");
 
@@ -32,7 +30,6 @@ namespace BgituGrades.Application.Validators
         public UpdateTransferRequestValidator(ITransferRepository transferRepository)
         {
             RuleFor(x => x.Id)
-                .GreaterThan(0)
                 .MustAsync(async (id, cancellationToken) => await transferRepository.ExistsAsync(id, cancellationToken))
                 .WithMessage((x) => $"Id = {x.Id} не существует");
             RuleFor(x => x.NewDate)
