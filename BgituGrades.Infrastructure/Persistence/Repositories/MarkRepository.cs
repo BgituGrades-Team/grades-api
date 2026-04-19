@@ -106,5 +106,10 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                 .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.Id == id, cancellationToken: cancellationToken);
         }
+
+        public Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

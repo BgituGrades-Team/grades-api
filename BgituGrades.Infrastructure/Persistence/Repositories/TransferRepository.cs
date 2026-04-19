@@ -95,5 +95,10 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                     g => g.Key,
                     g => g.ToList());
         }
+
+        public Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

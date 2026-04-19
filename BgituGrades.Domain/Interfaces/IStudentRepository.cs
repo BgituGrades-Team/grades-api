@@ -6,6 +6,7 @@ namespace BgituGrades.Domain.Interfaces
     public interface IStudentRepository
     {
         Task<List<Student>> GetAllStudentsAsync(CancellationToken cancellationToken);
+        Task<bool> ExistsAsync(int id, CancellationToken cancellationToken);
         Task<List<Student>> GetStudentsByGroupAsync(int groupId, CancellationToken cancellationToken);
         Task<List<Student>> GetStudentsByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken);
         Task<List<StudentMarkResult>> GetMarksGrade(IEnumerable<Work> works, int groupId, int disciplineId, CancellationToken cancellationToken);

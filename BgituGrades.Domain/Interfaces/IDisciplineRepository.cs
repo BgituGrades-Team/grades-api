@@ -5,6 +5,7 @@ namespace BgituGrades.Domain.Interfaces
     public interface IDisciplineRepository
     {
         Task<List<Discipline>> GetAllAsync(CancellationToken cancellationToken);
+        Task<bool> ExistsAsync(int id, CancellationToken cancellationToken);
         Task<Discipline> CreateDisciplineAsync(Discipline entity, CancellationToken cancellationToken);
         Task<List<Discipline>> CreateDisciplineAsync(IEnumerable<Discipline> entities, CancellationToken cancellationToken);
         Task<Discipline?> GetByIdAsync(int id, CancellationToken cancellationToken);

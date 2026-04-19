@@ -5,6 +5,7 @@ namespace BgituGrades.Domain.Interfaces
     public interface IClassRepository
     {
         Task<List<Class>> GetClassesByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
+        Task<bool> ExistsAsync(int id, CancellationToken cancellationToken);
         Task<Class> CreateClassAsync(Class entity, CancellationToken cancellationToken);
         Task<List<Class>> CreateClassAsync(IEnumerable<Class> entities, CancellationToken cancellationToken);
         Task<Class?> GetByIdAsync(int id, CancellationToken cancellationToken);

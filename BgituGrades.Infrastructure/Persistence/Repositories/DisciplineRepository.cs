@@ -138,5 +138,10 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                 .ToListAsync(cancellationToken: cancellationToken);
             return archivedDisciplines;
         }
+
+        public Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

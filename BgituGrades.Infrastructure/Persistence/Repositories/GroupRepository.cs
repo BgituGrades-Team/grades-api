@@ -41,6 +41,11 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             return result > 0;
         }
 
+        public Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<List<Group>> GetAllAsync(CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);

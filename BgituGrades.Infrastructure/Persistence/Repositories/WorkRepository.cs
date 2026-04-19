@@ -58,5 +58,8 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
         {
             await _dbContext.Works.ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
+
+        public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken) => 
+            await _dbContext.Works.AnyAsync(w => w.Id == id, cancellationToken: cancellationToken);
     }
 }

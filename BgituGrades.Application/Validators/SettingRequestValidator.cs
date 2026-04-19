@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace BgituGrades.Application.Validators
 {
-    public class UpdateSettingValidator : AbstractValidator<UpdateSettingRequest>
+    public class SettingRequestValidator : AbstractValidator<UpdateSettingRequest>
     {
-        public UpdateSettingValidator()
+        public SettingRequestValidator()
         {
             RuleFor(x => x.CalendarUrl)
                 .NotEmpty().WithMessage("Ссылка на календарный учебный график не должна быть пустая.");

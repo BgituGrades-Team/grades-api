@@ -5,6 +5,7 @@ namespace BgituGrades.Domain.Interfaces
     public interface IGroupRepository
     {
         Task<List<Group>> GetGroupsByDisciplineAsync(int disciplineId, CancellationToken cancellationToken);
+        Task<bool> ExistsAsync(int id, CancellationToken cancellationToken);
         Task<List<Group>> GetAllAsync(CancellationToken cancellationToken);
         Task<Group> CreateGroupAsync(Group entity, CancellationToken cancellationToken);
         Task<List<Group>> CreateGroupAsync(IEnumerable<Group> entities, CancellationToken cancellationToken);
@@ -16,7 +17,6 @@ namespace BgituGrades.Domain.Interfaces
         Task<bool> DeleteGroupAsync(int id, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
         Task<List<Group>> GetGroupsByIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken);
-        Task<List<Group>> GetByIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken);
         Task<List<int>> GetArchivedCoursesByPeriodAsync(int year, int semester, CancellationToken cancellationToken);
         Task<List<Group>> GetArchivedGroupsByCoursesAsync(IEnumerable<int> courses, CancellationToken cancellationToken);
         Task<List<Group>> GetArchivedGroupsByCoursesAndPeriodAsync(IEnumerable<int> courses, int year, int semester, CancellationToken cancellationToken);

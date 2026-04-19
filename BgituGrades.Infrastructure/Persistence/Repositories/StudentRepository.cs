@@ -198,5 +198,10 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             await context.Students.Where(s => studentsOfficialIds.Contains(s.OfficialId))
                 .ExecuteDeleteAsync(cancellationToken: cancellationToken);
         }
+
+        public Task<bool> ExistsAsync(int id, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

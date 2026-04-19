@@ -4,6 +4,7 @@ namespace BgituGrades.Domain.Interfaces
 {
     public interface IWorkRepository
     {
+        Task<bool> ExistsAsync(int id, CancellationToken cancellationToken);
         Task<List<Work>> GetAllWorksAsync(CancellationToken cancellationToken);
         Task<Work> CreateWorkAsync(Work entity, CancellationToken cancellationToken);
         Task<Work?> GetByIdAsync(int id, CancellationToken cancellationToken);

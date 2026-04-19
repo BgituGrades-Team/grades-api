@@ -5,6 +5,7 @@ namespace BgituGrades.Domain.Interfaces
     public interface IMarkRepository
     {
         Task<List<Mark>> GetAllMarksAsync(CancellationToken cancellationToken);
+        Task<bool> ExistsAsync(int id, CancellationToken cancellationToken);
         Task<Mark> CreateMarkAsync(Mark entity, CancellationToken cancellationToken);
         Task<List<Mark>> GetMarksByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
         Task<bool> UpdateMarkAsync(Mark entity, CancellationToken cancellationToken);

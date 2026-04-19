@@ -6,6 +6,7 @@ namespace BgituGrades.Domain.Interfaces
     public interface IPresenceRepository
     {
         Task<List<Presence>> GetAllPresencesAsync(CancellationToken cancellationToken);
+        Task<bool> ExistsAsync(int id, CancellationToken cancellationToken);
         Task<Presence> CreatePresenceAsync(Presence entity, CancellationToken cancellationToken);
         Task<List<Presence>> GetPresencesByDisciplineAndGroupAsync(int disciplineId, int groupId, CancellationToken cancellationToken);
         Task<List<Presence>> GetPresencesByDisciplinesAndGroupsAsync(IEnumerable<int> disciplineIds, IEnumerable<int> groupIds, CancellationToken cancellationToken);
