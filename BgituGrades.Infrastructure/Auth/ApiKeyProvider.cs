@@ -23,18 +23,18 @@ namespace BgituGrades.Infrastructure.Auth
             var lookupHash = _hasher.ComputeLookupHash(key);
 
             var storedKey = await _cacheService.GetOrCreateAsync(
-                key: CacheKeys.KeyByLookUpHash(lookupHash),
-                factory: async token => await _keyRepository.GetByLookupHashAsync(lookupHash),
+                key: CacheKeys.KeyVerified(lookupHash),
+                factory: async token =>
+                {
+                    var k = await _keyRepository.GetByLookupHashAsync(lookupHash, token);
+                    if (k is null) return null;
+                    if (!_hasher.Verify(key, k.StoredHash!)) return null;
+                    if (k.ExpiryDate is not null && k.ExpiryDate < DateTime.UtcNow) return null;
+                    return k;
+                },
                 options: DefaultOptions);
 
-            if (storedKey is null) return null;
-
-            var verified = _hasher.Verify(key, storedKey.StoredHash!);
-            if (!verified) return null;
-
-            if (storedKey.ExpiryDate is not null && storedKey.ExpiryDate < DateTime.UtcNow) return null;
-
-            return new ApiKeyAuthModel(storedKey); ;
+            return storedKey is null ? null : new ApiKeyAuthModel(storedKey);
         }
     }
 }

@@ -59,7 +59,7 @@ namespace BgituGrades.Application.Services
                 key: CacheKeys.KeyAll(),
                 factory: async token =>
                 {
-                    var entities = await _keyRepository.GetKeysAsync(cancellationToken: cancellationToken);
+                    var entities = await _keyRepository.GetKeysAsync(cancellationToken: token);
                     return _mapper.Map<List<KeyDTO>>(entities);
                 }, options: DefaultOptions, ct: cancellationToken);
         }
@@ -71,7 +71,7 @@ namespace BgituGrades.Application.Services
                 key: CacheKeys.KeyByLookUpHash(lookupHash),
                 factory: async token =>
                 {
-                    var entity = await _keyRepository.GetAsync(key, cancellationToken: cancellationToken);
+                    var entity = await _keyRepository.GetAsync(key, cancellationToken: token);
                     return _mapper.Map<KeyDTO>(entity);
                 }, options: DefaultOptions, ct: cancellationToken);
         }
