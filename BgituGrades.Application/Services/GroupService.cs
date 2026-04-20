@@ -77,7 +77,7 @@ namespace BgituGrades.Application.Services
         public async Task<List<GroupDTO>> GetGroupsByDisciplineAsync(int disciplineId, CancellationToken cancellationToken)
         {
             var entities = await _groupRepository.GetGroupsByDisciplineAsync(disciplineId, cancellationToken: cancellationToken);
-            var result = _mapper.Map<List<GroupDTO>>(entities).ToList();
+            var result = _mapper.Map<List<GroupDTO>>(entities);
             return result;
         }
 
@@ -115,7 +115,7 @@ namespace BgituGrades.Application.Services
             var results = new List<GroupDTO>();
 
             var entities = await _groupRepository.GetGroupsByCoursesAsync([.. courses], cancellationToken);
-            if (entities != null && entities.Any())
+            if (entities != null && entities.Count != 0)
             {
                 foreach (var course in courses)
                 {

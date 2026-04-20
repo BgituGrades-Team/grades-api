@@ -9,11 +9,11 @@ namespace BgituGrades.Application.Mappings
     {
         public DisciplineProfile()
         {
-            CreateMap<CreateDisciplineRequest, Discipline>();
-            CreateMap<UpdateDisciplineRequest, Discipline>();
-            CreateMap<Discipline, DisciplineResponse>();
-            CreateMap<Discipline, DisciplineDTO>();
+            CreateMap<CreateDisciplineRequest, DisciplineDTO>();
+            CreateMap<UpdateDisciplineRequest, DisciplineDTO>();
             CreateMap<DisciplineDTO, Discipline>();
+            CreateMap<Discipline, DisciplineDTO>();
+            CreateMap<DisciplineDTO, DisciplineResponse>();
         }
     }
 }
