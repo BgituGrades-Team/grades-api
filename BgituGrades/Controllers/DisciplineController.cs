@@ -1,17 +1,20 @@
 ﻿using Asp.Versioning;
+using AutoMapper;
+using BgituGrades.Application.DTOs;
 using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Models.Discipline;
 using BgituGrades.Application.Models.Student;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BgituGrades.Controllers
+namespace BgituGrades.API.Controllers
 {
     [Route("api/discipline")]
     [ApiController]
-    public class DisciplineController(IDisciplineService DisciplineService) : ControllerBase
+    public class DisciplineController(IDisciplineService DisciplineService, IMapper mapper) : ControllerBase
     {
         private readonly IDisciplineService _disciplineService = DisciplineService;
+        private readonly IMapper _mapper = mapper;
 
         [HttpGet("all")]
         [ApiVersion("2.0")]
@@ -19,8 +22,9 @@ namespace BgituGrades.Controllers
         [ProducesResponseType(typeof(List<DisciplineResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<DisciplineResponse>>> GetDisciplines(CancellationToken cancellationToken)
         {
-            var Disciplines = await _disciplineService.GetAllDisciplinesAsync(cancellationToken: cancellationToken);
-            return Ok(Disciplines);
+            var disciplinesDto = await _disciplineService.GetAllDisciplinesAsync(cancellationToken: cancellationToken);
+            var response = _mapper.Map<List<DisciplineResponse>>(disciplinesDto);
+            return Ok(response);
         }
 
         [HttpGet]
@@ -29,8 +33,9 @@ namespace BgituGrades.Controllers
         [ProducesResponseType(typeof(List<DisciplineResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<DisciplineResponse>>> GetDisciplinesByGroupIds([FromQuery] GetDisciplineByGroupIdsRequest request, CancellationToken cancellationToken)
         {
-            var disciplines = await _disciplineService.GetDisciplineByGroupIdAsync(request.GroupIds.Values, cancellationToken: cancellationToken);
-            return Ok(disciplines);
+            var disciplinesDto = await _disciplineService.GetDisciplineByGroupIdAsync(request.GroupIds.Values, cancellationToken: cancellationToken);
+            var response = _mapper.Map<List<DisciplineResponse>>(disciplinesDto);
+            return Ok(response);
         }
 
         [HttpGet("archived")]
@@ -39,8 +44,9 @@ namespace BgituGrades.Controllers
         [ProducesResponseType(typeof(List<DisciplineResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<DisciplineResponse>>> GetArchivedDisciplinesByGroupIds([FromQuery] GetDisciplineByGroupIdsRequest request, CancellationToken cancellationToken)
         {
-            var disciplines = await _disciplineService.GetArchivedDisciplinesByGroupIdsAsync(request.GroupIds.Values, cancellationToken: cancellationToken);
-            return Ok(disciplines);
+            var disciplinesDto = await _disciplineService.GetArchivedDisciplinesByGroupIdsAsync(request.GroupIds.Values, cancellationToken: cancellationToken);
+            var response = _mapper.Map<List<DisciplineResponse>>(disciplinesDto);
+            return Ok(response);
         }
 
         [HttpPost]
@@ -49,18 +55,22 @@ namespace BgituGrades.Controllers
         [ProducesResponseType(typeof(DisciplineResponse), StatusCodes.Status201Created)]
         public async Task<ActionResult<DisciplineResponse>> CreateDiscipline([FromBody] CreateDisciplineRequest request, CancellationToken cancellationToken)
         {
-            var discipline = await _disciplineService.CreateDisciplineAsync(request, cancellationToken: cancellationToken);
-            return Created(string.Empty, discipline);
+            var disciplineDto = _mapper.Map<DisciplineDTO>(request);
+            disciplineDto = await _disciplineService.CreateDisciplineAsync(disciplineDto, cancellationToken: cancellationToken);
+            var response = _mapper.Map<DisciplineResponse>(disciplineDto);
+            return Created(string.Empty, response);
         }
 
         [HttpPost("bulk")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
-        [ProducesResponseType(typeof(DisciplineResponse), StatusCodes.Status201Created)]
-        public async Task<ActionResult<DisciplineResponse>> CreateDisciplineBulk([FromBody] CreateDisciplineBulkRequest request, CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(List<DisciplineResponse>), StatusCodes.Status201Created)]
+        public async Task<ActionResult<List<DisciplineResponse>>> CreateDisciplineBulk([FromBody] CreateDisciplineBulkRequest request, CancellationToken cancellationToken)
         {
-            var disciplines = await _disciplineService.CreateDisciplineAsync(request, cancellationToken: cancellationToken);
-            return Created(string.Empty, disciplines);
+            var disciplineDto = _mapper.Map<List<DisciplineDTO>>(request.Disciplines);
+            disciplineDto = await _disciplineService.CreateDisciplineAsync(disciplineDto, cancellationToken: cancellationToken);
+            var response = _mapper.Map<List<DisciplineResponse>>(disciplineDto);
+            return Created(string.Empty, response);
         }
 
         [HttpDelete]
@@ -71,10 +81,7 @@ namespace BgituGrades.Controllers
         public async Task<IActionResult> DeleteDiscipline([FromQuery] DeleteDisciplineRequest request, CancellationToken cancellationToken)
         {
             var success = await _disciplineService.DeleteDisciplineAsync(request.Id, cancellationToken: cancellationToken);
-            if (!success)
-                return NotFound(request.Id);
-
-            return NoContent();
+            return success ? NoContent() : NotFound(request.Id);
         }
     }
 }

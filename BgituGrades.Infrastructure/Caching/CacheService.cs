@@ -1,20 +1,17 @@
 ﻿using BgituGrades.Application.Interfaces;
 using Microsoft.Extensions.Caching.Hybrid;
-using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 
 namespace BgituGrades.Infrastructure.Caching
 {
-    public sealed class CacheService(HybridCache cache, ILogger<CacheService> _logger) : ICacheService
+    public sealed class CacheService(HybridCache cache) : ICacheService
     {
         public async Task<T> GetOrCreateAsync<T>(
-            string key, Func<CancellationToken, ValueTask<T>> factory,
-            HybridCacheEntryOptions? options = null, CancellationToken ct = default)
+            string key, 
+            Func<CancellationToken, ValueTask<T>> factory,
+            HybridCacheEntryOptions? options = null,
+            CancellationToken ct = default)
         {
-            var sw = Stopwatch.StartNew();
-            var result = await cache.GetOrCreateAsync(key, factory, options, cancellationToken: ct);
-            _logger.LogInformation("Cache key: {key}, Time: {ms}ms", key, sw.ElapsedMilliseconds);
-            return result;
+            return await cache.GetOrCreateAsync(key, factory, options, cancellationToken: ct);
         }
 
         public async Task RemoveAsync(string key, CancellationToken ct = default)

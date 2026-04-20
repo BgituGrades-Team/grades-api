@@ -1,37 +1,41 @@
 ﻿using AutoMapper;
+using BgituGrades.Application.Caching;
 using BgituGrades.Application.DTOs;
 using BgituGrades.Application.Interfaces;
-using BgituGrades.Application.Models.Discipline;
 using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Interfaces;
-using Microsoft.Extensions.Caching.Distributed;
-using System.Text.Json;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace BgituGrades.Application.Services
 {
     
-    public class DisciplineService(IDisciplineRepository disciplineRepository, IMapper mapper, IDistributedCache cache) : IDisciplineService
+    public class DisciplineService(IDisciplineRepository disciplineRepository, IMapper mapper, ICacheService cacheService) : IDisciplineService
     {
         private readonly IDisciplineRepository _disciplineRepository = disciplineRepository;
         private readonly IMapper _mapper = mapper;
-        private readonly IDistributedCache _cache = cache;
-        private const string AllDisciplinesKey = "discipline:all";
-        private const string DisciplineByGroupKey = "discipline:group:";
+        private readonly ICacheService _cacheService = cacheService;
+       
 
-        public async Task<DisciplineResponse> CreateDisciplineAsync(CreateDisciplineRequest request, CancellationToken cancellationToken)
+        private static readonly HybridCacheEntryOptions DefaultOptions = new()
         {
-            var entity = _mapper.Map<Discipline>(request);
+            Expiration = TimeSpan.FromMinutes(10),
+            LocalCacheExpiration = TimeSpan.FromMinutes(5)
+        };
+
+        public async Task<DisciplineDTO> CreateDisciplineAsync(DisciplineDTO disciplineDto, CancellationToken cancellationToken)
+        {
+            var entity = _mapper.Map<Discipline>(disciplineDto);
             var createdEntity = await _disciplineRepository.CreateDisciplineAsync(entity, cancellationToken: cancellationToken);
-            await _cache.RemoveAsync(AllDisciplinesKey);
-            return _mapper.Map<DisciplineResponse>(createdEntity);
+            await _cacheService.RemoveAsync(CacheKeys.DisicplineAll(), cancellationToken);
+            return _mapper.Map<DisciplineDTO>(createdEntity);
         }
 
-        public async Task<List<DisciplineResponse>> CreateDisciplineAsync(CreateDisciplineBulkRequest request, CancellationToken cancellationToken)
+        public async Task<List<DisciplineDTO>> CreateDisciplineAsync(IEnumerable<DisciplineDTO> disciplineDto, CancellationToken cancellationToken)
         {
-            var entities = _mapper.Map<List<Discipline>>(request.Disciplines);
+            var entities = _mapper.Map<List<Discipline>>(disciplineDto);
             var createdEntities = await _disciplineRepository.CreateDisciplineAsync(entities, cancellationToken: cancellationToken);
-            await _cache.RemoveAsync(AllDisciplinesKey);
-            return _mapper.Map<List<DisciplineResponse>>(createdEntities);
+            await _cacheService.RemoveAsync(CacheKeys.DisicplineAll(), cancellationToken);
+            return _mapper.Map<List<DisciplineDTO>>(createdEntities);
         }
 
         public async Task<bool> DeleteDisciplineAsync(int id, CancellationToken cancellationToken)
@@ -39,32 +43,35 @@ namespace BgituGrades.Application.Services
             var result = await _disciplineRepository.DeleteDisciplineAsync(id, cancellationToken: cancellationToken);
             if (result)
             {
-                await _cache.RemoveAsync(AllDisciplinesKey);
+                await _cacheService.RemoveAsync(CacheKeys.DisicplineAll(), cancellationToken);
             }
             return result;
         }
 
-        public async Task<List<DisciplineResponse>> GetAllDisciplinesAsync(CancellationToken cancellationToken)
+        public async Task<List<DisciplineDTO>> GetAllDisciplinesAsync(CancellationToken cancellationToken)
         {
-            var cached = await GetFromCacheAsync<List<DisciplineResponse>>(AllDisciplinesKey);
-            if (cached != null)
-                return cached;
-
-            var entities = await _disciplineRepository.GetAllAsync(cancellationToken: cancellationToken);
-            var result = _mapper.Map<List<DisciplineResponse>>(entities).ToList();
-            await SetCacheAsync(AllDisciplinesKey, result, TimeSpan.FromHours(2));
-            return result;
+            return await _cacheService.GetOrCreateAsync(
+                key: CacheKeys.DisicplineAll(),
+                factory: async token =>
+                {
+                    var entities = await _disciplineRepository.GetAllAsync(cancellationToken: token);
+                    return _mapper.Map<List<DisciplineDTO>>(entities);
+                }, options: DefaultOptions, ct: cancellationToken);
         }
 
-        public async Task<List<DisciplineResponse>?> GetDisciplineByGroupIdAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken)
+        public async Task<List<DisciplineDTO>> GetDisciplineByGroupIdAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken)
         {
-            var results = new List<DisciplineResponse>();
+            var results = new List<DisciplineDTO>();
             var missingIds = new List<int>();
 
             foreach (var id in groupIds)
             {
-                var singleCacheKey = $"{DisciplineByGroupKey}:{id}";
-                var cached = await GetFromCacheAsync<List<DisciplineResponse>>(singleCacheKey);
+                var singleCacheKey = CacheKeys.DisciplineByGroup(id);
+                var cached = await _cacheService.GetOrCreateAsync<List<DisciplineDTO>?>(
+                    key: singleCacheKey,
+                    factory: _ => ValueTask.FromResult<List<DisciplineDTO>?>(null),
+                    options: DefaultOptions,
+                    ct: cancellationToken);
 
                 if (cached != null)
                     results.AddRange(cached);
@@ -75,17 +82,21 @@ namespace BgituGrades.Application.Services
             if (missingIds.Count != 0)
             {
                 var entities = await _disciplineRepository.GetByGroupIdsAsync([.. missingIds], cancellationToken);
-
-                if (entities != null && entities.Any())
+                if (entities != null && entities.Count != 0)
                 {
                     foreach (var groupId in missingIds)
                     {
                         var disciplinesForGroup = entities
                             .Where(d => d.Classes != null && d.Classes.Any(c => c.GroupId == groupId))
                             .ToList();
-                        var mappedDisciplines = _mapper.Map<List<DisciplineResponse>>(disciplinesForGroup);
 
-                        await SetCacheAsync($"{DisciplineByGroupKey}:{groupId}", mappedDisciplines, TimeSpan.FromHours(2));
+                        var mappedDisciplines = _mapper.Map<List<DisciplineDTO>>(disciplinesForGroup);
+
+                        await _cacheService.GetOrCreateAsync(
+                            key: CacheKeys.DisciplineByGroup(groupId),
+                            factory: _ => ValueTask.FromResult(mappedDisciplines),
+                            options: DefaultOptions,
+                            ct: cancellationToken);
 
                         results.AddRange(mappedDisciplines);
                     }
@@ -95,75 +106,11 @@ namespace BgituGrades.Application.Services
             return results.DistinctBy(d => d.Id).ToList();
         }
 
-        public async Task<List<DisciplineResponse>?> GetArchivedDisciplinesByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken)
+        public async Task<List<DisciplineDTO>> GetArchivedDisciplinesByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken)
         {
             var disciplines = await _disciplineRepository.GetArchivedByGroupIdsAsync(groupIds, cancellationToken);
-            var results = _mapper.Map<List<DisciplineResponse>>(disciplines);
+            var results = _mapper.Map<List<DisciplineDTO>>(disciplines);
             return results;
-        }
-
-        public async Task<DisciplineResponse?> GetDisciplineByIdAsync(int id, CancellationToken cancellationToken)
-        {
-            var entity = await _disciplineRepository.GetByIdAsync(id, cancellationToken: cancellationToken);
-            return entity == null ? null : _mapper.Map<DisciplineResponse>(entity);
-        }
-
-        public async Task<bool> UpdateDisciplineAsync(UpdateDisciplineRequest request, CancellationToken cancellationToken)
-        {
-            var entity = _mapper.Map<Discipline>(request);
-            var result = await _disciplineRepository.UpdateDisciplineAsync(entity, cancellationToken: cancellationToken);
-            if (result)
-            {
-                await _cache.RemoveAsync(AllDisciplinesKey);
-            }
-            return result;
-        }
-
-        public async Task<List<DisciplineDTO>> GetAllDisciplinesDtoAsync(CancellationToken cancellationToken)
-        {
-            var entities = await _disciplineRepository.GetAllAsync(cancellationToken: cancellationToken);
-            return _mapper.Map<List<DisciplineDTO>>(entities);
-        }
-
-        public async Task<List<DisciplineDTO>?> GetDisciplinesDtoByGroupIdAsync(int groupId, CancellationToken cancellationToken)
-        {
-            var entities = await _disciplineRepository.GetByGroupIdAsync(groupId, cancellationToken: cancellationToken);
-            return entities == null ? null : _mapper.Map<List<DisciplineDTO>>(entities);
-        }
-
-        public async Task<DisciplineDTO?> GetDisciplineDtoByIdAsync(int id, CancellationToken cancellationToken)
-        {
-            var entity = await _disciplineRepository.GetByIdAsync(id, cancellationToken: cancellationToken);
-            return entity == null ? null : _mapper.Map<DisciplineDTO>(entity);
-        }
-
-        private async Task<T?> GetFromCacheAsync<T>(string key)
-        {
-            try
-            {
-                var value = await _cache.GetStringAsync(key);
-                if (value == null)
-                    return default;
-                return JsonSerializer.Deserialize<T>(value);
-            }
-            catch
-            {
-                return default;
-            }
-        }
-
-        private async Task SetCacheAsync<T>(string key, T value, TimeSpan expiration)
-        {
-            try
-            {
-                var serialized = JsonSerializer.Serialize(value);
-                var options = new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = expiration };
-                await _cache.SetStringAsync(key, serialized, options);
-            }
-            catch
-            {
-
-            }
         }
     }
 }
