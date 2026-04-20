@@ -12,7 +12,6 @@ namespace BgituGrades.API.Controllers
 {
     [Route("api/group")]
     [ApiController]
-    [ApiVersion("2.0")]
     public class GroupController(IGroupService groupService, IMapper mapper, ILogger<GroupController> logger) : ControllerBase
     {
         private readonly IGroupService _groupService = groupService;
@@ -20,6 +19,7 @@ namespace BgituGrades.API.Controllers
         private readonly ILogger<GroupController> _logger = logger;
 
         [HttpGet]
+        [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<GroupResponse>>> GetGroupsByDiscipline([FromQuery] GetGroupsByDisciplineRequest request, CancellationToken cancellationToken)
@@ -30,6 +30,7 @@ namespace BgituGrades.API.Controllers
         }
 
         [HttpGet("courses")]
+        [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(List<int>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<int>>> GetCoursesByPeriod(CancellationToken cancellationToken)
@@ -39,6 +40,7 @@ namespace BgituGrades.API.Controllers
         }
 
         [HttpGet("archived/courses")]
+        [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(List<int>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<int>>> GetArchivedCoursesByPeriod(
@@ -49,6 +51,7 @@ namespace BgituGrades.API.Controllers
         }
 
         [HttpGet("all")]
+        [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<GroupResponse>>> GetAllGroups(CancellationToken cancellationToken)
@@ -77,6 +80,7 @@ namespace BgituGrades.API.Controllers
         }
 
         [HttpGet("archived")]
+        [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(List<ArchivedGroupResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<ArchivedGroupResponse>>> GetArchivedGroups([FromQuery] GetByPeriodRequest request, CancellationToken cancellationToken)
@@ -87,6 +91,7 @@ namespace BgituGrades.API.Controllers
         }
 
         [HttpGet("by_courses")]
+        [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<GroupResponse>>> GetGroupsByCourses([FromQuery] GetByCoursesRequest request, CancellationToken cancellationToken)
@@ -97,6 +102,7 @@ namespace BgituGrades.API.Controllers
         }
 
         [HttpPost]
+        [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
         [ProducesResponseType(typeof(GroupResponse), StatusCodes.Status201Created)]
         public async Task<ActionResult<GroupResponse>> CreateGroup([FromBody] CreateGroupRequest request, CancellationToken cancellationToken)
@@ -108,6 +114,7 @@ namespace BgituGrades.API.Controllers
         }
 
         [HttpPost("bulk")]
+        [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
         [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status201Created)]
         public async Task<ActionResult<List<GroupResponse>>> CreateGroupBulk([FromBody] CreateGroupBulkRequest request, CancellationToken cancellationToken)
@@ -119,6 +126,7 @@ namespace BgituGrades.API.Controllers
         }
 
         [HttpDelete]
+        [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]

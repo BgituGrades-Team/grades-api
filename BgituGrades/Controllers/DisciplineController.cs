@@ -63,33 +63,6 @@ namespace BgituGrades.Controllers
             return Created(string.Empty, disciplines);
         }
 
-        [HttpGet("{id}")]
-        [ApiVersion("1.0")]
-        [Obsolete("deprecated")]
-        [ProducesResponseType(typeof(DisciplineResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<DisciplineResponse>> GetDiscipline([FromRoute] int id, CancellationToken cancellationToken)
-        {
-            var discipline = await _disciplineService.GetDisciplineByIdAsync(id, cancellationToken: cancellationToken);
-            if (discipline == null)
-                return NotFound(id);
-            return Ok(discipline);
-        }
-
-        [HttpPut]
-        [ApiVersion("1.0")]
-        [Obsolete("deprecated")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateDiscipline([FromBody] UpdateDisciplineRequest request, CancellationToken cancellationToken)
-        {
-            var success = await _disciplineService.UpdateDisciplineAsync(request, cancellationToken: cancellationToken);
-            if (!success)
-                return NotFound(request.Id);
-
-            return NoContent();
-        }
-
         [HttpDelete]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
