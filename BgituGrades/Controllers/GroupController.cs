@@ -6,16 +6,18 @@ using BgituGrades.Application.Models.Group;
 using BgituGrades.Application.Models.Student;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace BgituGrades.API.Controllers
 {
     [Route("api/group")]
     [ApiController]
     [ApiVersion("2.0")]
-    public class GroupController(IGroupService groupService, IMapper mapper) : ControllerBase
+    public class GroupController(IGroupService groupService, IMapper mapper, ILogger<GroupController> logger) : ControllerBase
     {
         private readonly IGroupService _groupService = groupService;
         private readonly IMapper _mapper = mapper;
+        private readonly ILogger<GroupController> _logger = logger;
 
         [HttpGet]
         [Authorize(Policy = "ViewOnly")]
@@ -51,7 +53,11 @@ namespace BgituGrades.API.Controllers
         [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<GroupResponse>>> GetAllGroups(CancellationToken cancellationToken)
         {
+            var sw = Stopwatch.StartNew();
             var isStudent = User.IsInRole("STUDENT");
+            _logger.LogInformation("IsInRole: {ms}ms", sw.ElapsedMilliseconds);
+            sw.Restart();
+
             var groupIdClaim = User.FindFirst("group_id")?.Value;
 
             if (isStudent && groupIdClaim != null)
@@ -63,7 +69,10 @@ namespace BgituGrades.API.Controllers
             }
 
             var groupsDto = await _groupService.GetAllAsync(cancellationToken: cancellationToken);
+            _logger.LogInformation("GetAllAsync: {ms}ms", sw.ElapsedMilliseconds);
+            sw.Restart();
             var response = _mapper.Map<List<GroupResponse>>(groupsDto);
+            _logger.LogInformation("Map: {ms}ms", sw.ElapsedMilliseconds);
             return Ok(response);
         }
 
