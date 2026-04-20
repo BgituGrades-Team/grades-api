@@ -50,6 +50,7 @@ namespace BgituGrades.Application.Services
             if (result) 
                 await _cacheService.RemoveAsync(CacheKeys.KeyAll(), ct: cancellationToken);
                 await _cacheService.RemoveAsync(CacheKeys.KeyByLookUpHash(lookupHash), ct: cancellationToken);
+                await _cacheService.RemoveAsync(CacheKeys.KeyVerified(lookupHash), ct: cancellationToken);
             return result;
         }
 
