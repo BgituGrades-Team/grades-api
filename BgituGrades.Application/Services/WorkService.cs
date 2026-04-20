@@ -27,7 +27,7 @@ namespace BgituGrades.Application.Services
             var entity = _mapper.Map<Work>(work);
             var createdEntity = await _workRepository.CreateWorkAsync(entity, cancellationToken: cancellationToken);
 
-            await _cacheService.RemoveAsync(CacheKeys.WorkAll(), ct: cancellationToken);
+            await _cacheService.RemoveByTagAsync(CacheTags.Work(), ct: cancellationToken);
             return _mapper.Map<WorkDTO>(createdEntity);
         }
 
@@ -35,7 +35,7 @@ namespace BgituGrades.Application.Services
         {
             var result = await _workRepository.DeleteWorkAsync(id, cancellationToken: cancellationToken);
             if (result)
-                await _cacheService.RemoveAsync(CacheKeys.WorkAll(), ct: cancellationToken);
+                await _cacheService.RemoveByTagAsync(CacheTags.Work(), ct: cancellationToken);
             return result;
         }
 
@@ -49,6 +49,7 @@ namespace BgituGrades.Application.Services
                         var entity = await _workRepository.GetByIdAsync(id, cancellationToken: token);
                         return _mapper.Map<WorkDTO>(entity);
                     },
+                    tags: CacheTags.WorkAll(),
                     options: DefaultOptions, ct: cancellationToken);
         }
 
@@ -62,6 +63,7 @@ namespace BgituGrades.Application.Services
                         var entities = await _workRepository.GetAllWorksAsync(cancellationToken: token);
                         return _mapper.Map<List<WorkDTO>>(entities);
                     },
+                    tags: CacheTags.WorkAll(),
                     options: DefaultOptions, ct: cancellationToken);
         }
 
@@ -70,7 +72,7 @@ namespace BgituGrades.Application.Services
             var entity = _mapper.Map<Work>(work);
             var updatedEntity = await _workRepository.UpdateWorkAsync(entity, cancellationToken: cancellationToken);
             if (updatedEntity != null)
-                await _cacheService.RemoveAsync(CacheKeys.WorkAll(), ct: cancellationToken);
+                await _cacheService.RemoveByTagAsync(CacheTags.Work(), ct: cancellationToken);
 
             var result = _mapper.Map<WorkDTO>(updatedEntity);
             return result;

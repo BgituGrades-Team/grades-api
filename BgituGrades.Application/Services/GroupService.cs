@@ -29,7 +29,7 @@ namespace BgituGrades.Application.Services
             entity.CourseNumber = GroupCourseParser.Parse(entity.Name);
             var createdEntity = await _groupRepository.CreateGroupAsync(entity, cancellationToken: cancellationToken);
 
-            await _cacheService.RemoveAsync(CacheKeys.GroupAll(), ct: cancellationToken);
+            await _cacheService.RemoveByTagAsync(CacheTags.Group(), ct: cancellationToken);
             return _mapper.Map<GroupDTO>(createdEntity);
         }
 
@@ -40,7 +40,7 @@ namespace BgituGrades.Application.Services
                 entity.CourseNumber = GroupCourseParser.Parse(entity.Name);
 
             var createdEntities = await _groupRepository.CreateGroupAsync(entities, cancellationToken: cancellationToken);
-            await _cacheService.RemoveAsync(CacheKeys.GroupAll(), ct: cancellationToken);
+            await _cacheService.RemoveByTagAsync(CacheTags.Group(), ct: cancellationToken);
             return _mapper.Map<List<GroupDTO>>(createdEntities);
         }
 
@@ -48,7 +48,7 @@ namespace BgituGrades.Application.Services
         {
             var result = await _groupRepository.DeleteGroupAsync(id, cancellationToken: cancellationToken);
             if (result)
-                await _cacheService.RemoveAsync(CacheKeys.GroupAll(), ct: cancellationToken);
+                await _cacheService.RemoveByTagAsync(CacheTags.Group(), ct: cancellationToken);
             return result;
         }
 
@@ -60,7 +60,9 @@ namespace BgituGrades.Application.Services
                 {
                     var entities = await _groupRepository.GetAllAsync(cancellationToken: token);
                     return _mapper.Map<List<GroupDTO>>(entities);
-                }, options: DefaultOptions, ct: cancellationToken);
+                }, 
+                tags: CacheTags.GroupAll(),
+                options: DefaultOptions, ct: cancellationToken);
         }
 
         public async Task<GroupDTO?> GetGroupByIdAsync(int id, CancellationToken cancellationToken)
@@ -71,7 +73,9 @@ namespace BgituGrades.Application.Services
                 {
                     var entity = await _groupRepository.GetByIdAsync(id, cancellationToken: token);
                     return entity == null ? null : _mapper.Map<GroupDTO>(entity);
-                }, options: DefaultOptions, ct: cancellationToken);
+                }, 
+                tags: CacheTags.GroupAll(),
+                options: DefaultOptions, ct: cancellationToken);
         }
 
         public async Task<List<GroupDTO>> GetGroupsByDisciplineAsync(int disciplineId, CancellationToken cancellationToken)
@@ -79,14 +83,6 @@ namespace BgituGrades.Application.Services
             var entities = await _groupRepository.GetGroupsByDisciplineAsync(disciplineId, cancellationToken: cancellationToken);
             var result = _mapper.Map<List<GroupDTO>>(entities);
             return result;
-        }
-
-        public async Task<GroupDTO> UpdateGroupAsync(GroupDTO group, CancellationToken cancellationToken)
-        {
-            var entity = _mapper.Map<Group>(group);
-            entity.CourseNumber = GroupCourseParser.Parse(entity.Name);
-            entity = await _groupRepository.UpdateGroupAsync(entity, cancellationToken: cancellationToken);
-            return _mapper.Map<GroupDTO>(entity);
         }
 
         public async Task<List<GroupDTO>> GetArchivedGroupsByPeriodAsync(int semester, int year, CancellationToken cancellationToken)
@@ -97,7 +93,9 @@ namespace BgituGrades.Application.Services
                 {
                     var entities = await _groupRepository.GetArchivedByPeriod(semester, year, cancellationToken: token);
                     return _mapper.Map<List<GroupDTO>>(entities);
-                }, options: DefaultOptions, ct: cancellationToken);
+                },  
+                tags: CacheTags.GroupAll(), 
+                options: DefaultOptions, ct: cancellationToken);
         }
 
         public async Task<List<int>> GetCoursesAsync(CancellationToken cancellationToken)

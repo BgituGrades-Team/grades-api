@@ -53,18 +53,6 @@ namespace BgituGrades.Application.Services
             return await _transferRepository.UpdateTransferAsync(entity, cancellationToken: cancellationToken);
         }
 
-        public async Task<List<TransferDTO>> GetAllTransfersDtoAsync(CancellationToken cancellationToken)
-        {
-            var entities = await _transferRepository.GetAllTransfersAsync(cancellationToken: cancellationToken);
-            return _mapper.Map<List<TransferDTO>>(entities);
-        }
-
-        public async Task<TransferDTO?> GetTransferDtoByIdAsync(int id, CancellationToken cancellationToken)
-        {
-            var entity = await _transferRepository.GetByIdAsync(id, cancellationToken: cancellationToken);
-            return entity == null ? null : _mapper.Map<TransferDTO>(entity);
-        }
-
         public async Task<List<TransferResponse>> GetTransfersByGroupAndDisciplineAsync(int groupId, int disciplineId, CancellationToken cancellationToken)
         {
             var entities = await _transferRepository.GetTransfersByGroupAndDisciplineAsync(groupId, disciplineId, cancellationToken: cancellationToken);

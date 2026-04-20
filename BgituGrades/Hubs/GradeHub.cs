@@ -41,7 +41,7 @@ namespace BgituGrades.API.Hubs
                 return;
             }
             var cancellationToken = Context.ConnectionAborted;
-            var marks = await _classService.GetMarksByWorksAsync(request, cancellationToken);
+            var marks = await _classService.GetMarksByWorksAsync(request.GroupId, request.DisciplineId, cancellationToken);
             await Clients.Caller.SendAsync("ReceiveMarks", marks);
         }
 
@@ -69,7 +69,7 @@ namespace BgituGrades.API.Hubs
                 return;
             }
             var cancellationToken = Context.ConnectionAborted;
-            var classDates = await _classService.GetPresenceByScheduleAsync(request, cancellationToken);
+            var classDates = await _classService.GetPresenceByScheduleAsync(request.GroupId, request.DisciplineId, cancellationToken);
             await Clients.Caller.SendAsync("ReceivePresences", classDates);
         }
 

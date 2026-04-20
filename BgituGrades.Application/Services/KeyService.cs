@@ -39,7 +39,7 @@ namespace BgituGrades.Application.Services
 
             var createdKey = await _keyRepository.CreateKeyAsync(apiKey, cancellationToken: cancellationToken);
             var keyDto = _mapper.Map<KeyDTO>(createdKey);
-            await _cacheService.RemoveAsync(CacheKeys.KeyAll(), ct: cancellationToken);
+            await _cacheService.RemoveByTagAsync(CacheTags.Key(), ct: cancellationToken);
             return keyDto;
         }
 
@@ -48,9 +48,7 @@ namespace BgituGrades.Application.Services
             var lookupHash = _hasher.ComputeLookupHash(key);
             var result = await _keyRepository.DeleteKeyAsync(lookupHash, cancellationToken: cancellationToken);
             if (result) 
-                await _cacheService.RemoveAsync(CacheKeys.KeyAll(), ct: cancellationToken);
-                await _cacheService.RemoveAsync(CacheKeys.KeyByLookUpHash(lookupHash), ct: cancellationToken);
-                await _cacheService.RemoveAsync(CacheKeys.KeyVerified(lookupHash), ct: cancellationToken);
+                await _cacheService.RemoveByTagAsync(CacheTags.Key(), ct: cancellationToken);
             return result;
         }
 
@@ -62,7 +60,9 @@ namespace BgituGrades.Application.Services
                 {
                     var entities = await _keyRepository.GetKeysAsync(cancellationToken: token);
                     return _mapper.Map<List<KeyDTO>>(entities);
-                }, options: DefaultOptions, ct: cancellationToken);
+                }, 
+                tags: [CacheTags.Key()],
+                options: DefaultOptions, ct: cancellationToken);
         }
 
         public async Task<KeyDTO> GetKeyAsync(string key, CancellationToken cancellationToken)
@@ -74,7 +74,9 @@ namespace BgituGrades.Application.Services
                 {
                     var entity = await _keyRepository.GetAsync(key, cancellationToken: token);
                     return _mapper.Map<KeyDTO>(entity);
-                }, options: DefaultOptions, ct: cancellationToken);
+                }, 
+                tags: [CacheTags.Key()],
+                options: DefaultOptions, ct: cancellationToken);
         }
     }
 }

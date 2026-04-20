@@ -10,10 +10,11 @@ namespace BgituGrades.Application.Mappings
     {
         public ClassProfile()
         {
-            CreateMap<CreateClassRequest, Class>();
+            CreateMap<CreateClassRequest, ClassDTO>();
             CreateMap<GetClassDateRequest, ClassDateResponse>();
             CreateMap<ClassDateResponse, ScheduleDate>();
             CreateMap<Class, ClassResponse>();
+            CreateMap<ClassDTO, ClassResponse>();
             CreateMap<Class, ClassDTO>();
             CreateMap<ClassDTO, Class>();
         }

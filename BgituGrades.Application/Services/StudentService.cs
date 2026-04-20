@@ -9,14 +9,11 @@ using System.Text.RegularExpressions;
 namespace BgituGrades.Application.Services
 {
     
-    public partial class StudentService(IStudentRepository studentRepository, IPresenceRepository presenceRepository,
-        IClassService classService, IDisciplineRepository disciplineRepository, IGroupService groupService, IMapper mapper) : IStudentService
+    public partial class StudentService(IStudentRepository studentRepository,
+        IGroupService groupService, IMapper mapper) : IStudentService
 
     {
         private readonly IStudentRepository _studentRepository = studentRepository;
-        private readonly IPresenceRepository _presenceRepository = presenceRepository;
-        private readonly IDisciplineRepository _disciplineRepository = disciplineRepository;
-        private readonly IClassService _classService = classService;
         private readonly IGroupService _groupService = groupService;
         private readonly IMapper _mapper = mapper;
 

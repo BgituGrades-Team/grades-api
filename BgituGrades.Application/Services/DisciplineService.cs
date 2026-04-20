@@ -26,7 +26,7 @@ namespace BgituGrades.Application.Services
         {
             var entity = _mapper.Map<Discipline>(disciplineDto);
             var createdEntity = await _disciplineRepository.CreateDisciplineAsync(entity, cancellationToken: cancellationToken);
-            await _cacheService.RemoveAsync(CacheKeys.DisicplineAll(), cancellationToken);
+            await _cacheService.RemoveByTagAsync(CacheTags.Disicpline(), cancellationToken);
             return _mapper.Map<DisciplineDTO>(createdEntity);
         }
 
@@ -34,7 +34,7 @@ namespace BgituGrades.Application.Services
         {
             var entities = _mapper.Map<List<Discipline>>(disciplineDto);
             var createdEntities = await _disciplineRepository.CreateDisciplineAsync(entities, cancellationToken: cancellationToken);
-            await _cacheService.RemoveAsync(CacheKeys.DisicplineAll(), cancellationToken);
+            await _cacheService.RemoveByTagAsync(CacheTags.Disicpline(), cancellationToken);
             return _mapper.Map<List<DisciplineDTO>>(createdEntities);
         }
 
@@ -43,7 +43,7 @@ namespace BgituGrades.Application.Services
             var result = await _disciplineRepository.DeleteDisciplineAsync(id, cancellationToken: cancellationToken);
             if (result)
             {
-                await _cacheService.RemoveAsync(CacheKeys.DisicplineAll(), cancellationToken);
+                await _cacheService.RemoveByTagAsync(CacheTags.Disicpline(), cancellationToken);
             }
             return result;
         }
@@ -56,7 +56,9 @@ namespace BgituGrades.Application.Services
                 {
                     var entities = await _disciplineRepository.GetAllAsync(cancellationToken: token);
                     return _mapper.Map<List<DisciplineDTO>>(entities);
-                }, options: DefaultOptions, ct: cancellationToken);
+                }, 
+                tags: CacheTags.DisicplineAll(),
+                options: DefaultOptions, ct: cancellationToken);
         }
 
         public async Task<List<DisciplineDTO>> GetDisciplineByGroupIdAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken)
@@ -67,9 +69,10 @@ namespace BgituGrades.Application.Services
             foreach (var id in groupIds)
             {
                 var singleCacheKey = CacheKeys.DisciplineByGroup(id);
-                var cached = await _cacheService.GetOrCreateAsync<List<DisciplineDTO>?>(
+                var cached = await _cacheService.GetOrCreateAsync(
                     key: singleCacheKey,
                     factory: _ => ValueTask.FromResult<List<DisciplineDTO>?>(null),
+                    tags: CacheTags.DisicplineAll(),
                     options: DefaultOptions,
                     ct: cancellationToken);
 
@@ -95,6 +98,7 @@ namespace BgituGrades.Application.Services
                         await _cacheService.GetOrCreateAsync(
                             key: CacheKeys.DisciplineByGroup(groupId),
                             factory: _ => ValueTask.FromResult(mappedDisciplines),
+                            tags: CacheTags.DisicplineAll(),
                             options: DefaultOptions,
                             ct: cancellationToken);
 

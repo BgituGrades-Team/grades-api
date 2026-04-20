@@ -4,6 +4,7 @@
     {
         public static string Work(int id) => $"work:{id}";
         public static string WorkAll() => $"work:all";
+        public static string WorkByGroupAndDiscipline(int groupId, int disciplineId) => $"work:group:{groupId}:discipline:{disciplineId}";
         public static string KeyByLookUpHash(string lookUpHash) => $"key:{lookUpHash}";
         public static string KeyVerified(string lookUpHash) => $"key:verified:{lookUpHash}";
         public static string KeyAll() => $"key:all";
@@ -13,5 +14,6 @@
         public static string ReportByRequestHash(string hash) => $"report:hash:{hash}";
         public static string DisicplineAll() => "discipline:all";
         public static string DisciplineByGroup(int groupId) => $"discipline:group:{groupId}";
+        public static string ClassByGroupAndDiscipline(int groupId, int disciplineId) => $"class:group:{groupId}:discipline:{disciplineId}";
     }
 }

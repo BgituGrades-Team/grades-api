@@ -12,7 +12,5 @@ namespace BgituGrades.Application.Interfaces
         Task<bool> DeletePresenceByStudentAndDateAsync(DeletePresenceByStudentAndDateRequest request, CancellationToken cancellationToken);
         Task UpdatePresenceAsync(UpdatePresenceRequest request, CancellationToken cancellationToken);
         Task<FullGradePresenceResponse> UpdateOrCreatePresenceAsync(UpdatePresenceGradeRequest request, CancellationToken cancellationToken);
-        Task<List<PresenceDTO>> GetAllPresencesDtoAsync(CancellationToken cancellationToken);
-        Task<PresenceDTO?> GetPresenceDtoByIdAsync(int id, CancellationToken cancellationToken);
     }
 }

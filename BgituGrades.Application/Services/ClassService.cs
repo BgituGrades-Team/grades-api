@@ -1,17 +1,18 @@
 ﻿using AutoMapper;
+using BgituGrades.Application.Caching;
+using BgituGrades.Application.DTOs;
 using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Models.Class;
 using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Interfaces;
 using BgituGrades.Domain.Models;
-using Microsoft.Extensions.Caching.Distributed;
-using System.Text.Json;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace BgituGrades.Application.Services
 {
     
     public class ClassService(IClassRepository classRepository, IGroupRepository groupRepository, ITransferService transferService,
-        IStudentRepository studentRepository, IWorkRepository workRepository, IMapper mapper, IDistributedCache cache) : IClassService
+        IStudentRepository studentRepository, IWorkRepository workRepository, IMapper mapper, ICacheService cacheService) : IClassService
     {
         private readonly IClassRepository _classRepository = classRepository;
         private readonly IGroupRepository _groupRepository = groupRepository;
@@ -19,39 +20,37 @@ namespace BgituGrades.Application.Services
         private readonly IWorkRepository _workRepository = workRepository;
         private readonly ITransferService _transferService = transferService;
         private readonly IMapper _mapper = mapper;
-        private readonly IDistributedCache _cache = cache;
-        private const string CacheKeyPrefix = "class:schedule:";
+        private readonly ICacheService _cacheService = cacheService;
 
-        public async Task<ClassResponse> CreateClassAsync(CreateClassRequest request, CancellationToken cancellationToken)
+        private static readonly HybridCacheEntryOptions DefaultOptions = new()
         {
-            var entity = _mapper.Map<Class>(request);
+            Expiration = TimeSpan.FromHours(24),
+            LocalCacheExpiration = TimeSpan.FromHours(2)
+        };
+
+        public async Task<ClassDTO> CreateClassAsync(ClassDTO classDto, CancellationToken cancellationToken)
+        {
+            var entity = _mapper.Map<Class>(classDto);
             var createdEntity = await _classRepository.CreateClassAsync(entity, cancellationToken: cancellationToken);
-            return _mapper.Map<ClassResponse>(createdEntity);
+            await _cacheService.RemoveByTagAsync(CacheTags.Class(), ct: cancellationToken);
+            return _mapper.Map<ClassDTO>(createdEntity);
         }
 
-        public async Task<List<ClassResponse>> CreateClassAsync(CreateClassBulkRequest request, CancellationToken cancellationToken)
+        public async Task<List<ClassDTO>> CreateClassAsync(IEnumerable<ClassDTO> classDto, CancellationToken cancellationToken)
         {
-            var entities = _mapper.Map<List<Class>>(request.Classes);
+            var entities = _mapper.Map<List<Class>>(classDto);
             var createdEntities = await _classRepository.CreateClassAsync(entities, cancellationToken: cancellationToken);
-            return _mapper.Map<List<ClassResponse>>(createdEntities);
+            await _cacheService.RemoveByTagAsync(CacheTags.Class(), ct: cancellationToken);
+            return _mapper.Map<List<ClassDTO>>(createdEntities);
         }
 
-        public async Task<List<ClassDateResponse>> GetClassDatesAsync(GetClassDateRequest request, CancellationToken cancellationToken)
+        public async Task<List<ClassDateResponse>> GetClassDatesAsync(int groupId, int disciplineId, CancellationToken cancellationToken)
         {
-            var cacheKey = $"{CacheKeyPrefix}group:{request.GroupId}:discipline:{request.DisciplineId}";
-
-            var cached = await GetFromCacheAsync<List<ClassDateResponse>>(cacheKey);
-            if (cached != null)
-                return cached;
-
-            var group = await _groupRepository.GetByIdAsync(request.GroupId, cancellationToken: cancellationToken);
-            if (group == null) return [];
-
-            var classDates = await GenerateScheduleDatesAsync(request.GroupId, request.DisciplineId, cancellationToken);
-
-            await SetCacheAsync(cacheKey, classDates.ToList(), TimeSpan.FromDays(7));
-
-            return classDates;
+            return await _cacheService.GetOrCreateAsync(
+                key: CacheKeys.ClassByGroupAndDiscipline(groupId, disciplineId),
+                factory: async token => await GenerateScheduleDatesAsync(groupId, disciplineId, token),
+                tags: CacheTags.ClassAll(),
+                options: DefaultOptions, ct: cancellationToken);
         }
 
 
@@ -176,62 +175,27 @@ namespace BgituGrades.Application.Services
             return dates.OrderBy(d => d.Date).ToList();
         }
 
-        public async Task<bool> DeleteClassAsync(int id, CancellationToken cancellationToken)
+        public async Task<List<FullGradePresenceResponse>> GetPresenceByScheduleAsync(int groupId, int disciplineId, CancellationToken cancellationToken)
         {
-            return await _classRepository.DeleteClassAsync(id, cancellationToken: cancellationToken);
-        }
-
-        public async Task<ClassResponse?> GetClassByIdAsync(int id, CancellationToken cancellationToken)
-        {
-            var entity = await _classRepository.GetByIdAsync(id, cancellationToken: cancellationToken);
-            return entity == null ? null : _mapper.Map<ClassResponse>(entity);
-        }
-
-        public async Task<List<FullGradePresenceResponse>> GetPresenceByScheduleAsync(GetClassDateRequest request, CancellationToken cancellationToken)
-        {
-            var scheduleDates = await GenerateScheduleDatesAsync(request.GroupId, request.DisciplineId, cancellationToken);
+            var scheduleDates = await GetClassDatesAsync(groupId, disciplineId, cancellationToken);
             var scheduleDatesDomain = _mapper.Map<List<ScheduleDate>>(scheduleDates);
-            var students = await _studentRepository.GetPresenseGrade(scheduleDatesDomain, request.GroupId, request.DisciplineId, cancellationToken: cancellationToken);
+            var students = await _studentRepository.GetPresenseGrade(scheduleDatesDomain, groupId, disciplineId, cancellationToken: cancellationToken);
             var grade = _mapper.Map<List<FullGradePresenceResponse>>(students);
             return grade;
         }
 
-        public async Task<List<FullGradeMarkResponse>> GetMarksByWorksAsync(GetClassDateRequest request, CancellationToken cancellationToken)
+        public async Task<List<FullGradeMarkResponse>> GetMarksByWorksAsync(int groupId, int disciplineId, CancellationToken cancellationToken)
         {
-            var works = await _workRepository.GetByDisciplineAndGroupAsync(request.DisciplineId, request.GroupId, cancellationToken: cancellationToken);
+            var works = await _cacheService.GetOrCreateAsync(
+                    key: CacheKeys.WorkByGroupAndDiscipline(groupId, disciplineId),
+                    factory: async token => await _workRepository.GetByDisciplineAndGroupAsync(groupId, disciplineId, cancellationToken: token),
+                    tags: CacheTags.WorkAll(),
+                    options: DefaultOptions, ct: cancellationToken);
+                
 
-            var students = await _studentRepository.GetMarksGrade(works, request.GroupId, request.DisciplineId, cancellationToken: cancellationToken);
+            var students = await _studentRepository.GetMarksGrade(works, groupId, groupId, cancellationToken: cancellationToken);
             var grade = _mapper.Map<List<FullGradeMarkResponse>>(students);
             return grade;
-        }
-
-        private async Task<T?> GetFromCacheAsync<T>(string key)
-        {
-            try
-            {
-                var value = await _cache.GetStringAsync(key);
-                if (value == null)
-                    return default;
-                return JsonSerializer.Deserialize<T>(value);
-            }
-            catch
-            {
-                return default;
-            }
-        }
-
-        private async Task SetCacheAsync<T>(string key, T value, TimeSpan expiration)
-        {
-            try
-            {
-                var serialized = JsonSerializer.Serialize(value);
-                var options = new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = expiration };
-                await _cache.SetStringAsync(key, serialized, options);
-            }
-            catch
-            {
-
-            }
         }
     }
 }

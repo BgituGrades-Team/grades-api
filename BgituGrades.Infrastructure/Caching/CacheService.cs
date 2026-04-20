@@ -1,4 +1,5 @@
-﻿using BgituGrades.Application.Interfaces;
+﻿using BgituGrades.Application.Caching;
+using BgituGrades.Application.Interfaces;
 using Microsoft.Extensions.Caching.Hybrid;
 
 namespace BgituGrades.Infrastructure.Caching
@@ -6,8 +7,9 @@ namespace BgituGrades.Infrastructure.Caching
     public sealed class CacheService(HybridCache cache) : ICacheService
     {
         public async Task<T> GetOrCreateAsync<T>(
-            string key, 
+            string key,
             Func<CancellationToken, ValueTask<T>> factory,
+            IEnumerable<string>? tags = null,
             HybridCacheEntryOptions? options = null,
             CancellationToken ct = default)
         {
@@ -22,6 +24,16 @@ namespace BgituGrades.Infrastructure.Caching
         public async Task RemoveManyAsync(IEnumerable<string> keys, CancellationToken ct = default)
         {
             await cache.RemoveAsync(keys, ct);
+        }
+
+        public async Task RemoveByTagAsync(string tag, CancellationToken ct = default)
+        {
+            await cache.RemoveByTagAsync(tag, ct);
+        }
+
+        public async Task RemoveAllAsync(CancellationToken ct = default)
+        {
+            await cache.RemoveByTagAsync(CacheTags.All(), ct);
         }
     }
 }

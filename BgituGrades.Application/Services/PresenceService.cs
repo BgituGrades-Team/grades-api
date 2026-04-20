@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using BgituGrades.Application.DTOs;
 using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Models.Class;
 using BgituGrades.Application.Models.Presence;
@@ -11,7 +10,7 @@ using System.Text.Json;
 namespace BgituGrades.Application.Services
 {
     
-    public class PresenceService(IPresenceRepository presenceRepository, IMapper mapper, IDistributedCache cache) : IPresenceService
+    public class PresenceService(IPresenceRepository presenceRepository, IMapper mapper, IDistributedCache cache, ICacheService cacheService) : IPresenceService
     {
         private readonly IPresenceRepository _presenceRepository = presenceRepository;
         private readonly IMapper _mapper = mapper;
@@ -89,9 +88,6 @@ namespace BgituGrades.Application.Services
                 await _presenceRepository.CreatePresenceAsync(presence, cancellationToken: cancellationToken);
             }
 
-
-            await InvalidateCacheAsync(request.DisciplineId, request.StudentId);
-
             var response = new FullGradePresenceResponse
             {
                 StudentId = presence.StudentId,
@@ -102,18 +98,6 @@ namespace BgituGrades.Application.Services
                 }]
             };
             return response;
-        }
-
-        public async Task<List<PresenceDTO>> GetAllPresencesDtoAsync(CancellationToken cancellationToken)
-        {
-            var entities = await _presenceRepository.GetAllPresencesAsync(cancellationToken: cancellationToken);
-            return _mapper.Map<List<PresenceDTO>>(entities);
-        }
-
-        public async Task<PresenceDTO?> GetPresenceDtoByIdAsync(int id, CancellationToken cancellationToken)
-        {
-            var entity = await _presenceRepository.GetPresenceByIdAsync(id, cancellationToken: cancellationToken);
-            return entity == null ? null : _mapper.Map<PresenceDTO>(entity);
         }
 
 

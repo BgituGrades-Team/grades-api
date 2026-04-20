@@ -10,7 +10,6 @@ namespace BgituGrades.Application.Interfaces
         Task<GroupDTO> CreateGroupAsync(GroupDTO request, CancellationToken cancellationToken);
         Task<List<GroupDTO>> CreateGroupAsync(IEnumerable<GroupDTO> request, CancellationToken cancellationToken);
         Task<GroupDTO?> GetGroupByIdAsync(int id, CancellationToken cancellationToken);
-        Task<GroupDTO> UpdateGroupAsync(GroupDTO group, CancellationToken cancellationToken);
         Task<bool> DeleteGroupAsync(int id, CancellationToken cancellationToken);
         Task<List<GroupDTO>> GetArchivedGroupsByPeriodAsync(int semester, int year, CancellationToken cancellationToken);
         Task<List<int>> GetCoursesAsync(CancellationToken cancellationToken);

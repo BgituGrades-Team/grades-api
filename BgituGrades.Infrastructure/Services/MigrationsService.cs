@@ -15,7 +15,7 @@ namespace BgituGrades.Application.Services
     public class MigrationsService(IClassRepository classRepository, IDisciplineRepository disciplineRepository,
         IGroupRepository groupRepository, IMarkRepository markRepository, IReportSnapshotRepository reportSnapshotRepository,
         IPresenceRepository presenceRepository, ITransferRepository transferRepository,
-        IWorkRepository workRepository, IServiceScopeFactory scopeFactory) : IMigrationService
+        IWorkRepository workRepository, IServiceScopeFactory scopeFactory, ICacheService cacheService) : IMigrationService
     {
         private readonly IClassRepository _classRepository = classRepository;
         private readonly IDisciplineRepository _disciplineRepository = disciplineRepository;
@@ -25,6 +25,7 @@ namespace BgituGrades.Application.Services
         private readonly IWorkRepository _workRepository = workRepository;
         private readonly IMarkRepository _markRepository = markRepository;
         private readonly IReportSnapshotRepository _reportSnapshotRepository = reportSnapshotRepository;
+        private readonly ICacheService _cacheService = cacheService;
 
         public async Task<List<PeriodResponse>> GetAllPeriods(CancellationToken cancellationToken)
         {
@@ -43,6 +44,8 @@ namespace BgituGrades.Application.Services
             await _presenceRepository.DeleteAllAsync(cancellationToken: cancellationToken);
             await _transferRepository.DeleteAllAsync(cancellationToken: cancellationToken);
             await _workRepository.DeleteAllAsync(cancellationToken: cancellationToken);
+
+            await _cacheService.RemoveAllAsync(ct: cancellationToken);
         }
 
         public async Task ArchiveCurrentSemesterAsync(CancellationToken cancellationToken = default)
