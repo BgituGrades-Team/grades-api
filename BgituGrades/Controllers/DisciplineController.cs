@@ -50,7 +50,7 @@ namespace BgituGrades.Controllers
         public async Task<ActionResult<DisciplineResponse>> CreateDiscipline([FromBody] CreateDisciplineRequest request, CancellationToken cancellationToken)
         {
             var discipline = await _disciplineService.CreateDisciplineAsync(request, cancellationToken: cancellationToken);
-            return CreatedAtAction(nameof(GetDiscipline), new { id = discipline.Id }, discipline);
+            return Created(string.Empty, discipline);
         }
 
         [HttpPost("bulk")]
