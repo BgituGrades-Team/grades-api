@@ -188,12 +188,12 @@ namespace BgituGrades.Application.Services
         {
             var works = await _cacheService.GetOrCreateAsync(
                     key: CacheKeys.WorkByGroupAndDiscipline(groupId, disciplineId),
-                    factory: async token => await _workRepository.GetByDisciplineAndGroupAsync(groupId, disciplineId, cancellationToken: token),
+                    factory: async token => await _workRepository.GetByDisciplineAndGroupAsync(disciplineId, groupId, cancellationToken: token),
                     tags: CacheTags.WorkAll(),
                     options: DefaultOptions, ct: cancellationToken);
                 
 
-            var students = await _studentRepository.GetMarksGrade(works, groupId, groupId, cancellationToken: cancellationToken);
+            var students = await _studentRepository.GetMarksGrade(works, groupId, disciplineId, cancellationToken: cancellationToken);
             var grade = _mapper.Map<List<FullGradeMarkResponse>>(students);
             return grade;
         }
