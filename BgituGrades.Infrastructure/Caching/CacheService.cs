@@ -13,7 +13,7 @@ namespace BgituGrades.Infrastructure.Caching
             HybridCacheEntryOptions? options = null,
             CancellationToken ct = default)
         {
-            return await cache.GetOrCreateAsync(key, factory, options, cancellationToken: ct);
+            return await cache.GetOrCreateAsync(key, factory, options, tags, cancellationToken: ct);
         }
 
         public async Task RemoveAsync(string key, CancellationToken ct = default)
