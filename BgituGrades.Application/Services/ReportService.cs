@@ -230,7 +230,6 @@ namespace BgituGrades.Application.Services
                 }
             }
 
-            //worksheet.Cells[1, 1, currentRow - 1, maxCols + 1].AutoFitColumns();
             var fullRange = worksheet.Cells[1, 1, currentRow - 1, maxCols + 1];
             fullRange.Style.Border.Top.Style = fullRange.Style.Border.Bottom.Style =
             fullRange.Style.Border.Left.Style = fullRange.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
@@ -316,7 +315,7 @@ namespace BgituGrades.Application.Services
 
             var scheduleTasks = groupDisciplinePairs.Select(async pair =>
             {
-                var dates = await _classService.GenerateScheduleDatesAsync(pair.GroupId, pair.DisciplineId, cancellationToken);
+                var dates = await _classService.GetClassDatesAsync(pair.GroupId, pair.DisciplineId, cancellationToken);
                 return (pair.GroupId, pair.DisciplineId, Total: dates.Count());
             });
             var scheduleResults = await Task.WhenAll(scheduleTasks);

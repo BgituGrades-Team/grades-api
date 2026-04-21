@@ -138,8 +138,9 @@ namespace BgituGrades.Application.Services
             var week1Start = firstMonday.AddDays(-7 * (firstWeekStart - 1));
 
             var transferMap = transfers
-                .ToDictionary(t => t.OriginalDate, t => t.NewDate);
+                .ToDictionary(t => (t.OriginalDate, t.ClassId), t => t.NewDate);
 
+            var seen = new HashSet<(int ClassId, DateOnly ActualDate)>();
 
             if (week1Start > endDate.AddDays(7))
                 return dates;
@@ -154,9 +155,12 @@ namespace BgituGrades.Application.Services
                         .AddDays(_class.WeekDay - 1)
                         .AddDays(7 * (_class.Weeknumber - 1));
 
-                    var actualDate = transferMap.TryGetValue(lessonDate, out var newDate)
+                    var actualDate = transferMap.TryGetValue((lessonDate, _class.Id), out var newDate)
                         ? newDate
                         : lessonDate;
+
+                    if (!seen.Add((_class.Id, actualDate)))
+                        continue;
 
                     if (lessonDate >= startDate && lessonDate <= endDate)
                     {
