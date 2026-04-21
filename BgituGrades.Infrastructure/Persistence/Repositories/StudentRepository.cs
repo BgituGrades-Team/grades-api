@@ -126,7 +126,9 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                     WorkId = work.Id,
                     Name = work.Name!,
                     Value = s.MarksByWorkId[work.Id].FirstOrDefault()?.Value ?? "",
-                    IsOverdue = s.MarksByWorkId[work.Id].FirstOrDefault()?.IsOverdue ?? false
+                    IsOverdue = s.MarksByWorkId[work.Id].FirstOrDefault()?.IsOverdue ?? false,
+                    Description = work.Description,
+                    IssuedDate = work.IssuedDate
                 }).ToList()
             }).ToList();
 

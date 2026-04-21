@@ -1,7 +1,6 @@
 ﻿using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 
 namespace BgituGrades.Infrastructure.Persistence.Repositories
 {

@@ -102,9 +102,11 @@ namespace BgituGrades.Application.Services
                 Marks = [new GradeMarkResponse
                 {
                     WorkId = request.WorkId,
-                    Name = mark.Work!.Name!,
+                    Name = mark!.Work!.Name!,
                     Value = request.Value,
-                    IsOverdue = mark.IsOverdue
+                    IsOverdue = mark.IsOverdue,
+                    Description = mark.Work.Description,
+                    IssuedDate = mark.Work.IssuedDate
                 }]
             };
             return response;
