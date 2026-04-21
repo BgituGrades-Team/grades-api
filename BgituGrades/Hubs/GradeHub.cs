@@ -5,7 +5,6 @@ using BgituGrades.Application.Models.Presence;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.OpenApi;
 using Saunter.Attributes;
 
 namespace BgituGrades.API.Hubs

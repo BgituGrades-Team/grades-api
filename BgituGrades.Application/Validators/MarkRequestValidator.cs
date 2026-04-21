@@ -57,7 +57,7 @@ namespace BgituGrades.Application.Validators
         public UpdateMarkGradeRequestValidator(IStudentRepository studentRepository, IWorkRepository workRepository)
         {
             RuleFor(x => x.IsOverdue)
-                .NotEmpty().WithMessage("Признак просроченности не может быть пустым");
+                .NotNull().WithMessage("Признак просроченности не может быть пустым");
 
             RuleFor(x => x.StudentId)
                 .MustAsync(async (studentId, cancellationToken) => await studentRepository.ExistsAsync(studentId, cancellationToken))
