@@ -46,6 +46,7 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var keys = await context.ApiKeys
+                .OrderBy(k => k.Role)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken: cancellationToken);
             return keys;
