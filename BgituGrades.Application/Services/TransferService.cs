@@ -56,6 +56,7 @@ namespace BgituGrades.Application.Services
             if (entity.OriginalDate == request.NewDate)
             {
                 await _transferRepository.DeleteTransferAsync(entity.Id, cancellationToken: cancellationToken);
+                await _cacheService.RemoveByTagAsync(CacheTags.Class(), cancellationToken);
                 return true;
             }
 
