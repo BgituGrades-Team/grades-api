@@ -33,13 +33,7 @@ namespace BgituGrades.Application.Validators
                 .MustAsync(async (id, cancellationToken) => await transferRepository.ExistsAsync(id, cancellationToken))
                 .WithMessage((x) => $"Id = {x.Id} не существует");
             RuleFor(x => x.NewDate)
-                .NotEmpty().WithMessage("Новая дата не может быть пустой")
-                .MustAsync(async (request, newDate, cancellationToken) =>
-                {
-                    var transfer = await transferRepository.GetByIdAsync(request.Id, cancellationToken);
-                    return transfer != null && newDate != transfer.OriginalDate;
-                })
-                .WithMessage("Новая дата должна отличаться от исходной");
+                .NotEmpty().WithMessage("Новая дата не может быть пустой");
         }
     }
 }
