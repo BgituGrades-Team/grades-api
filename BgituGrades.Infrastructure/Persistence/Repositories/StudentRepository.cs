@@ -34,25 +34,6 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             return entity;
         }
 
-        public async Task<List<Student>> GetAllStudentsAsync(CancellationToken cancellationToken)
-        {
-            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
-            var entities = await context.Students
-                .AsNoTracking()
-                .ToListAsync(cancellationToken: cancellationToken);
-            return entities;
-        }
-
-        public async Task<List<Student>> GetStudentsByGroupAsync(int groupId, CancellationToken cancellationToken)
-        {
-            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
-            var entities = await context.Students
-                .Where(s => s.GroupId == groupId)
-                .AsNoTracking()
-                .ToListAsync(cancellationToken: cancellationToken);
-            return entities;
-        }
-
         public async Task<List<StudentPresenceResult>> GetPresenseGrade(IEnumerable<ScheduleDate> scheduleDates,
             int groupId, int disciplineId, CancellationToken cancellationToken)
         {
@@ -149,6 +130,7 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             return await context.Students
                 .AsNoTracking()
                 .Where(s => studentIds.Contains(s.Id))
+                .OrderBy(s => s.Name)
                 .ToListAsync(cancellationToken: cancellationToken);
         }
 
@@ -158,6 +140,7 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             var entities = await context.Students
                 .AsNoTracking()
                 .Where(s => groupIds.Contains(s.GroupId))
+                .OrderBy(s => s.Name)
                 .ToListAsync(cancellationToken: cancellationToken);
             return entities;
         }
@@ -168,8 +151,6 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             var bulkConfig = new BulkConfig { UpdateByProperties = [nameof(Student.OfficialId), nameof(Student.GroupId)] };
             await context.BulkInsertOrUpdateAsync(students, bulkConfig, cancellationToken: cancellationToken);
         }
-
-
 
         public async Task DeleteAllAsync(CancellationToken cancellationToken)
         {
