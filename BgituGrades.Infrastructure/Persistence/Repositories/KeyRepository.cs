@@ -1,4 +1,5 @@
 ﻿using BgituGrades.Domain.Entities;
+using BgituGrades.Domain.Enums;
 using BgituGrades.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,10 +46,9 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var keys = await context.ApiKeys
-                .OrderBy(k => k.Role)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken: cancellationToken);
-            return keys;
+            return keys.OrderBy(k => Enum.Parse<Role>(k.Role!)).ToList();
         }
     }
 }
