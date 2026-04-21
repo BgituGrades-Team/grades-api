@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace BgituGrades.Controllers
+namespace BgituGrades.API.Controllers
 {
     [Route("api/migrations")]
     [ApiVersion("2.0")]

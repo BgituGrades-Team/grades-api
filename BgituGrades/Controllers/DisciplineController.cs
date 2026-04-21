@@ -49,18 +49,6 @@ namespace BgituGrades.API.Controllers
             return Ok(response);
         }
 
-        [HttpPost]
-        [ApiVersion("2.0")]
-        [Authorize(Policy = "Admin")]
-        [ProducesResponseType(typeof(DisciplineResponse), StatusCodes.Status201Created)]
-        public async Task<ActionResult<DisciplineResponse>> CreateDiscipline([FromBody] CreateDisciplineRequest request, CancellationToken cancellationToken)
-        {
-            var disciplineDto = _mapper.Map<DisciplineDTO>(request);
-            disciplineDto = await _disciplineService.CreateDisciplineAsync(disciplineDto, cancellationToken: cancellationToken);
-            var response = _mapper.Map<DisciplineResponse>(disciplineDto);
-            return Created(string.Empty, response);
-        }
-
         [HttpPost("bulk")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
@@ -71,17 +59,6 @@ namespace BgituGrades.API.Controllers
             disciplineDto = await _disciplineService.CreateDisciplineAsync(disciplineDto, cancellationToken: cancellationToken);
             var response = _mapper.Map<List<DisciplineResponse>>(disciplineDto);
             return Created(string.Empty, response);
-        }
-
-        [HttpDelete]
-        [ApiVersion("2.0")]
-        [Authorize(Policy = "Admin")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteDiscipline([FromQuery] DeleteDisciplineRequest request, CancellationToken cancellationToken)
-        {
-            var success = await _disciplineService.DeleteDisciplineAsync(request.Id, cancellationToken: cancellationToken);
-            return success ? NoContent() : NotFound(request.Id);
         }
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 
-namespace BgituGrades.Controllers
+namespace BgituGrades.API.Controllers
 {
     [ApiController]
     [Route("api/report")]

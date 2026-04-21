@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace BgituGrades.Controllers
+namespace BgituGrades.API.Controllers
 {
     [Route("api/student")]
     [ApiController]
@@ -33,30 +33,6 @@ namespace BgituGrades.Controllers
             return Ok(students);
         }
 
-
-        [HttpPost]
-        [ApiVersion("2.0")]
-        [Authorize(Policy = "Edit")]
-        [ProducesResponseType(typeof(StudentResponse), StatusCodes.Status201Created)]
-        public async Task<ActionResult<StudentResponse>> CreateStudent([FromBody] CreateStudentRequest request, CancellationToken cancellationToken)
-        {
-            var student = await _studentService.CreateStudentAsync(request, cancellationToken: cancellationToken);
-            return CreatedAtAction(nameof(GetStudent), new { id = student.Id }, student);
-        }
-
-        [HttpGet("{id}")]
-        [ApiVersion("1.0")]
-        [Obsolete("deprecated")]
-        [ProducesResponseType(typeof(StudentResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<StudentResponse>> GetStudent([FromRoute] int id, CancellationToken cancellationToken)
-        {
-            var student = await _studentService.GetStudentByIdAsync(id, cancellationToken: cancellationToken);
-            if (student == null)
-                return NotFound(id);
-            return Ok(student);
-        }
-
         [HttpPut]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Edit")]
@@ -82,17 +58,6 @@ namespace BgituGrades.Controllers
             if (!success)
                 return NotFound(request.Id);
 
-            return NoContent();
-        }
-
-        [HttpDelete("all")]
-        [ApiVersion("2.0")]
-        [Authorize(Policy = "Admin")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteAllStudents(CancellationToken cancellationToken)
-        {
-            await _studentService.DeleteAllAsync(cancellationToken: cancellationToken);
             return NoContent();
         }
 

@@ -15,18 +15,6 @@ namespace BgituGrades.API.Controllers
         private readonly IClassService _classService = ClassService;
         private readonly IMapper _mapper = mapper;
 
-        [HttpPost]
-        [ApiVersion("2.0")]
-        [Authorize(Policy = "Admin")]
-        [ProducesResponseType(typeof(ClassResponse), StatusCodes.Status201Created)]
-        public async Task<ActionResult<ClassResponse>> CreateClass([FromBody] CreateClassRequest request, CancellationToken cancellationToken)
-        {
-            var classDto = _mapper.Map<ClassDTO>(request);
-            classDto = await _classService.CreateClassAsync(classDto, cancellationToken: cancellationToken);
-            var response = _mapper.Map<ClassResponse>(classDto);
-            return Created(string.Empty, response);
-        }
-
         [HttpPost("bulk")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]

@@ -7,7 +7,7 @@ using BgituGrades.Application.Models.Work;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BgituGrades.Controllers
+namespace BgituGrades.API.Controllers
 {
     [Route("api/work")]
     [ApiVersion("2.0")]
@@ -17,16 +17,6 @@ namespace BgituGrades.Controllers
         private readonly IWorkService _workService = WorkService;
         private readonly IMapper _mapper = mapper;
 
-        [HttpGet]
-        [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(List<WorkResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<WorkResponse>>> GetAllWorks(CancellationToken cancellationToken)
-        {
-            var workDto = await _workService.GetAllWorksAsync(cancellationToken: cancellationToken);
-            var response = _mapper.Map<List<WorkResponse>>(workDto);
-            return Ok(response);
-        }
-
         [HttpPost]
         [Authorize(Policy = "Edit")]
         [ProducesResponseType(typeof(WorkResponse), StatusCodes.Status201Created)]
@@ -35,17 +25,7 @@ namespace BgituGrades.Controllers
             var workDto = _mapper.Map<WorkDTO>(request);
             workDto = await _workService.CreateWorkAsync(workDto, cancellationToken: cancellationToken);
             var response = _mapper.Map<WorkResponse>(workDto);
-            return CreatedAtAction(nameof(GetWork), new { id = response.Id }, response);
-        }
-
-        [HttpGet("{id}")]
-        [Authorize(Policy = "ViewOnly")]
-        [ProducesResponseType(typeof(WorkResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<WorkResponse>> GetWork([FromRoute] int id, CancellationToken cancellationToken)
-        {
-            var workDto = await _workService.GetWorkByIdAsync(id, cancellationToken: cancellationToken);
-            return workDto == null ? NotFound(id) : Ok(_mapper.Map<WorkResponse>(workDto));
+            return Created(string.Empty, response);
         }
 
         [HttpPut]

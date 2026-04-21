@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 
 
-namespace BgituGrades.Controllers
+namespace BgituGrades.API.Controllers
 {
     [Route("api/settings")]
     [ApiController]

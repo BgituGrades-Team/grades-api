@@ -3,7 +3,6 @@ using AutoMapper;
 using BgituGrades.Application.DTOs;
 using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Models.Group;
-using BgituGrades.Application.Models.Student;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,7 +30,7 @@ namespace BgituGrades.API.Controllers
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
         [ProducesResponseType(typeof(List<int>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<int>>> GetCoursesByPeriod(CancellationToken cancellationToken)
+        public async Task<ActionResult<List<int>>> GetCourses(CancellationToken cancellationToken)
         {
             var courses = await _groupService.GetCoursesAsync(cancellationToken: cancellationToken);
             return Ok(courses);
@@ -93,18 +92,6 @@ namespace BgituGrades.API.Controllers
             return Ok(response);
         }
 
-        [HttpPost]
-        [ApiVersion("2.0")]
-        [Authorize(Policy = "Admin")]
-        [ProducesResponseType(typeof(GroupResponse), StatusCodes.Status201Created)]
-        public async Task<ActionResult<GroupResponse>> CreateGroup([FromBody] CreateGroupRequest request, CancellationToken cancellationToken)
-        {
-            var groupDto = _mapper.Map<GroupDTO>(request);
-            groupDto = await _groupService.CreateGroupAsync(groupDto, cancellationToken: cancellationToken);
-            var response = _mapper.Map<GroupResponse>(groupDto);
-            return CreatedAtAction(nameof(GetGroupsByDiscipline), new { id = response.Id }, response);
-        }
-
         [HttpPost("bulk")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
@@ -115,17 +102,6 @@ namespace BgituGrades.API.Controllers
             groupDto = await _groupService.CreateGroupAsync(groupDto, cancellationToken: cancellationToken);
             var response = _mapper.Map<List<GroupResponse>>(groupDto);
             return Created(string.Empty, response);
-        }
-
-        [HttpDelete]
-        [ApiVersion("2.0")]
-        [Authorize(Policy = "Admin")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteGroup([FromQuery] DeleteGroupRequest request, CancellationToken cancellationToken)
-        {
-            var success = await _groupService.DeleteGroupAsync(request.Id, cancellationToken: cancellationToken);
-            return success ? NoContent() : NotFound(request.Id);
         }
     }
 }
