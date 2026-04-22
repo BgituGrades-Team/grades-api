@@ -12,13 +12,14 @@ namespace BgituGrades.Application.Services
 {
     
     public class ClassService(IClassRepository classRepository, IGroupRepository groupRepository, ITransferService transferService,
-        IStudentRepository studentRepository, IWorkRepository workRepository, IMapper mapper, ICacheService cacheService) : IClassService
+        IStudentRepository studentRepository, IWorkRepository workRepository, IMapper mapper, ICacheService cacheService, ITransferRepository transferRepository) : IClassService
     {
         private readonly IClassRepository _classRepository = classRepository;
         private readonly IGroupRepository _groupRepository = groupRepository;
         private readonly IStudentRepository _studentRepository = studentRepository;
         private readonly IWorkRepository _workRepository = workRepository;
         private readonly ITransferService _transferService = transferService;
+        private readonly ITransferRepository _transferRepository = transferRepository;
         private readonly IMapper _mapper = mapper;
         private readonly ICacheService _cacheService = cacheService;
 
@@ -200,6 +201,40 @@ namespace BgituGrades.Application.Services
             var students = await _studentRepository.GetMarksGrade(works, groupId, disciplineId, cancellationToken: cancellationToken);
             var grade = _mapper.Map<List<FullGradeMarkResponse>>(students);
             return grade;
+        }
+
+        public async Task<Dictionary<(int GroupId, int DisciplineId), int>> GetClassDateCountsAsync(
+            IEnumerable<Group> groups,
+            IEnumerable<(int GroupId, int DisciplineId)> pairs,
+            CancellationToken cancellationToken)
+        {
+            var groupIds = pairs.Select(p => p.GroupId).Distinct().ToList();
+            var disciplineIds = pairs.Select(p => p.DisciplineId).Distinct().ToList();
+            var pairSet = pairs.ToHashSet();
+
+            var classesTask = _classRepository.GetClassesByGroupIdsAndDisciplineIdsAsync(groupIds, disciplineIds, cancellationToken);
+            var transfersTask = _transferRepository.GetTransfersByGroupIdsAsync(groupIds, cancellationToken);
+
+            await Task.WhenAll(classesTask, transfersTask);
+
+            var allClasses = await classesTask;
+            var allTransfers = await transfersTask; 
+
+            var groupLookup = groups.ToDictionary(g => g.Id);
+            var result = new Dictionary<(int, int), int>();
+
+            foreach (var pair in pairSet)
+            {
+                if (!groupLookup.TryGetValue(pair.GroupId, out var group)) continue;
+
+                var classes = allClasses.TryGetValue(pair, out var c) ? c : [];
+                var transfers = allTransfers.TryGetValue(pair, out var t) ? t : [];
+
+                var dates = await GenerateScheduleDatesAsync(group, classes, transfers);
+                result[pair] = dates.Count;
+            }
+
+            return result;
         }
     }
 }

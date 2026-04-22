@@ -80,6 +80,7 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var classes = await context.Classes
                 .Where(c => groupIds.Contains(c.GroupId) && disciplineIds.Contains(c.DisciplineId))
+                .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
             return classes

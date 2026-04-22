@@ -15,5 +15,9 @@ namespace BgituGrades.Application.Interfaces
             DateOnly? startDateOverride = null, DateOnly? endDateOverride = null);
         Task<List<ClassDateResponse>> GenerateScheduleDatesAsync(Group group, IEnumerable<Class> classes,
             IEnumerable<Transfer> transfers, DateOnly? startDateOverride = null, DateOnly? endDateOverride = null);
+        Task<Dictionary<(int GroupId, int DisciplineId), int>> GetClassDateCountsAsync(
+            IEnumerable<Group> groups,
+            IEnumerable<(int GroupId, int DisciplineId)> pairs,
+            CancellationToken cancellationToken);
     }
 }
