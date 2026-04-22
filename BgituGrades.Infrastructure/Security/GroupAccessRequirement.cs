@@ -12,7 +12,7 @@ namespace BgituGrades.Infrastructure.Security
         AuthorizationHandlerContext context,
         GroupAccessRequirement requirement)
         {
-            if (context.User.IsInRole("ADMIN") || context.User.IsInRole("EDIT"))
+            if (context.User.IsInRole("ADMIN") || context.User.IsInRole("TEACHER"))
             {
                 context.Succeed(requirement);
                 return Task.CompletedTask;
