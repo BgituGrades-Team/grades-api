@@ -39,6 +39,7 @@ namespace BgituGrades.API.Hubs
                 await Clients.Caller.SendAsync("ValidationError", errors);
                 return;
             }
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"class_{request.GroupId}_{request.DisciplineId}");
             var cancellationToken = Context.ConnectionAborted;
             var marks = await _classService.GetMarksByWorksAsync(request.GroupId, request.DisciplineId, cancellationToken);
             await Clients.Caller.SendAsync("ReceiveMarks", marks);
@@ -67,6 +68,7 @@ namespace BgituGrades.API.Hubs
                 await Clients.Caller.SendAsync("ValidationError", errors);
                 return;
             }
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"class_{request.GroupId}_{request.DisciplineId}");
             var cancellationToken = Context.ConnectionAborted;
             var classDates = await _classService.GetPresenceByScheduleAsync(request.GroupId, request.DisciplineId, cancellationToken);
             await Clients.Caller.SendAsync("ReceivePresences", classDates);
@@ -88,7 +90,7 @@ namespace BgituGrades.API.Hubs
             }
             var cancellationToken = Context.ConnectionAborted;
             var response = await _markService.UpdateOrCreateMarkAsync(request, cancellationToken: cancellationToken);
-            await Clients.All.SendAsync("UpdatedMark", response);
+            await Clients.Groups($"class_{request.GroupId}_{request.DisciplineId}").SendAsync("UpdatedMark", response);
         }
 
         [Channel("hubs/grade/UpdatePresenceGrade")]
@@ -107,7 +109,7 @@ namespace BgituGrades.API.Hubs
             }
             var cancellationToken = Context.ConnectionAborted;
             var response = await _presenceService.UpdateOrCreatePresenceAsync(request, cancellationToken: cancellationToken);
-            await Clients.All.SendAsync("UpdatedPresence", response);
+            await Clients.Groups($"class_{request.GroupId}_{request.DisciplineId}").SendAsync("UpdatedPresence", response);
         }
 
         public record PermissionDeniedResponse(string Message);

@@ -50,6 +50,10 @@ namespace BgituGrades.Application.Models.Mark
         public int StudentId { get; set; }
         [Required]
         public int WorkId { get; set; }
+        [Required]
+        public int DisciplineId { get; set; }
+        [Required]
+        public int GroupId { get; set; }
     }
 
     public class DeleteMarkByStudentAndWorkRequest

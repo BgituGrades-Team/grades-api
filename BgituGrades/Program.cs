@@ -10,9 +10,11 @@ using BgituGrades.Infrastructure;
 using BgituGrades.Infrastructure.Auth;
 using BgituGrades.Infrastructure.Persistence;
 using BgituGrades.Infrastructure.Security;
+using BgituGrades.Infrastructure.Services;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using OfficeOpenXml;
 using Saunter;
 using Saunter.AsyncApiSchema.v2;
@@ -126,7 +128,22 @@ namespace BgituGrades
 
             builder.Services.AddEndpointsApiExplorer();
 
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+                {
+                    Type = Microsoft.OpenApi.SecuritySchemeType.ApiKey,
+                    In = ParameterLocation.Header,
+                    Name = "key"
+                });
+
+                options.AddSecurityRequirement(document => new()
+                {
+                    [new OpenApiSecuritySchemeReference("ApiKey", document)] = []
+                });
+
+                options.OperationFilter<AuthorizeCheckOperationFilter>();
+            });
 
             var app = builder.Build();
 
