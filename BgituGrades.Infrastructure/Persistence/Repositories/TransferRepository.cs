@@ -101,5 +101,11 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Transfers.AnyAsync(t => t.Id == id, cancellationToken: cancellationToken);
         }
+
+        public async Task<bool> OriginalDateExistsAsync(DateOnly date, CancellationToken cancellationToken)
+        {
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            return await context.Transfers.AnyAsync(t => t.OriginalDate == date, cancellationToken: cancellationToken);
+        }
     }
 }

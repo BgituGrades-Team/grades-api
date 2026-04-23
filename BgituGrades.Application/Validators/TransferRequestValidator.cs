@@ -6,7 +6,7 @@ namespace BgituGrades.Application.Validators
 {
     public class CreateTransferRequestValidator : AbstractValidator<CreateTransferRequest>
     {
-        public CreateTransferRequestValidator(IGroupRepository groupRepository, IDisciplineRepository disciplineRepository)
+        public CreateTransferRequestValidator(IGroupRepository groupRepository, IDisciplineRepository disciplineRepository, ITransferRepository transferRepository)
         {
             RuleFor(x => x.DisciplineId)
                 .MustAsync(async (disciplineId, cancellationToken) => await disciplineRepository.ExistsAsync(disciplineId, cancellationToken))
@@ -17,7 +17,8 @@ namespace BgituGrades.Application.Validators
                 .WithMessage((x) => $"GroupId = {x.GroupId} не существует");
 
             RuleFor(x => x.OriginalDate)
-                .NotEmpty().WithMessage("Исходная дата не может быть пустой");
+                .MustAsync(async (originalDate, cancellationToken) => !(await transferRepository.OriginalDateExistsAsync(originalDate, cancellationToken)))
+                .WithMessage((x) => $"OriginalDate = {x.OriginalDate} уже есть в переносах");
 
             RuleFor(x => x.NewDate)
                 .NotEmpty().WithMessage("Новая дата не может быть пустой")
