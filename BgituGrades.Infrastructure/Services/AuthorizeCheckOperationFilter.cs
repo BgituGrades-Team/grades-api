@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace BgituGrades.Infrastructure.Services
@@ -23,16 +23,23 @@ namespace BgituGrades.Infrastructure.Services
                 .Any();
 
             if (!hasAuthorize || hasAllowAnonymous)
-            {
-                operation.Security = [];
                 return;
-            }
 
             operation.Security =
             [
                 new OpenApiSecurityRequirement
                 {
-                    [new OpenApiSecuritySchemeReference("ApiKey", null)] = []
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "ApiKey"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
                 }
             ];
         }

@@ -14,7 +14,7 @@ using BgituGrades.Infrastructure.Services;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using OfficeOpenXml;
 using Saunter;
 using Saunter.AsyncApiSchema.v2;
@@ -132,14 +132,9 @@ namespace BgituGrades
             {
                 options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
                 {
-                    Type = Microsoft.OpenApi.SecuritySchemeType.ApiKey,
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
                     In = ParameterLocation.Header,
-                    Name = "key"
-                });
-
-                options.AddSecurityRequirement(document => new()
-                {
-                    [new OpenApiSecuritySchemeReference("ApiKey", document)] = []
+                    Name = "key",
                 });
 
                 options.OperationFilter<AuthorizeCheckOperationFilter>();
