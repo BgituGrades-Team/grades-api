@@ -4,7 +4,6 @@ namespace BgituGrades.Domain.Interfaces
 {
     public interface ITransferRepository
     {
-        Task<List<Transfer>> GetAllTransferssAsync(CancellationToken cancellationToken);
         Task<bool> ExistsAsync(int id, CancellationToken cancellationToken);
         Task<bool> OriginalDateExistsAsync(DateOnly date, CancellationToken cancellationToken);
         Task<Transfer> CreateTransferAsync(Transfer entity, CancellationToken cancellationToken);

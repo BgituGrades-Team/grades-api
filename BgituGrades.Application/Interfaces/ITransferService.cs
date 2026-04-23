@@ -5,7 +5,6 @@ namespace BgituGrades.Application.Interfaces
 {
     public interface ITransferService
     {
-        Task<List<TransferResponse>> GetAllTransfersAsync(CancellationToken cancellationToken);
         Task<TransferResponse> CreateTransferAsync(CreateTransferRequest request, CancellationToken cancellationToken);
         Task<TransferResponse?> GetTransferByClassIdAndDateAsync(int classId, DateOnly originalDate, CancellationToken cancellationToken);
         Task<TransferResponse?> GetTransferByIdAsync(int id, CancellationToken cancellationToken);

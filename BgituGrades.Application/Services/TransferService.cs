@@ -42,12 +42,6 @@ namespace BgituGrades.Application.Services
             return entity == null ? null : _mapper.Map<TransferResponse>(entity);
         }
 
-        public async Task<List<TransferResponse>> GetAllTransfersAsync(CancellationToken cancellationToken)
-        {
-            var entities = await _transferRepository.GetAllTransfersAsync(cancellationToken: cancellationToken);
-            return _mapper.Map<List<TransferResponse>>(entities);
-        }
-
         public async Task<bool> UpdateTransferAsync(UpdateTransferRequest request, CancellationToken cancellationToken)
         {
             var entity = await _transferRepository.GetByIdAsync(request.Id, cancellationToken: cancellationToken);
