@@ -113,8 +113,8 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             var classId = await context.Classes
                 .AsNoTracking()
                 .Where(c =>
-                    c.Group!.Name == groupName &&
-                    c.Discipline!.Name == disciplineName &&
+                    c.Group!.Name!.ToLower() == groupName.ToLower() &&
+                    c.Discipline!.Name!.ToLower() == disciplineName.ToLower() &&
                     c.WeekDay == weekDay &&
                     c.Weeknumber == weekNumber &&
                     c.StartTime.Hour == startTime.Hour &&
@@ -127,7 +127,7 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
 
             var total = await context.Students
                 .AsNoTracking()
-                .CountAsync(s => s.Group!.Name == groupName, cancellationToken);
+                .CountAsync(s => s.Group!.Name!.ToLower() == groupName.ToLower(), cancellationToken);
 
             var absentCount = await context.Presences
                 .AsNoTracking()
