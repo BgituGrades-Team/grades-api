@@ -24,5 +24,8 @@ namespace BgituGrades.Application.Models.Presence
     {
         public int Present { get; set; }
         public int Total { get; set; }
+        public string DisciplineName { get; set; } = null!;
+        public DateOnly Date { get; set; }
+        public TimeOnly StartTime { get; set; }
     }
 }

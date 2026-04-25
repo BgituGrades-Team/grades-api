@@ -100,7 +100,7 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
         }
 
 
-        public async Task<(int present, int total)?> GetPresenceCountAsync(
+        public async Task<(int present, int total, TimeOnly StartTime, string DisciplineName, DateOnly Date)?> GetPresenceCountAsync(
             string groupName, string disciplineName,
             DateOnly date, TimeOnly startTime,
             CancellationToken cancellationToken)
@@ -135,10 +135,10 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                     (p.IsPresent == PresenceType.ABSENTVALID || p.IsPresent == PresenceType.ABSENTINVALID), 
                     cancellationToken);
 
-            return (total - absentCount, total);
+            return (total - absentCount, total, startTime, disciplineName, date);
         }
 
-        public async Task<(int present, int total, string GroupKey)?> GetPresenceCountByClassAsync(int classId, DateOnly date, CancellationToken cancellationToken)
+        public async Task<(int present, int total, string GroupKey, TimeOnly StartTime, string DisciplineName, DateOnly Date)?> GetPresenceCountByClassAsync(int classId, DateOnly date, CancellationToken cancellationToken)
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             var classEntity = await context.Classes
@@ -164,7 +164,7 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
 
             var groupKey = $"count_{classEntity.GroupName!.ToLower()}_{classEntity.DisciplineName!.ToLower()}_{date:yyyy-MM-dd}_{classEntity.StartTime:HH-mm}";
 
-            return (total - absentCount, total, groupKey);
+            return (total - absentCount, total, groupKey, TimeOnly.FromDateTime(classEntity.StartTime), classEntity.DisciplineName, date);
         }
     }
 }

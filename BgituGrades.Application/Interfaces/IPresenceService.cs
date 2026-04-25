@@ -11,11 +11,11 @@ namespace BgituGrades.Application.Interfaces
         Task<bool> DeletePresenceByStudentAndDateAsync(DeletePresenceByStudentAndDateRequest request, CancellationToken cancellationToken);
         Task UpdatePresenceAsync(UpdatePresenceRequest request, CancellationToken cancellationToken);
         Task<FullGradePresenceResponse> UpdateOrCreatePresenceAsync(UpdatePresenceGradeRequest request, CancellationToken cancellationToken);
-        Task<(int present, int total)?> GetPresenceCountAsync(
+        Task<(int present, int total, TimeOnly StartTime, string DisciplineName, DateOnly Date)?> GetPresenceCountAsync(
             string groupName, string disciplineName,
             DateOnly date, TimeOnly startTime,
             CancellationToken cancellationToken);
-        Task<(int present, int total, string GroupKey)?> GetPresenceCountByClassAsync(
+        Task<(int present, int total, string GroupKey, TimeOnly StartTime, string DisciplineName, DateOnly Date)?> GetPresenceCountByClassAsync(
             int classId, DateOnly date,
             CancellationToken cancellationToken);
     }

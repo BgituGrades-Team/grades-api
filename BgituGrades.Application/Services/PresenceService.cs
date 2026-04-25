@@ -100,7 +100,7 @@ namespace BgituGrades.Application.Services
             return response;
         }
 
-        public async Task<(int present, int total)?> GetPresenceCountAsync(
+        public async Task<(int present, int total, TimeOnly StartTime, string DisciplineName, DateOnly Date)?> GetPresenceCountAsync(
             string groupName, string disciplineName,
             DateOnly date, TimeOnly startTime, 
             CancellationToken cancellationToken)
@@ -108,7 +108,7 @@ namespace BgituGrades.Application.Services
             return await _presenceRepository.GetPresenceCountAsync(groupName, disciplineName, date, startTime, cancellationToken: cancellationToken);
         }
 
-        public async Task<(int present, int total, string GroupKey)?> GetPresenceCountByClassAsync(
+        public async Task<(int present, int total, string GroupKey, TimeOnly StartTime, string DisciplineName, DateOnly Date)?> GetPresenceCountByClassAsync(
             int classId, DateOnly date,
             CancellationToken cancellationToken)
         {

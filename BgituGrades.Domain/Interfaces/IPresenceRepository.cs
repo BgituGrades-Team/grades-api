@@ -15,10 +15,10 @@ namespace BgituGrades.Domain.Interfaces
         Task UpdatePresenceAsync(Presence entity, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
         Task<Presence?> GetPresenceByIdAsync(int id, CancellationToken cancellationToken);
-        Task<(int present, int total)?> GetPresenceCountAsync(
+        Task<(int present, int total, TimeOnly StartTime, string DisciplineName, DateOnly Date)?> GetPresenceCountAsync(
             string groupName, string disciplineName,
             DateOnly date, TimeOnly startTime,
             CancellationToken cancellationToken);
-        Task<(int present, int total, string GroupKey)?> GetPresenceCountByClassAsync(int classId, DateOnly date, CancellationToken cancellationToken);
+        Task<(int present, int total, string GroupKey, TimeOnly StartTime, string DisciplineName, DateOnly Date)?> GetPresenceCountByClassAsync(int classId, DateOnly date, CancellationToken cancellationToken);
     }
 }
