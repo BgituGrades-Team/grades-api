@@ -162,7 +162,7 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                     (p.IsPresent == PresenceType.ABSENTVALID || p.IsPresent == PresenceType.ABSENTINVALID),
                     cancellationToken);
 
-            var groupKey = $"count_{classEntity.GroupName}_{classEntity.DisciplineName}_{date:yyyy-MM-dd}_{classEntity.StartTime:HH-mm}";
+            var groupKey = $"count_{classEntity.GroupName!.ToLower()}_{classEntity.DisciplineName!.ToLower()}_{date:yyyy-MM-dd}_{classEntity.StartTime:HH-mm}";
 
             return (total - absentCount, total, groupKey);
         }

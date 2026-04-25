@@ -151,7 +151,7 @@ namespace BgituGrades.API.Hubs
                 Present = result.Value.present,
                 Total = result.Value.total
             };
-            var groupKey = $"count_{request.GroupName}_{request.DisciplineName}_{request.Date:yyyy-MM-dd}_{request.StartTime:HH-mm}";
+            var groupKey = $"count_{request.GroupName.ToLower()}_{request.DisciplineName.ToLower()}_{request.Date:yyyy-MM-dd}_{request.StartTime:HH-mm}";
             await Groups.AddToGroupAsync(Context.ConnectionId, groupKey);
             await Clients.Caller.SendAsync("ReceivePresenceCount", response);
         }
