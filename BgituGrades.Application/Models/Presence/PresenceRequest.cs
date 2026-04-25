@@ -60,4 +60,16 @@ namespace BgituGrades.Application.Models.Presence
         [Required]
         public int GroupId { get; set; }
     }
+
+    public class GetPresenceCountRequest
+    {
+        [Required]
+        public string? GroupName { get; set; }
+        [Required]
+        public string? DisciplineName { get; set; }
+        [Required]
+        public DateOnly Date { get; set; }
+        [Required]
+        public TimeOnly StartTime { get; set; }
+    };
 }

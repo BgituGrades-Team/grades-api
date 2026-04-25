@@ -15,5 +15,10 @@ namespace BgituGrades.Domain.Interfaces
         Task UpdatePresenceAsync(Presence entity, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
         Task<Presence?> GetPresenceByIdAsync(int id, CancellationToken cancellationToken);
+        Task<(int present, int total)?> GetPresenceCountAsync(
+            string groupName, string disciplineName,
+            DateOnly date, TimeOnly startTime,
+            CancellationToken cancellationToken);
+        Task<(int present, int total, string GroupKey)?> GetPresenceCountByClassAsync(int classId, DateOnly date, CancellationToken cancellationToken);
     }
 }

@@ -100,6 +100,21 @@ namespace BgituGrades.Application.Services
             return response;
         }
 
+        public async Task<(int present, int total)?> GetPresenceCountAsync(
+            string groupName, string disciplineName,
+            DateOnly date, TimeOnly startTime, 
+            CancellationToken cancellationToken)
+        {
+            return await _presenceRepository.GetPresenceCountAsync(groupName, disciplineName, date, startTime, cancellationToken: cancellationToken);
+        }
+
+        public async Task<(int present, int total, string GroupKey)?> GetPresenceCountByClassAsync(
+            int classId, DateOnly date,
+            CancellationToken cancellationToken)
+        {
+            return await _presenceRepository.GetPresenceCountByClassAsync(classId, date, cancellationToken: cancellationToken);
+        }
+
 
         private async Task<T?> GetFromCacheAsync<T>(string key)
         {
@@ -144,5 +159,4 @@ namespace BgituGrades.Application.Services
             }
         }
     }
-
 }

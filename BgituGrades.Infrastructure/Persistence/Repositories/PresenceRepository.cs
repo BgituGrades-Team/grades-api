@@ -1,8 +1,10 @@
 ﻿using BgituGrades.Application.Models.Presence;
 using BgituGrades.Domain.Entities;
+using BgituGrades.Domain.Enums;
 using BgituGrades.Domain.Interfaces;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace BgituGrades.Infrastructure.Persistence.Repositories
 {
@@ -95,6 +97,74 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
         {
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Presences.AnyAsync(p => p.Id == id, cancellationToken: cancellationToken);
+        }
+
+
+        public async Task<(int present, int total)?> GetPresenceCountAsync(
+            string groupName, string disciplineName,
+            DateOnly date, TimeOnly startTime,
+            CancellationToken cancellationToken)
+        {
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+
+            int weekDay = (int)date.DayOfWeek;
+            int weekNumber = ISOWeek.GetWeekOfYear(date.ToDateTime(TimeOnly.MinValue)) % 2 == 0 ? 2 : 1;
+
+            var classId = await context.Classes
+                .AsNoTracking()
+                .Where(c =>
+                    c.Group!.Name == groupName &&
+                    c.Discipline!.Name == disciplineName &&
+                    c.WeekDay == weekDay &&
+                    c.Weeknumber == weekNumber &&
+                    c.StartTime.Hour == startTime.Hour &&
+                    c.StartTime.Minute == startTime.Minute)
+                .Select(c => (int?)c.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (classId == null)
+                return null;
+
+            var total = await context.Students
+                .AsNoTracking()
+                .CountAsync(s => s.Group!.Name == groupName, cancellationToken);
+
+            var absentCount = await context.Presences
+                .AsNoTracking()
+                .CountAsync(p => p.ClassId == classId && p.Date == date && 
+                    (p.IsPresent == PresenceType.ABSENTVALID || p.IsPresent == PresenceType.ABSENTINVALID), 
+                    cancellationToken);
+
+            return (total - absentCount, total);
+        }
+
+        public async Task<(int present, int total, string GroupKey)?> GetPresenceCountByClassAsync(int classId, DateOnly date, CancellationToken cancellationToken)
+        {
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            var classEntity = await context.Classes
+                .Where(c => c.Id == classId)
+                .Select(c => new
+                {
+                    GroupName = c.Group!.Name,
+                    DisciplineName = c.Discipline!.Name,
+                    c.StartTime
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+            
+            if (classEntity == null)    
+                return null;
+
+            var total = await context.Students
+                .CountAsync(s => s.Group!.Name == classEntity.GroupName, cancellationToken);
+
+            var absentCount = await context.Presences
+                .CountAsync(p => p.ClassId == classId && p.Date == date &&
+                    (p.IsPresent == PresenceType.ABSENTVALID || p.IsPresent == PresenceType.ABSENTINVALID),
+                    cancellationToken);
+
+            var groupKey = $"count_{classEntity.GroupName}_{classEntity.DisciplineName}_{date:yyyy-MM-dd}_{classEntity.StartTime:HH-mm}";
+
+            return (total - absentCount, total, groupKey);
         }
     }
 }

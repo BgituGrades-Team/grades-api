@@ -10,7 +10,7 @@ namespace BgituGradesLoader.Database.Tables
         [JsonProperty] private string type;
         [JsonProperty] private int weekNumber;
         [JsonProperty] private int weekDay;
-        [JsonProperty] private string startAt;
+        [JsonProperty] private string startTime;
         [JsonProperty] private int disciplineId;
         [JsonProperty] private int groupId;
 
@@ -21,7 +21,7 @@ namespace BgituGradesLoader.Database.Tables
             this.type = type;
             this.weekNumber = weekNumber;
             this.weekDay = weekDay;
-            this.startAt = startAt;
+            this.startTime = startAt;
             this.disciplineId = disciplineId;
             this.groupId = groupId;
         }
@@ -33,7 +33,7 @@ namespace BgituGradesLoader.Database.Tables
             weekDay = compassPair.DayNumber;
 
             string plugDate = DateTime.Now.ToString("yyyy-MM-dd");
-            startAt = $"{plugDate}T{compassPair.StartAt}Z";
+            startTime = $"{plugDate}T{compassPair.StartAt}Z";
         }
 
         public void SetDiscipline(DatabaseDiscipline discipline)

@@ -22,6 +22,24 @@ namespace BgituGrades.Application.Validators
         }
     }
 
+    public class GetPresenceCountRequestValidator : AbstractValidator<GetPresenceCountRequest>
+    {
+        public GetPresenceCountRequestValidator()
+        {
+            RuleFor(x => x.GroupName)
+                .NotEmpty().WithMessage("GroupName не может быть пустым");
+
+            RuleFor(x => x.DisciplineName)
+                .NotEmpty().WithMessage("DisciplineName не может быть пустым");
+
+            RuleFor(x => x.Date)
+                .NotEmpty().WithMessage("Дата не может быть пустой");
+
+            RuleFor(x => x.StartTime)
+                .NotEmpty().WithMessage("Время начала не может быть пустым");
+        }
+    }
+
     public class UpdatePresenceRequestValidator : AbstractValidator<UpdatePresenceRequest>
     {
         public UpdatePresenceRequestValidator(IPresenceRepository presenceRepository, IStudentRepository studentRepository, IDisciplineRepository disciplineRepository)

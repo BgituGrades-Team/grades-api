@@ -109,7 +109,51 @@ namespace BgituGrades.API.Hubs
             }
             var cancellationToken = Context.ConnectionAborted;
             var response = await _presenceService.UpdateOrCreatePresenceAsync(request, cancellationToken: cancellationToken);
+            var result = await _presenceService.GetPresenceCountByClassAsync(request.ClassId, request.Date, cancellationToken);
+            var countResponse = new PresenceCountResponse
+            {
+                Present = result?.present ?? 0,
+                Total = result?.total ?? 0
+            };
+            if (result != null)
+            {
+                await Clients.Groups(result.Value.GroupKey).SendAsync("ReceivePresenceCount", countResponse);
+            }
             await Clients.Groups($"class_{request.GroupId}_{request.DisciplineId}").SendAsync("UpdatedPresence", response);
+        }
+
+        [Channel("hubs/grade/GetPresenceCount")]
+        [AllowAnonymous]
+        [PublishOperation(typeof(GetPresenceCountRequest), Summary = "Подписаться на счётчик присутствующих", OperationId = nameof(GetPresenceCount))]
+        [SubscribeOperation(typeof(PresenceCountResponse), Summary = "Событие: Текущий счётчик присутствующих", OperationId = "ReceivePresenceCount")]
+        public async Task GetPresenceCount(GetPresenceCountRequest request)
+        {
+            var validator = serviceProvider.GetService<IValidator<GetPresenceCountRequest>>();
+            var validationResult = validator != null ? await validator.ValidateAsync(request) : null;
+            if (validationResult == null || !validationResult.IsValid)
+            {
+                var errors = validationResult?.Errors.Select(e => e.ErrorMessage).ToList() ?? ["Validation failed"];
+                await Clients.Caller.SendAsync("ValidationError", errors);
+                return;
+            }
+
+            var cancellationToken = Context.ConnectionAborted;
+            var result = await _presenceService.GetPresenceCountAsync(
+                request.GroupName, request.DisciplineName,
+                request.Date, request.StartTime, cancellationToken);
+            if (result == null)
+            {
+                await Clients.Caller.SendAsync("NotFound", "Пара или записи о посещаемости не найдены");
+                return;
+            }
+            var response = new PresenceCountResponse
+            {
+                Present = result.Value.present,
+                Total = result.Value.total
+            };
+            var groupKey = $"count_{request.GroupName}_{request.DisciplineName}_{request.Date:yyyy-MM-dd}_{request.StartTime:HH-mm}";
+            await Groups.AddToGroupAsync(Context.ConnectionId, groupKey);
+            await Clients.Caller.SendAsync("ReceivePresenceCount", response);
         }
 
         public record PermissionDeniedResponse(string Message);

@@ -19,4 +19,10 @@ namespace BgituGrades.Application.Models.Presence
         public DateOnly Date { get; set; }
         public DateOnly OriginalDate { get; set; }
     }
+
+    public class PresenceCountResponse
+    {
+        public int Present { get; set; }
+        public int Total { get; set; }
+    }
 }
