@@ -38,13 +38,3 @@ jobs:
           tags: ghcr.io/${{ env.OWNER }}/bgitu-grades-api:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Build & push Loader image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./BgituGradesLoader
-          file: ./BgituGradesLoader/Dockerfile
-          push: true
-          tags: ghcr.io/${{ env.OWNER }}/bgitu-grades-loader:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
