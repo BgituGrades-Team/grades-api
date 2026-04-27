@@ -187,5 +187,12 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
             using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
             return await context.Students.AnyAsync(s => s.Id == id, cancellationToken: cancellationToken);
         }
+
+        public async Task DeleteNotInAsync(IEnumerable<int> seenOfficialIds, CancellationToken cancellationToken)
+        {
+            using var context = await contextFactory.CreateDbContextAsync(cancellationToken: cancellationToken);
+            await context.Students.Where(s => !seenOfficialIds.Contains(s.OfficialId))
+                .ExecuteDeleteAsync(cancellationToken: cancellationToken);
+        }
     }
 }

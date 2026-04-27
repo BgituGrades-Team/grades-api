@@ -18,5 +18,6 @@ namespace BgituGrades.Domain.Interfaces
         Task BulkInsertAsync(IEnumerable<Student> students, CancellationToken cancellationToken);
         Task DeleteByIdsAsync(IEnumerable<int> studentsIds, CancellationToken cancellationToken);
         Task DeleteAllAsync(CancellationToken cancellationToken);
+        Task DeleteNotInAsync(IEnumerable<int> seenOfficialIds, CancellationToken cancellationToken);
     }
 }

@@ -90,6 +90,7 @@ namespace BgituGrades.Application.Services
             var batch = new List<Student>(BATCH_SIZE);
             var unknownGroups = new HashSet<string>();
             var leavedStudents = new List<int>();
+            var seenOfficialIds = new HashSet<int>();
 
             using var package = new ExcelPackage(fileStream);
             var sheet = package.Workbook.Worksheets[0];
@@ -109,6 +110,7 @@ namespace BgituGrades.Application.Services
                 if (status != STATUS_STUDYING)
                 {
                     leavedStudents.Add(officialId);
+                    seenOfficialIds.Add(officialId);
                     result.SkippedRows++;
                     continue;
                 }
@@ -157,6 +159,7 @@ namespace BgituGrades.Application.Services
                         GroupId = gId,
                         OfficialGroupId = officialGroupId,
                     });
+                    seenOfficialIds.Add(officialId);
                 }
                 result.ProcessedRows++;
 
@@ -170,6 +173,8 @@ namespace BgituGrades.Application.Services
 
             if (batch.Count > 0)
                 await FlushBatchAsync(batch, leavedStudents, cancellationToken);
+
+            await _studentRepository.DeleteNotInAsync(seenOfficialIds, cancellationToken);
 
             result.UnknownGroups = unknownGroups;
             return result;
