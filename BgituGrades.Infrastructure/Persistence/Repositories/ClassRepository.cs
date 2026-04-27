@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 
 namespace BgituGrades.Infrastructure.Persistence.Repositories
-{ 
+{
     public class ClassRepository(IDbContextFactory<AppDbContext> contextFactory) : IClassRepository
     {
         public async Task<Class> CreateClassAsync(Class entity, CancellationToken cancellationToken)

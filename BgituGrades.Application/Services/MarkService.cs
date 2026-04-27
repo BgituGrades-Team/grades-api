@@ -10,7 +10,7 @@ using System.Text.Json;
 
 namespace BgituGrades.Application.Services
 {
-    
+
     public class MarkService(IMarkRepository markRepository, IMapper mapper, IDistributedCache cache) : IMarkService
     {
         private readonly IMarkRepository _markRepository = markRepository;

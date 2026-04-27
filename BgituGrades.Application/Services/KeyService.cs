@@ -47,7 +47,7 @@ namespace BgituGrades.Application.Services
         {
             var lookupHash = _hasher.ComputeLookupHash(key);
             var result = await _keyRepository.DeleteKeyAsync(lookupHash, cancellationToken: cancellationToken);
-            if (result) 
+            if (result)
                 await _cacheService.RemoveByTagAsync(CacheTags.Key(), ct: cancellationToken);
             return result;
         }
@@ -60,7 +60,7 @@ namespace BgituGrades.Application.Services
                 {
                     var entities = await _keyRepository.GetKeysAsync(cancellationToken: token);
                     return _mapper.Map<List<KeyDTO>>(entities);
-                }, 
+                },
                 tags: [CacheTags.Key()],
                 options: DefaultOptions, ct: cancellationToken);
         }
@@ -74,7 +74,7 @@ namespace BgituGrades.Application.Services
                 {
                     var entity = await _keyRepository.GetAsync(key, cancellationToken: token);
                     return _mapper.Map<KeyDTO>(entity);
-                }, 
+                },
                 tags: [CacheTags.Key()],
                 options: DefaultOptions, ct: cancellationToken);
         }

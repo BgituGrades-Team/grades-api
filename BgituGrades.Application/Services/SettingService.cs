@@ -6,7 +6,7 @@ using BgituGrades.Domain.Interfaces;
 
 namespace BgituGrades.Application.Services
 {
-    
+
     public class SettingService(ISettingRepository settingRepository, IMapper mapper) : ISettingService
     {
         private readonly ISettingRepository _settingRepository = settingRepository;

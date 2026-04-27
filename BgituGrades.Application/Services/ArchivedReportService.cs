@@ -11,7 +11,7 @@ using System.Globalization;
 
 namespace BgituGrades.Application.Services
 {
-    
+
 
     public class ArchivedReportService(IReportProgressNotifier notifier, IDistributedCache cache, IServiceScopeFactory scopeFactory) : IArchivedReportService
     {

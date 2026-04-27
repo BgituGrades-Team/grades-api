@@ -1,5 +1,4 @@
 ﻿using BgituGrades.Application.Interfaces;
-using BgituGrades.API.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
 namespace BgituGrades.API.Hubs
@@ -7,7 +6,7 @@ namespace BgituGrades.API.Hubs
     public class ReportProgressNotifier(IHubContext<ReportHub> hubContext) : IReportProgressNotifier
     {
         public Task AddToGroupAsync(string connectionId, Guid reportId) =>
-            hubContext.Groups.AddToGroupAsync(connectionId, reportId.ToString());   
+            hubContext.Groups.AddToGroupAsync(connectionId, reportId.ToString());
         public Task SendProgressAsync(Guid reportId, int percent, string message) =>
             hubContext.Clients.Group(reportId.ToString())
                 .SendAsync("ReportProgress", reportId.ToString(), percent, message);

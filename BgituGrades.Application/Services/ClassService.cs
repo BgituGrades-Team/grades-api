@@ -10,7 +10,7 @@ using Microsoft.Extensions.Caching.Hybrid;
 
 namespace BgituGrades.Application.Services
 {
-    
+
     public class ClassService(IClassRepository classRepository, IGroupRepository groupRepository, ITransferService transferService,
         IStudentRepository studentRepository, IWorkRepository workRepository, IMapper mapper, ICacheService cacheService, ITransferRepository transferRepository) : IClassService
     {
@@ -196,7 +196,7 @@ namespace BgituGrades.Application.Services
                     factory: async token => await _workRepository.GetByDisciplineAndGroupAsync(disciplineId, groupId, cancellationToken: token),
                     tags: CacheTags.WorkAll(),
                     options: DefaultOptions, ct: cancellationToken);
-                
+
 
             var students = await _studentRepository.GetMarksGrade(works, groupId, disciplineId, cancellationToken: cancellationToken);
             var grade = _mapper.Map<List<FullGradeMarkResponse>>(students);
@@ -218,7 +218,7 @@ namespace BgituGrades.Application.Services
             await Task.WhenAll(classesTask, transfersTask);
 
             var allClasses = await classesTask;
-            var allTransfers = await transfersTask; 
+            var allTransfers = await transfersTask;
 
             var groupLookup = groups.ToDictionary(g => g.Id);
             var result = new Dictionary<(int, int), int>();

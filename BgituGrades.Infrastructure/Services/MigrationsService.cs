@@ -11,7 +11,7 @@ using System.Globalization;
 
 namespace BgituGrades.Application.Services
 {
-    
+
     public class MigrationsService(IClassRepository classRepository, IDisciplineRepository disciplineRepository,
         IGroupRepository groupRepository, IMarkRepository markRepository, IReportSnapshotRepository reportSnapshotRepository,
         IPresenceRepository presenceRepository, ITransferRepository transferRepository,

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BgituGrades.Infrastructure.Persistence.Repositories
 {
-    
+
 
     public class TransferRepository(IDbContextFactory<AppDbContext> contextFactory) : ITransferRepository
     {

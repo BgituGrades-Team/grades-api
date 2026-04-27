@@ -1,5 +1,4 @@
 using BgituGrades.Application.Models.Presence;
-using BgituGrades.Domain.Enums;
 using BgituGrades.Domain.Interfaces;
 using FluentValidation;
 

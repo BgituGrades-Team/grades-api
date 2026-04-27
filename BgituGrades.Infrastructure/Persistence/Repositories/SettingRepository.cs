@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BgituGrades.Infrastructure.Persistence.Repositories
 {
-    
+
     public class SettingRepository(IDbContextFactory<AppDbContext> contextFactory) : ISettingRepository
     {
         public async Task<Setting?> GetCalendarUrlAsync(CancellationToken cancellationToken)

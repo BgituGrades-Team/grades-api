@@ -32,7 +32,7 @@ namespace BgituGrades.API.Hubs
                 }
             }
             var validator = serviceProvider.GetService<IValidator<GetClassDateRequest>>();
-            var validationResult =  validator != null ? await validator.ValidateAsync(request) : null;
+            var validationResult = validator != null ? await validator.ValidateAsync(request) : null;
             if (validationResult == null || !validationResult.IsValid)
             {
                 var errors = validationResult?.Errors.Select(e => e.ErrorMessage).ToList() ?? ["Validation failed"];
@@ -61,7 +61,7 @@ namespace BgituGrades.API.Hubs
                 }
             }
             var validator = serviceProvider.GetService<IValidator<GetClassDateRequest>>();
-            var validationResult =  validator != null ? await validator.ValidateAsync(request) : null;
+            var validationResult = validator != null ? await validator.ValidateAsync(request) : null;
             if (validationResult == null || !validationResult.IsValid)
             {
                 var errors = validationResult?.Errors.Select(e => e.ErrorMessage).ToList() ?? ["Validation failed"];
@@ -81,7 +81,7 @@ namespace BgituGrades.API.Hubs
         public async Task UpdateMarkGrade(UpdateMarkGradeRequest request)
         {
             var validator = serviceProvider.GetService<IValidator<UpdateMarkGradeRequest>>();
-            var validationResult =  validator != null ? await validator.ValidateAsync(request) : null;
+            var validationResult = validator != null ? await validator.ValidateAsync(request) : null;
             if (validationResult == null || !validationResult.IsValid)
             {
                 var errors = validationResult?.Errors.Select(e => e.ErrorMessage).ToList() ?? ["Validation failed"];
@@ -100,7 +100,7 @@ namespace BgituGrades.API.Hubs
         public async Task UpdatePresenceGrade(UpdatePresenceGradeRequest request)
         {
             var validator = serviceProvider.GetService<IValidator<UpdatePresenceGradeRequest>>();
-            var validationResult =  validator != null ? await validator.ValidateAsync(request) : null;
+            var validationResult = validator != null ? await validator.ValidateAsync(request) : null;
             if (validationResult == null || !validationResult.IsValid)
             {
                 var errors = validationResult?.Errors.Select(e => e.ErrorMessage).ToList() ?? ["Validation failed"];

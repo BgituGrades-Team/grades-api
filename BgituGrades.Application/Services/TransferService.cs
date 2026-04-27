@@ -7,7 +7,7 @@ using BgituGrades.Domain.Interfaces;
 
 namespace BgituGrades.Application.Services
 {
-    
+
     public class TransferService(ITransferRepository transferRepository, IMapper mapper, ICacheService cacheService) : ITransferService
     {
         private readonly ITransferRepository _transferRepository = transferRepository;
@@ -28,7 +28,7 @@ namespace BgituGrades.Application.Services
             if (success)
                 await _cacheService.RemoveByTagAsync(CacheTags.Class(), cancellationToken);
             return success;
-         }
+        }
 
         public async Task<TransferResponse?> GetTransferByIdAsync(int id, CancellationToken cancellationToken)
         {

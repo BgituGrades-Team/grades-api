@@ -1,14 +1,12 @@
-﻿using BgituGrades.Application.Models.Presence;
-using BgituGrades.Domain.Entities;
+﻿using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Enums;
 using BgituGrades.Domain.Interfaces;
-using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
 namespace BgituGrades.Infrastructure.Persistence.Repositories
 {
-    
+
 
     public class PresenceRepository(IDbContextFactory<AppDbContext> contextFactory) : IPresenceRepository
     {
@@ -131,8 +129,8 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
 
             var absentCount = await context.Presences
                 .AsNoTracking()
-                .CountAsync(p => p.ClassId == classId && p.Date == date && 
-                    (p.IsPresent == PresenceType.ABSENTVALID || p.IsPresent == PresenceType.ABSENTINVALID), 
+                .CountAsync(p => p.ClassId == classId && p.Date == date &&
+                    (p.IsPresent == PresenceType.ABSENTVALID || p.IsPresent == PresenceType.ABSENTINVALID),
                     cancellationToken);
 
             return (total - absentCount, total, startTime, disciplineName, date);
@@ -150,8 +148,8 @@ namespace BgituGrades.Infrastructure.Persistence.Repositories
                     c.StartTime
                 })
                 .FirstOrDefaultAsync(cancellationToken);
-            
-            if (classEntity == null)    
+
+            if (classEntity == null)
                 return null;
 
             var total = await context.Students

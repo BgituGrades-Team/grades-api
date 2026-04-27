@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace BgituGrades.Application.Services
 {
-    
+
     public partial class StudentService(IStudentRepository studentRepository,
         IGroupService groupService, IMapper mapper) : IStudentService
 
@@ -172,7 +172,7 @@ namespace BgituGrades.Application.Services
 
         private async Task FlushBatchAsync(IEnumerable<Student> batch, IEnumerable<int> leavedOfficialIds, CancellationToken cancellationToken)
         {
-            
+
             await _studentRepository.DeleteByIdsAsync(leavedOfficialIds, cancellationToken: cancellationToken);
 
             await _studentRepository.BulkInsertAsync(batch, cancellationToken: cancellationToken);

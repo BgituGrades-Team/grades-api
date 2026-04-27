@@ -9,7 +9,7 @@ using System.Text.Json;
 
 namespace BgituGrades.Application.Services
 {
-    
+
     public class PresenceService(IPresenceRepository presenceRepository, IMapper mapper, IDistributedCache cache, ICacheService cacheService) : IPresenceService
     {
         private readonly IPresenceRepository _presenceRepository = presenceRepository;
@@ -102,7 +102,7 @@ namespace BgituGrades.Application.Services
 
         public async Task<(int present, int total, TimeOnly StartTime, string DisciplineName, DateOnly Date)?> GetPresenceCountAsync(
             string groupName, string disciplineName,
-            DateOnly date, TimeOnly startTime, 
+            DateOnly date, TimeOnly startTime,
             CancellationToken cancellationToken)
         {
             return await _presenceRepository.GetPresenceCountAsync(groupName, disciplineName, date, startTime, cancellationToken: cancellationToken);

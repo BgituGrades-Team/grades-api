@@ -8,7 +8,7 @@ using Microsoft.Extensions.Caching.Hybrid;
 
 namespace BgituGrades.Application.Services
 {
-    
+
     public class WorkService(IWorkRepository workRepository, IMapper mapper, ICacheService cacheService) : IWorkService
     {
         private readonly IWorkRepository _workRepository = workRepository;

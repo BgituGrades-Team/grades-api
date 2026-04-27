@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BgituGrades.Infrastructure.Persistence.Repositories
 {
-    
+
 
     public class MarkRepository(IDbContextFactory<AppDbContext> contextFactory) : IMarkRepository
     {

@@ -8,13 +8,13 @@ using Microsoft.Extensions.Caching.Hybrid;
 
 namespace BgituGrades.Application.Services
 {
-    
+
     public class DisciplineService(IDisciplineRepository disciplineRepository, IMapper mapper, ICacheService cacheService) : IDisciplineService
     {
         private readonly IDisciplineRepository _disciplineRepository = disciplineRepository;
         private readonly IMapper _mapper = mapper;
         private readonly ICacheService _cacheService = cacheService;
-       
+
 
         private static readonly HybridCacheEntryOptions DefaultOptions = new()
         {
@@ -56,7 +56,7 @@ namespace BgituGrades.Application.Services
                 {
                     var entities = await _disciplineRepository.GetAllAsync(cancellationToken: token);
                     return _mapper.Map<List<DisciplineDTO>>(entities);
-                }, 
+                },
                 tags: CacheTags.DisicplineAll(),
                 options: DefaultOptions, ct: cancellationToken);
         }

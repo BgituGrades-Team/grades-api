@@ -130,7 +130,7 @@ namespace BgituGrades.Application.Services
 
             int maxCols = disciplinesByGroup.Count != 0 ? disciplinesByGroup.Values.Max(v => v.Count) : 1;
 
- 
+
             for (int col = 2; col <= maxCols + 1; col++)
             {
                 ws.Column(col).Width = 30;
@@ -173,7 +173,8 @@ namespace BgituGrades.Application.Services
 
             var markDict = allMarks
                 .Where(m => m.Work != null && !string.IsNullOrEmpty(m.Value))
-                .Select(m => new {
+                .Select(m => new
+                {
                     m.StudentId,
                     m.Work!.DisciplineId,
                     Val = double.TryParse(m.Value!.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out var v) ? v : (double?)null

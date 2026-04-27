@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BgituGrades.Infrastructure.Persistence.Repositories
 {
-    
+
 
     public class DisciplineRepository(IDbContextFactory<AppDbContext> contextFactory) : IDisciplineRepository
     {

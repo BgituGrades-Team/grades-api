@@ -3,7 +3,6 @@ using AutoMapper;
 using BgituGrades.Application.DTOs;
 using BgituGrades.Application.Interfaces;
 using BgituGrades.Application.Models.Discipline;
-using BgituGrades.Application.Models.Student;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

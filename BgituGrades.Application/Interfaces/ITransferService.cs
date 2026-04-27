@@ -1,5 +1,4 @@
-﻿using BgituGrades.Application.DTOs;
-using BgituGrades.Application.Models.Transfer;
+﻿using BgituGrades.Application.Models.Transfer;
 
 namespace BgituGrades.Application.Interfaces
 {

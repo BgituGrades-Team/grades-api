@@ -2,7 +2,6 @@
 using BgituGrades.Application.DTOs;
 using BgituGrades.Application.Models.Class;
 using BgituGrades.Application.Models.Mark;
-using BgituGrades.Application.Models.Presence;
 using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Models;
 

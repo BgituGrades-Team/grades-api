@@ -1,5 +1,4 @@
 ﻿using BgituGrades.Application.DTOs;
-using BgituGrades.Application.Models.Group;
 
 namespace BgituGrades.Application.Interfaces
 {

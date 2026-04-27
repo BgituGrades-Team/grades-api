@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BgituGrades.Infrastructure.Persistence.Repositories
 {
-    
+
     public class KeyRepository(IDbContextFactory<AppDbContext> contextFactory) : IKeyRepository
     {
         public async Task<ApiKey> CreateKeyAsync(ApiKey entity, CancellationToken cancellationToken)

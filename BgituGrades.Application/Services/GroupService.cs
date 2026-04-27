@@ -9,7 +9,7 @@ using Microsoft.Extensions.Caching.Hybrid;
 
 namespace BgituGrades.Application.Services
 {
-    
+
 
     public class GroupService(IGroupRepository groupRepository, IMapper mapper, ICacheService cacheService) : IGroupService
     {
@@ -60,7 +60,7 @@ namespace BgituGrades.Application.Services
                 {
                     var entities = await _groupRepository.GetAllAsync(cancellationToken: token);
                     return _mapper.Map<List<GroupDTO>>(entities);
-                }, 
+                },
                 tags: CacheTags.GroupAll(),
                 options: DefaultOptions, ct: cancellationToken);
         }
@@ -73,7 +73,7 @@ namespace BgituGrades.Application.Services
                 {
                     var entity = await _groupRepository.GetByIdAsync(id, cancellationToken: token);
                     return entity == null ? null : _mapper.Map<GroupDTO>(entity);
-                }, 
+                },
                 tags: CacheTags.GroupAll(),
                 options: DefaultOptions, ct: cancellationToken);
         }
@@ -93,8 +93,8 @@ namespace BgituGrades.Application.Services
                 {
                     var entities = await _groupRepository.GetArchivedByPeriod(semester, year, cancellationToken: token);
                     return _mapper.Map<List<GroupDTO>>(entities);
-                },  
-                tags: CacheTags.GroupAll(), 
+                },
+                tags: CacheTags.GroupAll(),
                 options: DefaultOptions, ct: cancellationToken);
         }
 

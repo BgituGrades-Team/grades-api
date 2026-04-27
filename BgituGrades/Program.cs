@@ -69,7 +69,7 @@ namespace BgituGrades
             })
             .AddStackExchangeRedis(redisConnectionString!);
 
-            builder.Services.AddAutoMapper(cfg => { }, 
+            builder.Services.AddAutoMapper(cfg => { },
                 typeof(Program).Assembly,
                 typeof(ClassProfile).Assembly);
 

@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace BgituGrades.Application.Services
 {
-    
+
     public class ScheduleLoaderService(IConfiguration config, ILogger<IScheduleLoaderService> logger) : IScheduleLoaderService
     {
         private readonly IConfiguration _config = config;

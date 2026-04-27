@@ -1,12 +1,11 @@
-﻿using BgituGrades.Application.Models.Group;
-using BgituGrades.Domain.Entities;
+﻿using BgituGrades.Domain.Entities;
 using BgituGrades.Domain.Interfaces;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace BgituGrades.Infrastructure.Persistence.Repositories
 {
-    
+
 
     public class GroupRepository(IDbContextFactory<AppDbContext> contextFactory) : IGroupRepository
     {

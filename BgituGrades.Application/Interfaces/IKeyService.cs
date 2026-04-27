@@ -1,5 +1,5 @@
-﻿using BgituGrades.Domain.Enums;
-using BgituGrades.Application.DTOs;
+﻿using BgituGrades.Application.DTOs;
+using BgituGrades.Domain.Enums;
 
 namespace BgituGrades.Application.Interfaces
 {
