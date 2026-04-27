@@ -1,4 +1,12 @@
 services:
+  frontend:
+      image: ghcr.io/bgitugrades-team/bgitu-grades-frontend:latest
+      container_name: bgitu-frontend
+      restart: unless-stopped
+      ports:
+        - "80:80"
+      depends_on:
+        - api
   api:
     image: ghcr.io/bgitugrades-team/bgitu-grades-api:latest
     container_name: bgitu-grades
@@ -10,8 +18,6 @@ services:
       - ConnectionStrings__PostgreSQL=Host=db;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD};Pooling=true;MinPoolSize=10;MaxPoolSize=150;Keepalive=60
       - ConnectionStrings__Redis=redis:6379
       - ScheduleLoader__ExecutablePath=/app/loader/BgituGradesLoader
-    volumes:
-      - loader-bin:/app/loader
     depends_on:
       db:
         condition: service_healthy
