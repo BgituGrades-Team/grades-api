@@ -15,7 +15,7 @@ namespace BgituGradesLoader.Table
         private TableData? _nowTableData;
         private CompassConfig? _config;
 
-        private static readonly string FILE_PATH = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "table.xlsx");
+        private static readonly string FILE_PATH = Path.Combine(Path.GetTempPath(), "table.xlsx");
 
         public TableManager(SaveManager saveManager)
         {
