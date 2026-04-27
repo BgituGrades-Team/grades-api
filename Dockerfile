@@ -1,9 +1,15 @@
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS base
-WORKDIR /app
-EXPOSE 8080
-USER $APP_UID
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS loader-build # Собираем загрузчик
+WORKDIR /src
+COPY ["BgituGradesLoader/BgituGradesLoader.csproj", "."]
+RUN dotnet restore "./BgituGradesLoader.csproj"
+COPY BgituGradesLoader/ .
+RUN dotnet publish "./BgituGradesLoader.csproj" \
+    -c Release \
+    -r linux-musl-x64 \
+    --self-contained true \
+    -o /app/loader-publish
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build # Собираем API
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
@@ -18,7 +24,11 @@ COPY . .
 
 RUN dotnet publish "BgituGrades/BgituGrades.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS final # Совмещаем в финальный образ
+RUN apk add --no-cache libstdc++ gcompat icu-libs   # зависимости loader-а
 WORKDIR /app
+EXPOSE 8080
 COPY --from=build /app/publish .
+COPY --from=loader-build /app/loader-publish ./loader 
+USER $APP_UID
 ENTRYPOINT ["dotnet", "BgituGrades.API.dll"]
