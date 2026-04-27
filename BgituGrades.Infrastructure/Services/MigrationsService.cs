@@ -112,7 +112,7 @@ namespace BgituGrades.Application.Services
                 var group = groupDict[pair.GroupId];
                 var classes = allClasses.Where(c => c.GroupId == pair.GroupId && c.DisciplineId == pair.DisciplineId);
                 var transfers = allTransfers.Where(t => t.GroupId == pair.GroupId && t.DisciplineId == pair.DisciplineId);
-                var dates = await classService.GenerateScheduleDatesAsync(group, classes, transfers);
+                var dates = classService.GenerateScheduleDates(group, classes, transfers);
                 scheduleTotalDict[(pair.GroupId, pair.DisciplineId)] = dates.Count;
             }
 

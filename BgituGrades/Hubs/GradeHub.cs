@@ -142,7 +142,7 @@ namespace BgituGrades.API.Hubs
 
             var cancellationToken = Context.ConnectionAborted;
             var result = await _presenceService.GetPresenceCountAsync(
-                request.GroupName, request.DisciplineName,
+                request.GroupName!, request.DisciplineName!,
                 request.Date, request.StartTime, cancellationToken);
             if (result == null)
             {
@@ -157,7 +157,7 @@ namespace BgituGrades.API.Hubs
                 StartTime = result.Value.StartTime,
                 Date = result.Value.Date
             };
-            var groupKey = $"count_{request.GroupName.ToLower()}_{request.DisciplineName.ToLower()}_{request.Date:yyyy-MM-dd}_{request.StartTime:HH-mm}";
+            var groupKey = $"count_{request.GroupName!.ToLower()}_{request.DisciplineName!.ToLower()}_{request.Date:yyyy-MM-dd}_{request.StartTime:HH-mm}";
             await Groups.AddToGroupAsync(Context.ConnectionId, groupKey);
             await Clients.Caller.SendAsync("ReceivePresenceCount", response);
         }

@@ -121,7 +121,7 @@ namespace BgituGrades.Application.Services
             return dates.OrderBy(d => d.Date).ToList();
         }
 
-        public async Task<List<ClassDateResponse>> GenerateScheduleDatesAsync(Group group, IEnumerable<Class> classes,
+        public List<ClassDateResponse> GenerateScheduleDates(Group group, IEnumerable<Class> classes,
             IEnumerable<Transfer> transfers, DateOnly? startDateOverride = null, DateOnly? endDateOverride = null)
         {
             var startDate = startDateOverride ?? group.StudyStartDate;
@@ -230,7 +230,7 @@ namespace BgituGrades.Application.Services
                 var classes = allClasses.TryGetValue(pair, out var c) ? c : [];
                 var transfers = allTransfers.TryGetValue(pair, out var t) ? t : [];
 
-                var dates = await GenerateScheduleDatesAsync(group, classes, transfers);
+                var dates = GenerateScheduleDates(group, classes, transfers);
                 result[pair] = dates.Count;
             }
 

@@ -10,7 +10,7 @@ using System.Text.Json;
 namespace BgituGrades.Application.Services
 {
 
-    public class PresenceService(IPresenceRepository presenceRepository, IMapper mapper, IDistributedCache cache, ICacheService cacheService) : IPresenceService
+    public class PresenceService(IPresenceRepository presenceRepository, IMapper mapper, IDistributedCache cache) : IPresenceService
     {
         private readonly IPresenceRepository _presenceRepository = presenceRepository;
         private readonly IMapper _mapper = mapper;

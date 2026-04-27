@@ -60,12 +60,14 @@ namespace BgituGrades.Application.Services
 
         public async Task<ImportResult> ImportStudentsFromXlsxAsync(Stream fileStream, CancellationToken cancellationToken)
         {
-            var groupsByName = await _groupService
-                .GetAllAsync(cancellationToken)
-                .ContinueWith(t => t.Result.ToDictionary(
-                    g => g.Name,
+            var groups = await _groupService.GetAllAsync(cancellationToken);
+    
+            var groupsByName = groups
+                .Where(g => g.Name != null)
+                .ToDictionary(
+                    g => g.Name!,
                     g => g.Id,
-                    StringComparer.OrdinalIgnoreCase));
+                    StringComparer.OrdinalIgnoreCase);
 
             var subGroupMap = groupsByName
                 .Keys
@@ -78,7 +80,10 @@ namespace BgituGrades.Application.Services
                         ? name[..match.Index].Trim()
                         : name[..name.IndexOf('(')].Trim();
                 }, StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(g => g.Key, g => g.Select(name => groupsByName[name]).ToList(), StringComparer.OrdinalIgnoreCase);
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(name => groupsByName[name]).ToList(),
+                    StringComparer.OrdinalIgnoreCase);
 
 
             var result = new ImportResult();

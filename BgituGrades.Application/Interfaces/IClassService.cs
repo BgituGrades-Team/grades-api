@@ -13,7 +13,7 @@ namespace BgituGrades.Application.Interfaces
         Task<List<ClassDTO>> CreateClassAsync(IEnumerable<ClassDTO> classDto, CancellationToken cancellationToken);
         Task<List<ClassDateResponse>> GenerateScheduleDatesAsync(int groupId, int disciplineId, CancellationToken cancellationToken,
             DateOnly? startDateOverride = null, DateOnly? endDateOverride = null);
-        Task<List<ClassDateResponse>> GenerateScheduleDatesAsync(Group group, IEnumerable<Class> classes,
+        List<ClassDateResponse> GenerateScheduleDates(Group group, IEnumerable<Class> classes,
             IEnumerable<Transfer> transfers, DateOnly? startDateOverride = null, DateOnly? endDateOverride = null);
         Task<Dictionary<(int GroupId, int DisciplineId), int>> GetClassDateCountsAsync(
             IEnumerable<Group> groups,

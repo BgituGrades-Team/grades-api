@@ -58,7 +58,7 @@ namespace BgituGrades.Application.Services
                 await _notifier.SendProgressAsync(reportId, 80, "Сохранение...");
                 await _cache.SetAsync($"report_{reportId}", result.ExcelBytes!, cacheOptions);
 
-                await _notifier.SendReadyAsync(reportId, $"https://{request.Host}/api/report/{reportId}/download", result.Preview);
+                await _notifier.SendReadyAsync(reportId, $"https://{request.Host}/api/report/{reportId}/download", result.Preview!);
             }
             catch (Exception ex)
             {
