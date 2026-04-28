@@ -2,7 +2,7 @@ name: Build & Push project
 
 on:
   push:
-    branches: [master, release]
+    branches: [master]
 
 env:
   REGISTRY: ghcr.io
