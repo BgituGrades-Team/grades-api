@@ -1,3 +1,4 @@
+name: grades-dev
 services:
   frontend:
       image: ghcr.io/bgitugrades-team/bgitu-grades-frontend:latest
