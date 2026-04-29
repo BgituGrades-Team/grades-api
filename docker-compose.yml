@@ -2,7 +2,7 @@ name: grades-release
 services:
   frontend:
       image: ghcr.io/bgitugrades-team/bgitu-grades-frontend:release
-      container_name: bgitu-frontend
+      container_name: grades-frontend
       restart: unless-stopped
       environment:
         - VITE_DOTNET_API_URL=${VITE_API_URL}
@@ -12,7 +12,7 @@ services:
         - api
   api:
     image: ghcr.io/bgitugrades-team/bgitu-grades-api:release
-    container_name: bgitu-grades
+    container_name: grades-api
     restart: unless-stopped
     ports:
       - "${API_EX_PORT}:8080"
