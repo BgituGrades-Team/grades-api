@@ -1,6 +1,6 @@
 services:
   frontend:
-      image: ghcr.io/bgitugrades-team/bgitu-grades-frontend:latest
+      image: ghcr.io/bgitugrades-team/bgitu-grades-frontend:release
       container_name: bgitu-frontend
       restart: unless-stopped
       environment:
@@ -10,7 +10,7 @@ services:
       depends_on:
         - api
   api:
-    image: ghcr.io/bgitugrades-team/bgitu-grades-api:latest
+    image: ghcr.io/bgitugrades-team/bgitu-grades-api:release
     container_name: bgitu-grades
     restart: unless-stopped
     ports:
