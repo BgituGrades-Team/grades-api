@@ -72,7 +72,13 @@ namespace BgituGradesLoader.Table
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36");
 
                 HttpResponseMessage response = await client.GetAsync(url);
-                Console.WriteLine($"Status: {response.StatusCode}");
+                Console.WriteLine($"Content-Type: {response.Content.Headers.ContentType}");
+                Console.WriteLine($"Content-Length: {response.Content.Headers.ContentLength}");
+
+                byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+                Console.WriteLine($"Bytes received: {bytes.Length}");
+
+                Console.WriteLine($"First bytes (text): {System.Text.Encoding.UTF8.GetString(bytes[..Math.Min(200, bytes.Length)])}");
 
                 if (!response.IsSuccessStatusCode)
                 {
