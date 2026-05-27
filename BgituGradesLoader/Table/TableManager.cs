@@ -57,6 +57,8 @@ namespace BgituGradesLoader.Table
                 throw new Exception("URL таблицы не получен от API (возможно, ошибка авторизации).");
 
             using HttpClient client = new();
+            client.DefaultRequestHeaders.Add("User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36");
             HttpResponseMessage response = await client.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
