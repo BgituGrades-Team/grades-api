@@ -55,19 +55,42 @@ namespace BgituGradesLoader.Table
             string? url = _saveManager.SaveData.TableLink.Data;
             if (string.IsNullOrEmpty(url))
                 throw new Exception("URL таблицы не получен от API (возможно, ошибка авторизации).");
-
-            using HttpClient client = new();
-            client.DefaultRequestHeaders.Add("User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36");
-            HttpResponseMessage response = await client.GetAsync(url);
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                string body = await response.Content.ReadAsStringAsync();
-                throw new Exception($"Ошибка скачивания таблицы! Код: {response.StatusCode}, Ответ: {body}");
-            }
+                var handler = new HttpClientHandler();
+                handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
+                {
+                    Console.WriteLine($"SSL errors: {errors}");
+                    Console.WriteLine($"Cert subject: {cert?.Subject}");
+                    Console.WriteLine($"Cert issuer: {cert?.Issuer}");
+                    Console.WriteLine($"Cert expiry: {cert?.GetExpirationDateString()}");
+                    return true;
+                };
 
-            File.WriteAllBytes(FILE_PATH, await response.Content.ReadAsByteArrayAsync());
+                using HttpClient client = new(handler);
+                client.DefaultRequestHeaders.Add("User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36");
+
+                HttpResponseMessage response = await client.GetAsync(url);
+                Console.WriteLine($"Status: {response.StatusCode}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    string body = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Ошибка скачивания таблицы! Код: {response.StatusCode}, Ответ: {body}");
+                }
+
+                File.WriteAllBytes(FILE_PATH, await response.Content.ReadAsByteArrayAsync());
+            }
+            catch (Exception ex)
+            {
+                Exception? e = ex;
+                while (e != null)
+                {
+                    Console.WriteLine($"[{e.GetType().Name}] {e.Message}");
+                    e = e.InnerException;
+                }
+            }
         }
 
         private static void DeleteTable()
