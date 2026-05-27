@@ -2,7 +2,7 @@ name: Build & Push project
 
 on:
   push:
-    branches: [release]
+    branches: [master]
 
 env:
   REGISTRY: ghcr.io
@@ -35,6 +35,6 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ghcr.io/${{ env.OWNER }}/bgitu-grades-api:release
+          tags: ghcr.io/${{ env.OWNER }}/bgitu-grades-api:master
           cache-from: type=gha
           cache-to: type=gha,mode=max
