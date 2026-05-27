@@ -60,7 +60,7 @@ namespace BgituGrades.API.Controllers
             var key = await _keyService.GenerateKeyAsync(Role.STUDENT, groupId: request.GroupId, cancellationToken: cancellationToken);
             var response = new SharedKeyResponse
             {
-                Link = $"{Request.Headers.Origin}/visit?key={key.Key}"
+                Link = $"{Request.Headers.Referer}?key={key.Key}"
             };
             return Ok(response);
         }
