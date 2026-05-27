@@ -55,8 +55,10 @@ namespace BgituGradesLoader.Table
             string? url = _saveManager.SaveData.TableLink.Data;
             if (string.IsNullOrEmpty(url))
                 throw new Exception("URL таблицы не получен от API (возможно, ошибка авторизации).");
+            var handler = new HttpClientHandler();
 
-            using HttpClient client = new();
+            using HttpClient client = new(handler);
+
             HttpResponseMessage response = await client.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
