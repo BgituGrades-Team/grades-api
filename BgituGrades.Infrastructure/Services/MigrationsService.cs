@@ -174,11 +174,10 @@ namespace BgituGrades.Application.Services
                 };
             }).ToList();
 
-            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                await db.Presences.ExecuteDeleteAsync(cancellationToken);
-                await db.Marks.ExecuteDeleteAsync(cancellationToken);
+                await db.BulkInsertAsync(archives, cancellationToken: cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
             }
             catch
@@ -186,7 +185,6 @@ namespace BgituGrades.Application.Services
                 await transaction.RollbackAsync(cancellationToken);
                 throw;
             }
-            await db.BulkInsertAsync(archives, cancellationToken: cancellationToken);
         }
     }
 }
