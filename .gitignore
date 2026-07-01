@@ -368,3 +368,4 @@ FodyWeavers.xsd
 /BgutuGrades/appsettings.Production.json
 /BgituGrades/appsettings.Production.json
 /BgituGrades/appsettings.json
+*.md
