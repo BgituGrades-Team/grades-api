@@ -89,7 +89,7 @@ namespace BgituGrades
                 {
                     Info = new Info("Bgitu Grades SignalR API", "v1")
                     {
-                        Description = "Документация SignalR хаба"
+                        Description = "Документация SignalR хабов"
                     }
                 };
             });

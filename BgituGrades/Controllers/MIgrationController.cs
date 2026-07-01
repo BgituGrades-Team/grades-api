@@ -17,6 +17,7 @@ namespace BgituGrades.API.Controllers
 
         [HttpDelete("truncate")]
         [Authorize(Policy = "Admin")]
+        [EndpointSummary("Очистить все данные")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> Delete(CancellationToken cancellationToken)
         {
@@ -26,6 +27,7 @@ namespace BgituGrades.API.Controllers
 
         [HttpPost("migrate")]
         [Authorize(Policy = "Admin")]
+        [EndpointSummary("Архивировать текущий семестр")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> MigrateAsync(CancellationToken cancellationToken)
@@ -43,6 +45,7 @@ namespace BgituGrades.API.Controllers
 
         [HttpPost("sync")]
         [Authorize(Policy = "Admin")]
+        [EndpointSummary("Синхронизировать расписание из внешнего источника")]
         public async Task<IActionResult> Sync(CancellationToken cancellationToken)
         {
             var apiKey = Request.Headers["key"].ToString();
@@ -52,6 +55,7 @@ namespace BgituGrades.API.Controllers
 
         [HttpGet("periods/all")]
         [Authorize(Policy = "Edit")]
+        [EndpointSummary("Получить все учебные периоды")]
         [ProducesResponseType(typeof(List<PeriodResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPeriodsAsync(CancellationToken cancellationToken)
         {

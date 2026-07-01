@@ -17,15 +17,16 @@ namespace BgituGrades.API.Controllers
 
         [HttpGet]
         [ApiVersion("2.0")]
+        [EndpointSummary("Получить ссылку на график")]
         public async Task<ActionResult<SettingResponse>> GetSettings(CancellationToken cancellationToken)
         {
             var settings = await _settingService.GetSettingsAsync(cancellationToken: cancellationToken);
             return Ok(settings);
         }
 
-
         [HttpPut]
         [ApiVersion("2.0")]
+        [EndpointSummary("Обновить ссылку на график")]
         public async Task<IActionResult> UpdateSettings([FromBody] UpdateSettingRequest request, CancellationToken cancellationToken)
         {
             await _settingService.UpdateSettingAsync(request, cancellationToken: cancellationToken);

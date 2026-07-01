@@ -19,6 +19,7 @@ namespace BgituGrades.API.Controllers
 
         [HttpPost]
         [Authorize(Policy = "Edit")]
+        [EndpointSummary("Создать работу")]
         [ProducesResponseType(typeof(WorkResponse), StatusCodes.Status201Created)]
         public async Task<ActionResult<WorkResponse>> CreateWork([FromBody] CreateWorkRequest request, CancellationToken cancellationToken)
         {
@@ -30,6 +31,7 @@ namespace BgituGrades.API.Controllers
 
         [HttpPut]
         [Authorize(Policy = "Edit")]
+        [EndpointSummary("Обновить работу")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateWork([FromBody] UpdateWorkRequest request, CancellationToken cancellationToken)
@@ -41,6 +43,7 @@ namespace BgituGrades.API.Controllers
 
         [HttpDelete]
         [Authorize(Policy = "Edit")]
+        [EndpointSummary("Удалить работу")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteWork([FromQuery] DeleteWorkRequest request, CancellationToken cancellationToken)

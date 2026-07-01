@@ -18,6 +18,7 @@ namespace BgituGrades.API.Controllers
         [HttpGet("all")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
+        [EndpointSummary("Получить все дисциплины")]
         [ProducesResponseType(typeof(List<DisciplineResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<DisciplineResponse>>> GetDisciplines(CancellationToken cancellationToken)
         {
@@ -29,6 +30,7 @@ namespace BgituGrades.API.Controllers
         [HttpGet]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
+        [EndpointSummary("Получить дисциплины по ID групп")]
         [ProducesResponseType(typeof(List<DisciplineResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<DisciplineResponse>>> GetDisciplinesByGroupIds([FromQuery] GetDisciplineByGroupIdsRequest request, CancellationToken cancellationToken)
         {
@@ -40,6 +42,7 @@ namespace BgituGrades.API.Controllers
         [HttpGet("archived")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
+        [EndpointSummary("Получить архивные дисциплины по ID групп")]
         [ProducesResponseType(typeof(List<DisciplineResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<DisciplineResponse>>> GetArchivedDisciplinesByGroupIds([FromQuery] GetDisciplineByGroupIdsRequest request, CancellationToken cancellationToken)
         {
@@ -51,6 +54,7 @@ namespace BgituGrades.API.Controllers
         [HttpPost("bulk")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
+        [EndpointSummary("Создать несколько дисциплин")]
         [ProducesResponseType(typeof(List<DisciplineResponse>), StatusCodes.Status201Created)]
         public async Task<ActionResult<List<DisciplineResponse>>> CreateDisciplineBulk([FromBody] CreateDisciplineBulkRequest request, CancellationToken cancellationToken)
         {

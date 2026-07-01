@@ -16,6 +16,7 @@ namespace BgituGrades.API.Controllers
         [HttpGet]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
+        [EndpointSummary("Получить студентов группы")]
         [ProducesResponseType(typeof(IEnumerable<StudentResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<StudentResponse>>> GetStudents([FromQuery] GetStudentsByGroupRequest request, CancellationToken cancellationToken)
         {
@@ -26,6 +27,7 @@ namespace BgituGrades.API.Controllers
         [HttpGet("archived")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
+        [EndpointSummary("Получить архивных студентов группы")]
         [ProducesResponseType(typeof(IEnumerable<StudentResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<StudentResponse>>> GetArchivedStudents([FromQuery] GetStudentsByGroupRequest request, CancellationToken cancellationToken)
         {
@@ -36,6 +38,7 @@ namespace BgituGrades.API.Controllers
         [HttpPut]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Edit")]
+        [EndpointSummary("Обновить данные студента")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateStudent([FromBody] UpdateStudentRequest request, CancellationToken cancellationToken)
@@ -50,6 +53,7 @@ namespace BgituGrades.API.Controllers
         [HttpDelete]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Edit")]
+        [EndpointSummary("Удалить студента")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteStudent([FromQuery] DeleteStudentRequest request, CancellationToken cancellationToken)
@@ -64,6 +68,7 @@ namespace BgituGrades.API.Controllers
         [HttpPost("import")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
+        [EndpointSummary("Импортировать студентов из Excel файла")]
         [ProducesResponseType(typeof(ImportResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ImportStudents(IFormFile file, CancellationToken cancellationToken)

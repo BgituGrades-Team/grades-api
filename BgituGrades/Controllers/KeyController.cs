@@ -21,6 +21,7 @@ namespace BgituGrades.API.Controllers
         [HttpGet("all")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
+        [EndpointSummary("Получить все ключи доступа")]
         [ProducesResponseType(typeof(List<KeyResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<KeyResponse>>> GetAllKeys(CancellationToken cancellationToken)
         {
@@ -32,6 +33,7 @@ namespace BgituGrades.API.Controllers
         [HttpPost]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
+        [EndpointSummary("Создать ключ доступа")]
         [ProducesResponseType(typeof(KeyResponse), StatusCodes.Status201Created)]
         public async Task<ActionResult<KeyResponse>> CreateKey(CreateKeyRequest request, CancellationToken cancellationToken)
         {
@@ -43,6 +45,7 @@ namespace BgituGrades.API.Controllers
         [HttpGet]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
+        [EndpointSummary("Получить ключ доступа")]
         [ProducesResponseType(typeof(KeyResponse), StatusCodes.Status200OK)]
         public async Task<ActionResult<KeyResponse>> GetKey([FromHeader(Name = "key")] string key, CancellationToken cancellationToken)
         {
@@ -54,6 +57,7 @@ namespace BgituGrades.API.Controllers
         [HttpGet("shared")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Edit")]
+        [EndpointSummary("Сгенерировать ссылку с ключом студента")]
         [ProducesResponseType(typeof(SharedKeyResponse), StatusCodes.Status200OK)]
         public async Task<ActionResult<SharedKeyResponse>> CreateSharedKeyV2([FromQuery] CreateSharedKeyRequest request, CancellationToken cancellationToken)
         {
@@ -68,6 +72,7 @@ namespace BgituGrades.API.Controllers
         [HttpDelete]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
+        [EndpointSummary("Удалить ключ доступа")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteKey([FromQuery] DeleteKeyRequest request, CancellationToken cancellationToken)

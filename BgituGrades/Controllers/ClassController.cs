@@ -18,6 +18,7 @@ namespace BgituGrades.API.Controllers
         [HttpPost("bulk")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
+        [EndpointSummary("Создать несколько занятий")]
         [ProducesResponseType(typeof(List<ClassResponse>), StatusCodes.Status201Created)]
         public async Task<ActionResult<List<ClassResponse>>> CreateClassBulk([FromBody] CreateClassBulkRequest request, CancellationToken cancellationToken)
         {

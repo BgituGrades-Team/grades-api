@@ -12,10 +12,10 @@ namespace BgituGrades.API.Controllers
     {
         private readonly IDistributedCache _cache = cache;
 
-
         [HttpGet("{reportId}/download")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Edit")]
+        [EndpointSummary("Скачать сгенерированный отчёт в формате Excel")]
         public async Task<IActionResult> DownloadReport(Guid reportId)
         {
             byte[]? excelBytes = await _cache.GetAsync($"report_{reportId}");
@@ -26,7 +26,6 @@ namespace BgituGrades.API.Controllers
             }
 
             var fileName = $"отчет_{reportId:N}.xlsx";
-
 
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }

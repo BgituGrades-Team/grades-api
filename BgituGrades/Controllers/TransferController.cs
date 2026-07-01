@@ -16,18 +16,19 @@ namespace BgituGrades.API.Controllers
         [HttpGet]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
+        [EndpointSummary("Получить перенос занятия по ID занятия и дате")]
         [ProducesResponseType(typeof(TransferResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<TransferResponse>> GetTransfer([FromQuery] GetTransferRequest request, CancellationToken cancellationToken)
         {
             var transfer = await _transferService.GetTransferByClassIdAndDateAsync(request.ClassId, request.Date, cancellationToken: cancellationToken);
-
             return transfer == null ? NotFound() : Ok(transfer);
         }
 
         [HttpPost]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Edit")]
+        [EndpointSummary("Создать перенос занятия")]
         [ProducesResponseType(typeof(TransferResponse), StatusCodes.Status201Created)]
         public async Task<ActionResult<TransferResponse>> CreateTransfer([FromBody] CreateTransferRequest request, CancellationToken cancellationToken)
         {
@@ -38,6 +39,7 @@ namespace BgituGrades.API.Controllers
         [HttpPut]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Edit")]
+        [EndpointSummary("Обновить перенос занятия")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(NotFoundResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateTransfer([FromBody] UpdateTransferRequest request, CancellationToken cancellationToken)

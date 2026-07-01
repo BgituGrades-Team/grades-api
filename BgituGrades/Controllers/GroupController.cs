@@ -18,6 +18,7 @@ namespace BgituGrades.API.Controllers
         [HttpGet]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
+        [EndpointSummary("Получить группы по дисциплине")]
         [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<GroupResponse>>> GetGroupsByDiscipline([FromQuery] GetGroupsByDisciplineRequest request, CancellationToken cancellationToken)
         {
@@ -29,6 +30,7 @@ namespace BgituGrades.API.Controllers
         [HttpGet("courses")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
+        [EndpointSummary("Получить список курсов")]
         [ProducesResponseType(typeof(List<int>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<int>>> GetCourses(CancellationToken cancellationToken)
         {
@@ -39,6 +41,7 @@ namespace BgituGrades.API.Controllers
         [HttpGet("archived/courses")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
+        [EndpointSummary("Получить архивные курсы за период")]
         [ProducesResponseType(typeof(List<int>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<int>>> GetArchivedCoursesByPeriod(
             [FromQuery] GetByPeriodRequest request, CancellationToken cancellationToken)
@@ -50,6 +53,7 @@ namespace BgituGrades.API.Controllers
         [HttpGet("all")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
+        [EndpointSummary("Получить все группы")]
         [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<GroupResponse>>> GetAllGroups(CancellationToken cancellationToken)
         {
@@ -73,6 +77,7 @@ namespace BgituGrades.API.Controllers
         [HttpGet("archived")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
+        [EndpointSummary("Получить архивные группы за период")]
         [ProducesResponseType(typeof(List<ArchivedGroupResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<ArchivedGroupResponse>>> GetArchivedGroups([FromQuery] GetByPeriodRequest request, CancellationToken cancellationToken)
         {
@@ -84,6 +89,7 @@ namespace BgituGrades.API.Controllers
         [HttpGet("by_courses")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "ViewOnly")]
+        [EndpointSummary("Получить группы по курсам")]
         [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<GroupResponse>>> GetGroupsByCourses([FromQuery] GetByCoursesRequest request, CancellationToken cancellationToken)
         {
@@ -95,6 +101,7 @@ namespace BgituGrades.API.Controllers
         [HttpPost("bulk")]
         [ApiVersion("2.0")]
         [Authorize(Policy = "Admin")]
+        [EndpointSummary("Создать несколько групп")]
         [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status201Created)]
         public async Task<ActionResult<List<GroupResponse>>> CreateGroupBulk([FromBody] CreateGroupBulkRequest request, CancellationToken cancellationToken)
         {
