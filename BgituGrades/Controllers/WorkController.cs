@@ -9,12 +9,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BgituGrades.API.Controllers
 {
-    [Route("api/work")]
+    [Route("api/works")]
     [ApiVersion("2.0")]
     [ApiController]
-    public class WorkController(IWorkService WorkService, IMapper mapper) : ControllerBase
+    public class WorkController(IWorkService workService, IMapper mapper) : ControllerBase
     {
-        private readonly IWorkService _workService = WorkService;
+        private readonly IWorkService _workService = workService;
         private readonly IMapper _mapper = mapper;
 
         [HttpPost]

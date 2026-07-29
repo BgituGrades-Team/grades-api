@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BgituGrades.API.Controllers
 {
-    [Route("api/student")]
+    [Route("api/students")]
     [ApiController]
     public class StudentController(IStudentService studentService) : ControllerBase
     {

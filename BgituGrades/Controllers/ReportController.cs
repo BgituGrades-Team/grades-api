@@ -6,7 +6,7 @@ using Microsoft.Extensions.Caching.Distributed;
 namespace BgituGrades.API.Controllers
 {
     [ApiController]
-    [Route("api/report")]
+    [Route("api/reports")]
     public class ReportController(
         IDistributedCache cache) : ControllerBase
     {

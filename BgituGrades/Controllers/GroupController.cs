@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BgituGrades.API.Controllers
 {
-    [Route("api/group")]
+    [Route("api/groups")]
     [ApiController]
     public class GroupController(IGroupService groupService, IMapper mapper) : ControllerBase
     {

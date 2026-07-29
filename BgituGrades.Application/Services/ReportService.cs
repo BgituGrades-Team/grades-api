@@ -231,10 +231,13 @@ namespace BgituGrades.Application.Services
             using var package = new ExcelPackage();
             var (ws, sortedGroups, disciplinesByGroup, studentsLookup, maxCols, preview) = BuildSheetSkeleton(package, "Отчёт посещаемости", groups, disciplines, students);
 
-            var groupDisciplinePairs = sortedGroups.SelectMany(g => disciplinesByGroup[g.Id].Select(d => (g.Id, d!.Id))).Distinct().ToList();
+            var groupDisciplinePairs = sortedGroups.SelectMany(g => disciplinesByGroup[g.Id]
+                .Select(d => (g.Id, d!.Id)))
+                .Distinct()
+                .ToList();
 
             var scheduleTotalDictTask = classService.GetClassDateCountsAsync(groups, groupDisciplinePairs, ct);
-            var allPresencesTask = presenceRepo.GetPresencesByDisciplinesAndGroupsAsync(disciplines.Select(d => d.Id).ToList(), sortedGroups.Select(g => g.Id).ToList(), cancellationToken: ct);
+            var allPresencesTask = presenceRepo.GetPresencesByDisciplinesAndGroupsAsync(disciplines.Select(d => d.Id).ToList(), sortedGroups.Select(g => g.Id).ToList(), ct);
 
             await Task.WhenAll(scheduleTotalDictTask, allPresencesTask);
             var scheduleTotalDict = await scheduleTotalDictTask;

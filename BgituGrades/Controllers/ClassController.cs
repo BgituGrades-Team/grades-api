@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BgituGrades.API.Controllers
 {
-    [Route("api/class")]
+    [Route("api/classes")]
     [ApiController]
     public class ClassController(IClassService ClassService, IMapper mapper) : ControllerBase
     {

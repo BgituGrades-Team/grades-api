@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BgituGrades.API.Controllers
 {
-    [Route("api/transfer")]
+    [Route("api/transfers")]
     [ApiController]
     public class TransferController(ITransferService TransferService) : ControllerBase
     {

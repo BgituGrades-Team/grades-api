@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BgituGrades.API.Controllers
 {
-    [Route("api/key")]
+    [Route("api/keys")]
     [ApiController]
     public class KeyController(IKeyService keyService, IMapper mapper) : ControllerBase
     {
